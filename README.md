@@ -12,7 +12,7 @@ My Crypto Heroes（マイクリ）のアセットを使った、**参考作 風�
 
 ## 公開版（Vercel）
 
-`bearko/mycryptodeckbattle` を Vercel プロジェクト `mycryptodeckbattle` に接続しています。リポジトリのデフォルトブランチに push すると自動でデプロイされます（ビルド不要の静的サイト。設定は `vercel.json`）。
+Vercel で `bearko/mycryptodeckbattle` をインポートすると、そのまま公開できます（ビルド不要の静的サイト。Framework Preset は「Other」、Build / Output の設定は空欄のままで可。設定は `vercel.json`）。接続後はデフォルトブランチへの push で自動デプロイされます。
 
 スマホの縦画面を基準にしたレイアウトで、どの画面もスクロールせずに操作できます（スクロールするのはエクステンション一覧などのリストと、遊び方・詳細の説明画面だけ）。
 
