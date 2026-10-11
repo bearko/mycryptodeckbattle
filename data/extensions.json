@@ -1,0 +1,255 @@
+[
+ {
+  "id": "ext_hp",
+  "mch_extension_id": 4004,
+  "effect": "maxHp",
+  "value": 60,
+  "text": "パーティの最大HP+60",
+  "name": "フリューテッドアーマー",
+  "name_en": "Fluted Armor",
+  "image": "assets/extensions/4004.png"
+ },
+ {
+  "id": "ext_start_shield",
+  "mch_extension_id": 3010,
+  "effect": "startShield",
+  "value": 40,
+  "text": "バトル開始時、味方パーティにシールド40",
+  "name": "ブレイブシールド",
+  "name_en": "Brave Shield",
+  "image": "assets/extensions/3010.png"
+ },
+ {
+  "id": "ext_damage",
+  "mch_extension_id": 3001,
+  "effect": "kindMult",
+  "kind": "damage",
+  "value": 15,
+  "text": "ダメージスキルの効果量+15%",
+  "name": "ブレイブブレード",
+  "name_en": "Brave Blade",
+  "image": "assets/extensions/3001.png"
+ },
+ {
+  "id": "ext_shield",
+  "mch_extension_id": 5010,
+  "effect": "kindMult",
+  "kind": "shield",
+  "value": 20,
+  "text": "シールドスキルの効果量+20%",
+  "name": "アイギス",
+  "name_en": "Aegis",
+  "image": "assets/extensions/5010.png"
+ },
+ {
+  "id": "ext_heal",
+  "mch_extension_id": 5030,
+  "effect": "kindMult",
+  "kind": "heal",
+  "value": 20,
+  "text": "回復スキルの効果量+20%",
+  "name": "聖杯",
+  "name_en": "Holy Grail",
+  "image": "assets/extensions/5030.png"
+ },
+ {
+  "id": "ext_bleed",
+  "mch_extension_id": 4048,
+  "effect": "kindFlat",
+  "kind": "bleed",
+  "value": 2,
+  "text": "出血を付与するスキルの出血+2",
+  "name": "グルカナイフ",
+  "name_en": "Gurkha Knife",
+  "image": "assets/extensions/4048.png"
+ },
+ {
+  "id": "ext_poison",
+  "mch_extension_id": 4026,
+  "effect": "kindFlat",
+  "kind": "poison",
+  "value": 1,
+  "text": "毒を付与するスキルの毒+1",
+  "name": "キングコブラ",
+  "name_en": "King cobra",
+  "image": "assets/extensions/4026.png"
+ },
+ {
+  "id": "ext_speed",
+  "mch_extension_id": 3031,
+  "effect": "speedAll",
+  "value": 8,
+  "text": "味方全員のチャージ速度+8%",
+  "name": "ブレイブブーツ",
+  "name_en": "Brave Boots",
+  "image": "assets/extensions/3031.png"
+ },
+ {
+  "id": "ext_front_speed",
+  "mch_extension_id": 4005,
+  "effect": "speedCol",
+  "col": 0,
+  "value": 20,
+  "text": "前衛のヒーローのチャージ速度+20%",
+  "name": "赤兎馬",
+  "name_en": "Red Hare",
+  "image": "assets/extensions/4005.png"
+ },
+ {
+  "id": "ext_mid_power",
+  "mch_extension_id": 4016,
+  "effect": "colMult",
+  "col": 1,
+  "value": 20,
+  "text": "中衛のヒーローの効果量+20%",
+  "name": "兵法書",
+  "name_en": "The Art of War",
+  "image": "assets/extensions/4016.png"
+ },
+ {
+  "id": "ext_back_power",
+  "mch_extension_id": 5013,
+  "effect": "colMult",
+  "col": 2,
+  "value": 25,
+  "text": "後衛のヒーローの効果量+25%",
+  "name": "与一の弓",
+  "name_en": "Yoichi no Yumi",
+  "image": "assets/extensions/5013.png"
+ },
+ {
+  "id": "ext_income",
+  "mch_extension_id": 3033,
+  "effect": "income",
+  "value": 2,
+  "text": "毎ステージ開始時にGUM+2",
+  "name": "ウィズダムMCHメダル",
+  "name_en": "Wisdom MCH Medal",
+  "image": "assets/extensions/3033.png"
+ },
+ {
+  "id": "ext_reroll",
+  "mch_extension_id": 4075,
+  "effect": "freeReroll",
+  "value": 1,
+  "text": "毎ステージ、マーケットの無料更新+1回",
+  "name": "ローネット",
+  "name_en": "Lorgnette",
+  "image": "assets/extensions/4075.png"
+ },
+ {
+  "id": "ext_win_gum",
+  "mch_extension_id": 4036,
+  "effect": "winGum",
+  "value": 3,
+  "text": "バトルに勝利するとGUM+3",
+  "name": "宝冠",
+  "name_en": "Treasure Crown",
+  "image": "assets/extensions/4036.png"
+ },
+ {
+  "id": "ext_sell",
+  "mch_extension_id": 5009,
+  "effect": "sellBonus",
+  "value": 2,
+  "text": "ヒーローの売却額+2",
+  "name": "王妃の指輪",
+  "name_en": "Ring of the Queen",
+  "image": "assets/extensions/5009.png"
+ },
+ {
+  "id": "ext_start_bleed",
+  "mch_extension_id": 4074,
+  "effect": "startBleed",
+  "value": 6,
+  "text": "バトル開始時、敵パーティに出血6",
+  "name": "国崩し",
+  "name_en": "Kunikuzushi",
+  "image": "assets/extensions/4074.png"
+ },
+ {
+  "id": "ext_start_poison",
+  "mch_extension_id": 4043,
+  "effect": "startPoison",
+  "value": 2,
+  "text": "バトル開始時、敵パーティに毒2",
+  "name": "怒りの葡萄",
+  "name_en": "Grape of Wrath",
+  "image": "assets/extensions/4043.png"
+ },
+ {
+  "id": "ext_multicast",
+  "mch_extension_id": 4082,
+  "effect": "multicastSlowest",
+  "value": 1,
+  "text": "チャージ時間が最も長い味方の連続発動+1",
+  "name": "詠春八斬刀",
+  "name_en": "Wing Chun-Baat Jaam Dou",
+  "image": "assets/extensions/4082.png"
+ },
+ {
+  "id": "ext_start_charge",
+  "mch_extension_id": 4031,
+  "effect": "startCharge",
+  "value": 1,
+  "text": "バトル開始時、味方全員のチャージを1秒進める",
+  "name": "大西部のブーツ",
+  "name_en": "Great Western Boots",
+  "image": "assets/extensions/4031.png"
+ },
+ {
+  "id": "ext_faction_1",
+  "mch_extension_id": 4020,
+  "effect": "factionMult",
+  "faction": 1,
+  "value": 15,
+  "text": "朱雀のヒーローの効果量+15%",
+  "name": "ホットスパー",
+  "name_en": "Hotspur",
+  "image": "assets/extensions/4020.png"
+ },
+ {
+  "id": "ext_faction_2",
+  "mch_extension_id": 4022,
+  "effect": "factionMult",
+  "faction": 2,
+  "value": 15,
+  "text": "青龍のヒーローの効果量+15%",
+  "name": "ワイバーン",
+  "name_en": "Wyvern",
+  "image": "assets/extensions/4022.png"
+ },
+ {
+  "id": "ext_faction_3",
+  "mch_extension_id": 4019,
+  "effect": "factionMult",
+  "faction": 3,
+  "value": 15,
+  "text": "玄武のヒーローの効果量+15%",
+  "name": "アーケロン",
+  "name_en": "Akeron",
+  "image": "assets/extensions/4019.png"
+ },
+ {
+  "id": "ext_faction_4",
+  "mch_extension_id": 5022,
+  "effect": "factionMult",
+  "faction": 4,
+  "value": 15,
+  "text": "黄竜のヒーローの効果量+15%",
+  "name": "金龍",
+  "name_en": "Golden Dragon",
+  "image": "assets/extensions/5022.png"
+ },
+ {
+  "id": "ext_faction_5",
+  "mch_extension_id": 4021,
+  "effect": "factionMult",
+  "faction": 5,
+  "value": 15,
+  "text": "白虎のヒーローの効果量+15%",
+  "name": "アムールタイガー",
+  "name_en": "Amur Tiger",
+  "image": "assets/extensions/4021.png"
+ }
+]

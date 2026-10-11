@@ -1,0 +1,6267 @@
+[
+ {
+  "id": "e310",
+  "mch_id": 310,
+  "side": "enemy",
+  "name": "クリーパー ショート",
+  "name_en": "Creeper-short",
+  "image": "assets/enemies/101.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "スパミング 1.0",
+  "agi_pct": 0.0298,
+  "hp_pct": 0.1845,
+  "stats": {
+   "hp": 8,
+   "phy": 4,
+   "int": 4,
+   "agi": 4
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にPHYの10〜30％分ダメージ"
+ },
+ {
+  "id": "e311",
+  "mch_id": 311,
+  "side": "enemy",
+  "name": "クリーパー トール",
+  "name_en": "Creeper-tall",
+  "image": "assets/enemies/102.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "スパミング 1.2",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.2202,
+  "stats": {
+   "hp": 9,
+   "phy": 5,
+   "int": 5,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にPHYの25〜45％分ダメージ"
+ },
+ {
+  "id": "e312",
+  "mch_id": 312,
+  "side": "enemy",
+  "name": "クリーパー グランデ",
+  "name_en": "Creeper-grande",
+  "image": "assets/enemies/103.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "リファクタリング 1.0",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.2202,
+  "stats": {
+   "hp": 9,
+   "phy": 5,
+   "int": 5,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もHPの低い味方のPHYをINTの5〜15%分アップ"
+ },
+ {
+  "id": "e314",
+  "mch_id": 314,
+  "side": "enemy",
+  "name": "クリーパー マキアート",
+  "name_en": "Creeper-macchiato",
+  "image": "assets/enemies/105.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "リファクタリング 1.0",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.2202,
+  "stats": {
+   "hp": 9,
+   "phy": 5,
+   "int": 5,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もHPの低い味方のPHYをINTの5〜15%分アップ"
+ },
+ {
+  "id": "e317",
+  "mch_id": 317,
+  "side": "enemy",
+  "name": "クリーパー グランデ ドッピオ",
+  "name_en": "Creeper-grande doppio",
+  "image": "assets/enemies/143.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "リファクタリング 1.5",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.2202,
+  "stats": {
+   "hp": 9,
+   "phy": 5,
+   "int": 5,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もHPの低い味方のPHYをINTの10〜25%分アップ"
+ },
+ {
+  "id": "e320",
+  "mch_id": 320,
+  "side": "enemy",
+  "name": "エルククローナ ショート",
+  "name_en": "Elk Cloner-short",
+  "image": "assets/enemies/111.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "フィッシング 1.0",
+  "agi_pct": 0.0298,
+  "hp_pct": 0.006,
+  "stats": {
+   "hp": 5,
+   "phy": 7,
+   "int": 4,
+   "agi": 4
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にINTの10〜30％分ダメージ"
+ },
+ {
+  "id": "e321",
+  "mch_id": 321,
+  "side": "enemy",
+  "name": "エルククローナ トール",
+  "name_en": "Elk Cloner-tall",
+  "image": "assets/enemies/112.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "フィッシング 1.0",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.0575,
+  "stats": {
+   "hp": 6,
+   "phy": 8,
+   "int": 5,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にINTの10〜30％分ダメージ"
+ },
+ {
+  "id": "e322",
+  "mch_id": 322,
+  "side": "enemy",
+  "name": "エルククローナ グランデ",
+  "name_en": "Elk Cloner-grande",
+  "image": "assets/enemies/113.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ディープラーニング 1.0",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.0575,
+  "stats": {
+   "hp": 6,
+   "phy": 8,
+   "int": 5,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もHPの低い味方のINTをINTの5〜15%分アップ"
+ },
+ {
+  "id": "e326",
+  "mch_id": 326,
+  "side": "enemy",
+  "name": "エルククローナ トール ドッピオ",
+  "name_en": "Elk Cloner-tall doppio",
+  "image": "assets/enemies/149.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "フィッシング 1.0",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.0575,
+  "stats": {
+   "hp": 6,
+   "phy": 8,
+   "int": 5,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にINTの10〜30％分ダメージ"
+ },
+ {
+  "id": "e327",
+  "mch_id": 327,
+  "side": "enemy",
+  "name": "エルククローナ グランデ ドッピオ",
+  "name_en": "Elk Cloner-grande doppio",
+  "image": "assets/enemies/150.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ディープラーニング 1.0",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.0575,
+  "stats": {
+   "hp": 6,
+   "phy": 8,
+   "int": 5,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もHPの低い味方のINTをINTの5〜15%分アップ"
+ },
+ {
+  "id": "e340",
+  "mch_id": 340,
+  "side": "enemy",
+  "name": "メリッサ ショート",
+  "name_en": "Melissa-short",
+  "image": "assets/enemies/131.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "フィッシング 1.0",
+  "agi_pct": 0.0298,
+  "hp_pct": 0.0575,
+  "stats": {
+   "hp": 6,
+   "phy": 4,
+   "int": 6,
+   "agi": 4
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にINTの10〜30％分ダメージ"
+ },
+ {
+  "id": "e342",
+  "mch_id": 342,
+  "side": "enemy",
+  "name": "メリッサ グランデ",
+  "name_en": "Melissa-grande",
+  "image": "assets/enemies/133.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ディープラーニング 1.0",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.1369,
+  "stats": {
+   "hp": 7,
+   "phy": 5,
+   "int": 7,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もHPの低い味方のINTをINTの5〜15%分アップ"
+ },
+ {
+  "id": "e344",
+  "mch_id": 344,
+  "side": "enemy",
+  "name": "メリッサ マキアート",
+  "name_en": "Melissa-macchiato",
+  "image": "assets/enemies/135.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "フィッシング 1.2",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.1369,
+  "stats": {
+   "hp": 7,
+   "phy": 5,
+   "int": 7,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にINTの25〜45％分ダメージ"
+ },
+ {
+  "id": "e346",
+  "mch_id": 346,
+  "side": "enemy",
+  "name": "メリッサ トール ドッピオ",
+  "name_en": "Melissa-tall doppio",
+  "image": "assets/enemies/142.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "フィッシング 1.0",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.1369,
+  "stats": {
+   "hp": 7,
+   "phy": 5,
+   "int": 7,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にINTの10〜30％分ダメージ"
+ },
+ {
+  "id": "e347",
+  "mch_id": 347,
+  "side": "enemy",
+  "name": "メリッサ グランデ ドッピオ",
+  "name_en": "Melissa-grande doppio",
+  "image": "assets/enemies/144.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "フィッシング 1.2",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.1369,
+  "stats": {
+   "hp": 7,
+   "phy": 5,
+   "int": 7,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にINTの25〜45％分ダメージ"
+ },
+ {
+  "id": "e376",
+  "mch_id": 376,
+  "side": "enemy",
+  "name": "カスケード トール",
+  "name_en": "Cascade-tall",
+  "image": "assets/enemies/376.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "スパミング 1.2",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.2202,
+  "stats": {
+   "hp": 9,
+   "phy": 5,
+   "int": 5,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にPHYの25〜45％分ダメージ"
+ },
+ {
+  "id": "e377",
+  "mch_id": 377,
+  "side": "enemy",
+  "name": "カスケード グランデ",
+  "name_en": "Cascade-grande",
+  "image": "assets/enemies/377.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "リファクタリング 1.0",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.2202,
+  "stats": {
+   "hp": 9,
+   "phy": 5,
+   "int": 5,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もHPの低い味方のPHYをINTの5〜15%分アップ"
+ },
+ {
+  "id": "e379",
+  "mch_id": 379,
+  "side": "enemy",
+  "name": "カスケード マキアート",
+  "name_en": "Cascade-macchiato",
+  "image": "assets/enemies/379.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "リファクタリング 1.0",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.2202,
+  "stats": {
+   "hp": 9,
+   "phy": 5,
+   "int": 5,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もHPの低い味方のPHYをINTの5〜15%分アップ"
+ },
+ {
+  "id": "e381",
+  "mch_id": 381,
+  "side": "enemy",
+  "name": "カスケード トール ドッピオ",
+  "name_en": "Cascade-tall doppio",
+  "image": "assets/enemies/381.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "スパミング 1.2",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.2202,
+  "stats": {
+   "hp": 9,
+   "phy": 5,
+   "int": 5,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にPHYの25〜45％分ダメージ"
+ },
+ {
+  "id": "e386",
+  "mch_id": 386,
+  "side": "enemy",
+  "name": "ラビット ショート",
+  "name_en": "Rabbit-short",
+  "image": "assets/enemies/386.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "フィッシング 1.0",
+  "agi_pct": 0.0298,
+  "hp_pct": 0.006,
+  "stats": {
+   "hp": 5,
+   "phy": 7,
+   "int": 4,
+   "agi": 4
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にINTの10〜30％分ダメージ"
+ },
+ {
+  "id": "e387",
+  "mch_id": 387,
+  "side": "enemy",
+  "name": "ラビット トール",
+  "name_en": "Rabbit-tall",
+  "image": "assets/enemies/387.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "フィッシング 1.0",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.0575,
+  "stats": {
+   "hp": 6,
+   "phy": 8,
+   "int": 5,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にINTの10〜30％分ダメージ"
+ },
+ {
+  "id": "e388",
+  "mch_id": 388,
+  "side": "enemy",
+  "name": "ラビット グランデ",
+  "name_en": "Rabbit-grande",
+  "image": "assets/enemies/388.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ディープラーニング 1.0",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.0575,
+  "stats": {
+   "hp": 6,
+   "phy": 8,
+   "int": 5,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もHPの低い味方のINTをINTの5〜15%分アップ"
+ },
+ {
+  "id": "e392",
+  "mch_id": 392,
+  "side": "enemy",
+  "name": "ラビット トール ドッピオ",
+  "name_en": "Rabbit-tall doppio",
+  "image": "assets/enemies/392.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "フィッシング 1.0",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.0575,
+  "stats": {
+   "hp": 6,
+   "phy": 8,
+   "int": 5,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にINTの10〜30％分ダメージ"
+ },
+ {
+  "id": "e393",
+  "mch_id": 393,
+  "side": "enemy",
+  "name": "ラビット グランデ ドッピオ",
+  "name_en": "Rabbit-grande doppio",
+  "image": "assets/enemies/393.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ディープラーニング 1.0",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.0575,
+  "stats": {
+   "hp": 6,
+   "phy": 8,
+   "int": 5,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もHPの低い味方のINTをINTの5〜15%分アップ"
+ },
+ {
+  "id": "e397",
+  "mch_id": 397,
+  "side": "enemy",
+  "name": "ラブレター ショート",
+  "name_en": "Love letter-short",
+  "image": "assets/enemies/397.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "リファクタリング 1.0",
+  "agi_pct": 0.0298,
+  "hp_pct": 0.006,
+  "stats": {
+   "hp": 5,
+   "phy": 4,
+   "int": 7,
+   "agi": 4
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もHPの低い味方のPHYをINTの5〜15%分アップ"
+ },
+ {
+  "id": "e398",
+  "mch_id": 398,
+  "side": "enemy",
+  "name": "ラブレター トール",
+  "name_en": "Love letter-tall",
+  "image": "assets/enemies/398.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "リファクタリング 1.0",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.0575,
+  "stats": {
+   "hp": 6,
+   "phy": 5,
+   "int": 8,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もHPの低い味方のPHYをINTの5〜15%分アップ"
+ },
+ {
+  "id": "e402",
+  "mch_id": 402,
+  "side": "enemy",
+  "name": "ラブレター フラペチーノ",
+  "name_en": "Love letter-frappuccino",
+  "image": "assets/enemies/402.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "リファクタリング 1.5",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.0575,
+  "stats": {
+   "hp": 6,
+   "phy": 5,
+   "int": 8,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もHPの低い味方のPHYをINTの10〜25%分アップ"
+ },
+ {
+  "id": "e403",
+  "mch_id": 403,
+  "side": "enemy",
+  "name": "ラブレター トール ドッピオ",
+  "name_en": "Love letter-tall doppio",
+  "image": "assets/enemies/403.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "リファクタリングボム 2.0",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.0575,
+  "stats": {
+   "hp": 6,
+   "phy": 5,
+   "int": 8,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "味方全体のPHYをINTの10〜30%分アップ"
+ },
+ {
+  "id": "e407",
+  "mch_id": 407,
+  "side": "enemy",
+  "name": "ラブレター フラペチーノ ドッピオ",
+  "name_en": "Love letter-frappuccino doppio",
+  "image": "assets/enemies/407.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "リファクタリング 1.5",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.0575,
+  "stats": {
+   "hp": 6,
+   "phy": 5,
+   "int": 8,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もHPの低い味方のPHYをINTの10〜25%分アップ"
+ },
+ {
+  "id": "e408",
+  "mch_id": 408,
+  "side": "enemy",
+  "name": "カメレオン ショート",
+  "name_en": "Chameleon-short",
+  "image": "assets/enemies/408.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "フィッシング 1.0",
+  "agi_pct": 0.0298,
+  "hp_pct": 0.0575,
+  "stats": {
+   "hp": 6,
+   "phy": 4,
+   "int": 6,
+   "agi": 4
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にINTの10〜30％分ダメージ"
+ },
+ {
+  "id": "e410",
+  "mch_id": 410,
+  "side": "enemy",
+  "name": "カメレオン グランデ",
+  "name_en": "Chameleon-grande",
+  "image": "assets/enemies/410.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ディープラーニング 1.0",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.1369,
+  "stats": {
+   "hp": 7,
+   "phy": 5,
+   "int": 7,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もHPの低い味方のINTをINTの5〜15%分アップ"
+ },
+ {
+  "id": "e412",
+  "mch_id": 412,
+  "side": "enemy",
+  "name": "カメレオン マキアート",
+  "name_en": "Chameleon-macchiato",
+  "image": "assets/enemies/412.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "フィッシング 1.2",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.1369,
+  "stats": {
+   "hp": 7,
+   "phy": 5,
+   "int": 7,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にINTの25〜45％分ダメージ"
+ },
+ {
+  "id": "e414",
+  "mch_id": 414,
+  "side": "enemy",
+  "name": "カメレオン トール ドッピオ",
+  "name_en": "Chameleon-tall doppio",
+  "image": "assets/enemies/414.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "フィッシング 1.0",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.1369,
+  "stats": {
+   "hp": 7,
+   "phy": 5,
+   "int": 7,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にINTの10〜30％分ダメージ"
+ },
+ {
+  "id": "e631",
+  "mch_id": 631,
+  "side": "enemy",
+  "name": "ハートブリード ショート",
+  "name_en": "Heartbleed-short",
+  "image": "assets/enemies/121.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "リファクタリング 1.0",
+  "agi_pct": 0.0298,
+  "hp_pct": 0.006,
+  "stats": {
+   "hp": 5,
+   "phy": 4,
+   "int": 7,
+   "agi": 4
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もHPの低い味方のPHYをINTの5〜15%分アップ"
+ },
+ {
+  "id": "e632",
+  "mch_id": 632,
+  "side": "enemy",
+  "name": "ハートブリード トール",
+  "name_en": "Heartbleed-tall",
+  "image": "assets/enemies/122.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "リファクタリング 1.0",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.0575,
+  "stats": {
+   "hp": 6,
+   "phy": 5,
+   "int": 8,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もHPの低い味方のPHYをINTの5〜15%分アップ"
+ },
+ {
+  "id": "e633",
+  "mch_id": 633,
+  "side": "enemy",
+  "name": "ハートブリード グランデ",
+  "name_en": "Heartbleed-grande",
+  "image": "assets/enemies/123.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "リファクタリング 1.0",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.0575,
+  "stats": {
+   "hp": 6,
+   "phy": 5,
+   "int": 8,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もHPの低い味方のPHYをINTの5〜15%分アップ"
+ },
+ {
+  "id": "e635",
+  "mch_id": 635,
+  "side": "enemy",
+  "name": "ハートブリード マキアート",
+  "name_en": "Heartbleed-macchiato",
+  "image": "assets/enemies/125.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "リファクタリング 1.0",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.0575,
+  "stats": {
+   "hp": 6,
+   "phy": 5,
+   "int": 8,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もHPの低い味方のPHYをINTの5〜15%分アップ"
+ },
+ {
+  "id": "e638",
+  "mch_id": 638,
+  "side": "enemy",
+  "name": "ハートブリード グランデ ドッピオ",
+  "name_en": "Heartbleed-grande doppio",
+  "image": "assets/enemies/154.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "リファクタリングボム 2.0",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.0575,
+  "stats": {
+   "hp": 6,
+   "phy": 5,
+   "int": 8,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "味方全体のPHYをINTの10〜30%分アップ"
+ },
+ {
+  "id": "e651",
+  "mch_id": 651,
+  "side": "enemy",
+  "name": "バイトバンディット ショート",
+  "name_en": "Byte Bandit-short",
+  "image": "assets/enemies/161.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "コードインジェクション 1.0",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.2619,
+  "stats": {
+   "hp": 11,
+   "phy": 6,
+   "int": 2,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "weaken",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体のINTをPHYの10~20％分ダウン"
+ },
+ {
+  "id": "e653",
+  "mch_id": 653,
+  "side": "enemy",
+  "name": "バイトバンディット グランデ",
+  "name_en": "Byte Bandit-grande",
+  "image": "assets/enemies/163.png",
+  "rarity": 1,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "コードインジェクション 1.0",
+  "agi_pct": 0.3095,
+  "hp_pct": 0.2202,
+  "stats": {
+   "hp": 9,
+   "phy": 7,
+   "int": 3,
+   "agi": 7
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "weaken",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体のINTをPHYの10~20％分ダウン"
+ },
+ {
+  "id": "e313",
+  "mch_id": 313,
+  "side": "enemy",
+  "name": "クリーパー ヴェンティ",
+  "name_en": "Creeper-venti",
+  "image": "assets/enemies/104.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "スパミング 2.0",
+  "agi_pct": 0.2718,
+  "hp_pct": 0.252,
+  "stats": {
+   "hp": 10,
+   "phy": 6,
+   "int": 6,
+   "agi": 6
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にPHYの10〜50％分ダメージ"
+ },
+ {
+  "id": "e315",
+  "mch_id": 315,
+  "side": "enemy",
+  "name": "クリーパー フラペチーノ",
+  "name_en": "Creeper-frappuccino",
+  "image": "assets/enemies/106.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "スパミング 2.0",
+  "agi_pct": 0.3611,
+  "hp_pct": 0.3532,
+  "stats": {
+   "hp": 16,
+   "phy": 12,
+   "int": 12,
+   "agi": 12
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にPHYの10〜50％分ダメージ"
+ },
+ {
+  "id": "e318",
+  "mch_id": 318,
+  "side": "enemy",
+  "name": "クリーパー ヴェンティ ドッピオ",
+  "name_en": "Creeper-venti doppio",
+  "image": "assets/enemies/145.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "スパミング 2.0",
+  "agi_pct": 0.2718,
+  "hp_pct": 0.252,
+  "stats": {
+   "hp": 10,
+   "phy": 6,
+   "int": 6,
+   "agi": 6
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にPHYの10〜50％分ダメージ"
+ },
+ {
+  "id": "e319",
+  "mch_id": 319,
+  "side": "enemy",
+  "name": "クリーパー フラペチーノ ドッピオ",
+  "name_en": "Creeper-frappuccino doppio",
+  "image": "assets/enemies/147.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "スパミング 2.0",
+  "agi_pct": 0.3611,
+  "hp_pct": 0.3532,
+  "stats": {
+   "hp": 16,
+   "phy": 12,
+   "int": 12,
+   "agi": 12
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にPHYの10〜50％分ダメージ"
+ },
+ {
+  "id": "e325",
+  "mch_id": 325,
+  "side": "enemy",
+  "name": "エルククローナ フラペチーノ",
+  "name_en": "Elk Cloner-frappuccino",
+  "image": "assets/enemies/116.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ディープラーニングボム 2.0",
+  "agi_pct": 0.3611,
+  "hp_pct": 0.2837,
+  "stats": {
+   "hp": 13,
+   "phy": 15,
+   "int": 12,
+   "agi": 12
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "味方全体のINTをINTの10〜30%分アップ"
+ },
+ {
+  "id": "e328",
+  "mch_id": 328,
+  "side": "enemy",
+  "name": "エルククローナ ヴェンティ ドッピオ",
+  "name_en": "Elk Cloner-venti doppio",
+  "image": "assets/enemies/151.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "フィッシング 1.2",
+  "agi_pct": 0.2718,
+  "hp_pct": 0.1369,
+  "stats": {
+   "hp": 7,
+   "phy": 9,
+   "int": 6,
+   "agi": 6
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にINTの25〜45％分ダメージ"
+ },
+ {
+  "id": "e329",
+  "mch_id": 329,
+  "side": "enemy",
+  "name": "エルククローナ フラペチーノ ドッピオ",
+  "name_en": "Elk Cloner-frappuccino doppio",
+  "image": "assets/enemies/152.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ディープラーニングボム 2.0",
+  "agi_pct": 0.3611,
+  "hp_pct": 0.2837,
+  "stats": {
+   "hp": 13,
+   "phy": 15,
+   "int": 12,
+   "agi": 12
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "味方全体のINTをINTの10〜30%分アップ"
+ },
+ {
+  "id": "e343",
+  "mch_id": 343,
+  "side": "enemy",
+  "name": "メリッサ ヴェンティ",
+  "name_en": "Melissa-venti",
+  "image": "assets/enemies/134.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "フィッシング 1.2",
+  "agi_pct": 0.2718,
+  "hp_pct": 0.1845,
+  "stats": {
+   "hp": 8,
+   "phy": 6,
+   "int": 8,
+   "agi": 6
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にINTの25〜45％分ダメージ"
+ },
+ {
+  "id": "e348",
+  "mch_id": 348,
+  "side": "enemy",
+  "name": "メリッサ ヴェンティ ドッピオ",
+  "name_en": "Melissa-venti doppio",
+  "image": "assets/enemies/146.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "フィッシング 1.2",
+  "agi_pct": 0.2718,
+  "hp_pct": 0.1845,
+  "stats": {
+   "hp": 8,
+   "phy": 6,
+   "int": 8,
+   "agi": 6
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にINTの25〜45％分ダメージ"
+ },
+ {
+  "id": "e349",
+  "mch_id": 349,
+  "side": "enemy",
+  "name": "メリッサ フラペチーノ ドッピオ",
+  "name_en": "Melissa-frappuccino doppio",
+  "image": "assets/enemies/148.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ディープラーニング 1.5",
+  "agi_pct": 0.3611,
+  "hp_pct": 0.3115,
+  "stats": {
+   "hp": 14,
+   "phy": 12,
+   "int": 14,
+   "agi": 12
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もHPの低い味方のINTをINTの10〜25%分アップ"
+ },
+ {
+  "id": "e378",
+  "mch_id": 378,
+  "side": "enemy",
+  "name": "カスケード ヴェンティ",
+  "name_en": "Cascade-venti",
+  "image": "assets/enemies/378.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "スパミング 2.0",
+  "agi_pct": 0.2718,
+  "hp_pct": 0.252,
+  "stats": {
+   "hp": 10,
+   "phy": 6,
+   "int": 6,
+   "agi": 6
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にPHYの10〜50％分ダメージ"
+ },
+ {
+  "id": "e380",
+  "mch_id": 380,
+  "side": "enemy",
+  "name": "カスケード フラペチーノ",
+  "name_en": "Cascade-frappuccino",
+  "image": "assets/enemies/380.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "スパミング 2.0",
+  "agi_pct": 0.3611,
+  "hp_pct": 0.3532,
+  "stats": {
+   "hp": 16,
+   "phy": 12,
+   "int": 12,
+   "agi": 12
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にPHYの10〜50％分ダメージ"
+ },
+ {
+  "id": "e384",
+  "mch_id": 384,
+  "side": "enemy",
+  "name": "カスケード マキアート ドッピオ",
+  "name_en": "Cascade-macchiato doppio",
+  "image": "assets/enemies/384.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "スパミング 2.0",
+  "agi_pct": 0.3611,
+  "hp_pct": 0.3532,
+  "stats": {
+   "hp": 16,
+   "phy": 12,
+   "int": 12,
+   "agi": 12
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にPHYの10〜50％分ダメージ"
+ },
+ {
+  "id": "e385",
+  "mch_id": 385,
+  "side": "enemy",
+  "name": "カスケード フラペチーノ ドッピオ",
+  "name_en": "Cascade-frappuccino doppio",
+  "image": "assets/enemies/385.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "スパミング 2.0",
+  "agi_pct": 0.3611,
+  "hp_pct": 0.3532,
+  "stats": {
+   "hp": 16,
+   "phy": 12,
+   "int": 12,
+   "agi": 12
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にPHYの10〜50％分ダメージ"
+ },
+ {
+  "id": "e389",
+  "mch_id": 389,
+  "side": "enemy",
+  "name": "ラビット ヴェンティ",
+  "name_en": "Rabbit-venti",
+  "image": "assets/enemies/389.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "フィッシング 1.2",
+  "agi_pct": 0.2718,
+  "hp_pct": 0.1369,
+  "stats": {
+   "hp": 7,
+   "phy": 9,
+   "int": 6,
+   "agi": 6
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にINTの25〜45％分ダメージ"
+ },
+ {
+  "id": "e391",
+  "mch_id": 391,
+  "side": "enemy",
+  "name": "ラビット フラペチーノ",
+  "name_en": "Rabbit-frappuccino",
+  "image": "assets/enemies/391.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ディープラーニングボム 2.0",
+  "agi_pct": 0.3611,
+  "hp_pct": 0.2837,
+  "stats": {
+   "hp": 13,
+   "phy": 15,
+   "int": 12,
+   "agi": 12
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "味方全体のINTをINTの10〜30%分アップ"
+ },
+ {
+  "id": "e395",
+  "mch_id": 395,
+  "side": "enemy",
+  "name": "ラビット マキアート ドッピオ",
+  "name_en": "Rabbit-macchiato doppio",
+  "image": "assets/enemies/395.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ディープラーニングボム 2.0",
+  "agi_pct": 0.3611,
+  "hp_pct": 0.2837,
+  "stats": {
+   "hp": 13,
+   "phy": 15,
+   "int": 12,
+   "agi": 12
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "味方全体のINTをINTの10〜30%分アップ"
+ },
+ {
+  "id": "e396",
+  "mch_id": 396,
+  "side": "enemy",
+  "name": "ラビット フラペチーノ ドッピオ",
+  "name_en": "Rabbit-frappuccino doppio",
+  "image": "assets/enemies/396.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ディープラーニングボム 2.0",
+  "agi_pct": 0.3611,
+  "hp_pct": 0.2837,
+  "stats": {
+   "hp": 13,
+   "phy": 15,
+   "int": 12,
+   "agi": 12
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "味方全体のINTをINTの10〜30%分アップ"
+ },
+ {
+  "id": "e399",
+  "mch_id": 399,
+  "side": "enemy",
+  "name": "ラブレター グランデ",
+  "name_en": "Love letter-grande",
+  "image": "assets/enemies/399.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "リファクタリング 1.0",
+  "agi_pct": 0.2718,
+  "hp_pct": 0.1369,
+  "stats": {
+   "hp": 7,
+   "phy": 6,
+   "int": 9,
+   "agi": 6
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もHPの低い味方のPHYをINTの5〜15%分アップ"
+ },
+ {
+  "id": "e401",
+  "mch_id": 401,
+  "side": "enemy",
+  "name": "ラブレター マキアート",
+  "name_en": "Love letter-macchiato",
+  "image": "assets/enemies/401.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "リファクタリングボム 2.0",
+  "agi_pct": 0.3611,
+  "hp_pct": 0.2837,
+  "stats": {
+   "hp": 13,
+   "phy": 12,
+   "int": 15,
+   "agi": 12
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "味方全体のPHYをINTの10〜30%分アップ"
+ },
+ {
+  "id": "e405",
+  "mch_id": 405,
+  "side": "enemy",
+  "name": "ラブレター ヴェンティ ドッピオ",
+  "name_en": "Love letter-venti doppio",
+  "image": "assets/enemies/405.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "リファクタリングボム 2.0",
+  "agi_pct": 0.3611,
+  "hp_pct": 0.2837,
+  "stats": {
+   "hp": 13,
+   "phy": 12,
+   "int": 15,
+   "agi": 12
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "味方全体のPHYをINTの10〜30%分アップ"
+ },
+ {
+  "id": "e406",
+  "mch_id": 406,
+  "side": "enemy",
+  "name": "ラブレター マキアート ドッピオ",
+  "name_en": "Love letter-macchiato doppio",
+  "image": "assets/enemies/406.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "リファクタリングボム 2.0",
+  "agi_pct": 0.3611,
+  "hp_pct": 0.2837,
+  "stats": {
+   "hp": 13,
+   "phy": 12,
+   "int": 15,
+   "agi": 12
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "味方全体のPHYをINTの10〜30%分アップ"
+ },
+ {
+  "id": "e411",
+  "mch_id": 411,
+  "side": "enemy",
+  "name": "カメレオン ヴェンティ",
+  "name_en": "Chameleon-venti",
+  "image": "assets/enemies/411.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "フィッシング 1.2",
+  "agi_pct": 0.2718,
+  "hp_pct": 0.1845,
+  "stats": {
+   "hp": 8,
+   "phy": 6,
+   "int": 8,
+   "agi": 6
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にINTの25〜45％分ダメージ"
+ },
+ {
+  "id": "e413",
+  "mch_id": 413,
+  "side": "enemy",
+  "name": "カメレオン フラペチーノ",
+  "name_en": "Chameleon-frappuccino",
+  "image": "assets/enemies/413.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "フィッシング 1.2",
+  "agi_pct": 0.3611,
+  "hp_pct": 0.3115,
+  "stats": {
+   "hp": 14,
+   "phy": 12,
+   "int": 14,
+   "agi": 12
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にINTの25〜45％分ダメージ"
+ },
+ {
+  "id": "e417",
+  "mch_id": 417,
+  "side": "enemy",
+  "name": "カメレオン マキアート ドッピオ",
+  "name_en": "Chameleon-macchiato doppio",
+  "image": "assets/enemies/417.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ディープラーニング 1.5",
+  "agi_pct": 0.3611,
+  "hp_pct": 0.3115,
+  "stats": {
+   "hp": 14,
+   "phy": 12,
+   "int": 14,
+   "agi": 12
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もHPの低い味方のINTをINTの10〜25%分アップ"
+ },
+ {
+  "id": "e634",
+  "mch_id": 634,
+  "side": "enemy",
+  "name": "ハートブリード ヴェンティ",
+  "name_en": "Heartbleed-venti",
+  "image": "assets/enemies/124.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "リファクタリング 1.0",
+  "agi_pct": 0.2718,
+  "hp_pct": 0.1369,
+  "stats": {
+   "hp": 7,
+   "phy": 6,
+   "int": 9,
+   "agi": 6
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もHPの低い味方のPHYをINTの5〜15%分アップ"
+ },
+ {
+  "id": "e636",
+  "mch_id": 636,
+  "side": "enemy",
+  "name": "ハートブリード フラペチーノ",
+  "name_en": "Heartbleed-frappuccino",
+  "image": "assets/enemies/126.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "リファクタリングボム 2.0",
+  "agi_pct": 0.3611,
+  "hp_pct": 0.2837,
+  "stats": {
+   "hp": 13,
+   "phy": 12,
+   "int": 15,
+   "agi": 12
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "味方全体のPHYをINTの10〜30%分アップ"
+ },
+ {
+  "id": "e639",
+  "mch_id": 639,
+  "side": "enemy",
+  "name": "ハートブリード ヴェンティ ドッピオ",
+  "name_en": "Heartbleed-venti doppio",
+  "image": "assets/enemies/155.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "リファクタリング 1.5",
+  "agi_pct": 0.2718,
+  "hp_pct": 0.1369,
+  "stats": {
+   "hp": 7,
+   "phy": 6,
+   "int": 9,
+   "agi": 6
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もHPの低い味方のPHYをINTの10〜25%分アップ"
+ },
+ {
+  "id": "e652",
+  "mch_id": 652,
+  "side": "enemy",
+  "name": "バイトバンディット トール",
+  "name_en": "Byte Bandit-tall",
+  "image": "assets/enemies/162.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "コードインジェクション 1.0",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.3294,
+  "stats": {
+   "hp": 15,
+   "phy": 7,
+   "int": 3,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "weaken",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体のINTをPHYの10~20％分ダウン"
+ },
+ {
+  "id": "e654",
+  "mch_id": 654,
+  "side": "enemy",
+  "name": "バイトバンディット ヴェンティ",
+  "name_en": "Byte Bandit-venti",
+  "image": "assets/enemies/164.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "コードインジェクション 1.0",
+  "agi_pct": 0.3095,
+  "hp_pct": 0.3532,
+  "stats": {
+   "hp": 16,
+   "phy": 10,
+   "int": 3,
+   "agi": 7
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "weaken",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体のINTをPHYの10~20％分ダウン"
+ },
+ {
+  "id": "e655",
+  "mch_id": 655,
+  "side": "enemy",
+  "name": "バイトバンディット マキアート",
+  "name_en": "Byte Bandit-macchiato",
+  "image": "assets/enemies/165.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "コードインジェクション 1.5",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.3294,
+  "stats": {
+   "hp": 15,
+   "phy": 7,
+   "int": 3,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "weaken",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体のINTをPHYの20~40％分ダウン"
+ },
+ {
+  "id": "e656",
+  "mch_id": 656,
+  "side": "enemy",
+  "name": "バイトバンディット フラペチーノ",
+  "name_en": "Byte Bandit-frappuccino",
+  "image": "assets/enemies/166.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "コードインジェクション 1.5",
+  "agi_pct": 0.4028,
+  "hp_pct": 0.375,
+  "stats": {
+   "hp": 19,
+   "phy": 19,
+   "int": 5,
+   "agi": 13
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "weaken",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体のINTをPHYの20~40％分ダウン"
+ },
+ {
+  "id": "e659",
+  "mch_id": 659,
+  "side": "enemy",
+  "name": "バイトバンディット ヴェンティ ドッピオ",
+  "name_en": "Byte Bandit-venti doppio",
+  "image": "assets/enemies/169.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "コードインジェクション 1.0",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.3532,
+  "stats": {
+   "hp": 16,
+   "phy": 10,
+   "int": 3,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "weaken",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体のINTをPHYの10~20％分ダウン"
+ },
+ {
+  "id": "e660",
+  "mch_id": 660,
+  "side": "enemy",
+  "name": "バイトバンディット フラペチーノ ドッピオ",
+  "name_en": "Byte Bandit-frappuccino doppio",
+  "image": "assets/enemies/170.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "コードインジェクション 1.5",
+  "agi_pct": 0.4028,
+  "hp_pct": 0.375,
+  "stats": {
+   "hp": 19,
+   "phy": 19,
+   "int": 5,
+   "agi": 13
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "weaken",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体のINTをPHYの20~40％分ダウン"
+ },
+ {
+  "id": "e661",
+  "mch_id": 661,
+  "side": "enemy",
+  "name": "ベーグル ショート",
+  "name_en": "Bagle-short",
+  "image": "assets/enemies/181.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "フィッシング 1.0",
+  "agi_pct": 0.006,
+  "hp_pct": 0.369,
+  "stats": {
+   "hp": 18,
+   "phy": 3,
+   "int": 5,
+   "agi": 3
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にINTの10〜30％分ダメージ"
+ },
+ {
+  "id": "e662",
+  "mch_id": 662,
+  "side": "enemy",
+  "name": "ベーグル トール",
+  "name_en": "Bagle-tall",
+  "image": "assets/enemies/182.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "フィッシング 1.2",
+  "agi_pct": 0.006,
+  "hp_pct": 0.3889,
+  "stats": {
+   "hp": 21,
+   "phy": 4,
+   "int": 6,
+   "agi": 3
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にINTの25〜45％分ダメージ"
+ },
+ {
+  "id": "e664",
+  "mch_id": 664,
+  "side": "enemy",
+  "name": "ベーグル ヴェンティ",
+  "name_en": "Bagle-venti",
+  "image": "assets/enemies/184.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "フィッシング 2.0",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.3889,
+  "stats": {
+   "hp": 21,
+   "phy": 4,
+   "int": 9,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にINTの10〜50％分ダメージ"
+ },
+ {
+  "id": "e665",
+  "mch_id": 665,
+  "side": "enemy",
+  "name": "ベーグル マキアート",
+  "name_en": "Bagle-macchiato",
+  "image": "assets/enemies/185.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "フィッシング 1.2",
+  "agi_pct": 0.006,
+  "hp_pct": 0.3889,
+  "stats": {
+   "hp": 21,
+   "phy": 4,
+   "int": 6,
+   "agi": 3
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にINTの25〜45％分ダメージ"
+ },
+ {
+  "id": "e667",
+  "mch_id": 667,
+  "side": "enemy",
+  "name": "ベーグル トール ドッピオ",
+  "name_en": "Bagle-tall doppio",
+  "image": "assets/enemies/366.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "フィッシング 1.2",
+  "agi_pct": 0.006,
+  "hp_pct": 0.3889,
+  "stats": {
+   "hp": 21,
+   "phy": 4,
+   "int": 6,
+   "agi": 3
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にINTの25〜45％分ダメージ"
+ },
+ {
+  "id": "e668",
+  "mch_id": 668,
+  "side": "enemy",
+  "name": "ベーグル グランデ ドッピオ",
+  "name_en": "Bagle-grande doppio",
+  "image": "assets/enemies/367.png",
+  "rarity": 2,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ディープラーニング 1.0",
+  "agi_pct": 0.1429,
+  "hp_pct": 0.3294,
+  "stats": {
+   "hp": 15,
+   "phy": 4,
+   "int": 6,
+   "agi": 5
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もHPの低い味方のINTをINTの5〜15%分アップ"
+ },
+ {
+  "id": "e444",
+  "mch_id": 444,
+  "side": "enemy",
+  "name": "ゴースト・カエサル",
+  "name_en": "Ghost Julius Caesar",
+  "image": "assets/enemies/444.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ドラゴンクエイク",
+  "agi_pct": 0.4762,
+  "hp_pct": 0.4365,
+  "stats": {
+   "hp": 332,
+   "phy": 64,
+   "int": 98,
+   "agi": 90
+  },
+  "effects": [
+   {
+    "kind": "poison",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にINTの25〜30%ダメージを与え、敵全体のINTをこのヒーローのINTの9%分ダウン"
+ },
+ {
+  "id": "e455",
+  "mch_id": 455,
+  "side": "enemy",
+  "name": "ゴースト・劉備",
+  "name_en": "Ghost Liu Bei",
+  "image": "assets/enemies/455.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "求法の旅",
+  "agi_pct": 0.4603,
+  "hp_pct": 0.4187,
+  "stats": {
+   "hp": 292,
+   "phy": 134,
+   "int": 149,
+   "agi": 84
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "poison",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にINTの35〜40%ダメージを与え、最もAGIの高い敵を毒状態にさせることがある。最もHPの低い味方のINTをこのヒーローのINTの10％分アップ"
+ },
+ {
+  "id": "e456",
+  "mch_id": 456,
+  "side": "enemy",
+  "name": "ゴースト・関羽",
+  "name_en": "Ghost Guan Yu",
+  "image": "assets/enemies/456.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "金剛",
+  "agi_pct": 0.496,
+  "hp_pct": 0.4187,
+  "stats": {
+   "hp": 292,
+   "phy": 158,
+   "int": 49,
+   "agi": 93
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "weaken",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "一番PHYの低い敵のHPに自分のPHYの65-75%ダメージ、一番PHYの低い敵のINTを自分のPHYの10%ダウン"
+ },
+ {
+  "id": "e477",
+  "mch_id": 477,
+  "side": "enemy",
+  "name": "ゴースト・孫権",
+  "name_en": "Ghost Sun Quan",
+  "image": "assets/enemies/477.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ワイルドウェストラッシング",
+  "agi_pct": 0.502,
+  "hp_pct": 0.6528,
+  "stats": {
+   "hp": 703,
+   "phy": 221,
+   "int": 76,
+   "agi": 98
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "slow",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "「最もPHYの低い敵にこのヒーローのPHYの22〜37%分ダメージを与える」を2回繰り返し、最もPHYの低い敵のAGIを自分のPHYの5%分ダウン"
+ },
+ {
+  "id": "e480",
+  "mch_id": 480,
+  "side": "enemy",
+  "name": "ゴースト・マルコ・ポーロ",
+  "name_en": "Ghost Marco Polo",
+  "image": "assets/enemies/480.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "求法の旅",
+  "agi_pct": 0.502,
+  "hp_pct": 0.6349,
+  "stats": {
+   "hp": 694,
+   "phy": 57,
+   "int": 262,
+   "agi": 98
+  },
+  "effects": [
+   {
+    "kind": "poison",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にINTの35〜40%ダメージを与え、最もAGIの高い敵を毒状態にさせることがある。最もHPの低い味方のINTをこのヒーローのINTの10％分アップ"
+ },
+ {
+  "id": "e483",
+  "mch_id": 483,
+  "side": "enemy",
+  "name": "ゴースト・チャイコフスキー",
+  "name_en": "Ghost Pyotr Tchaikovsky",
+  "image": "assets/enemies/483.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "三銃士の一斉射撃",
+  "agi_pct": 0.4861,
+  "hp_pct": 0.623,
+  "stats": {
+   "hp": 682,
+   "phy": 40,
+   "int": 322,
+   "agi": 92
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にINTの40〜45%ダメージを与え、自分のINTを5％アップ"
+ },
+ {
+  "id": "e496",
+  "mch_id": 496,
+  "side": "enemy",
+  "name": "ゴースト・趙雲",
+  "name_en": "Ghost Zhao Yun",
+  "image": "assets/enemies/496.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ハード・トレーニング",
+  "agi_pct": 0.4484,
+  "hp_pct": 0.5357,
+  "stats": {
+   "hp": 565,
+   "phy": 231,
+   "int": 38,
+   "agi": 79
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "自分のPHYを5％アップし、先頭の敵のPHYをPHYの5％分ダウン"
+ },
+ {
+  "id": "e497",
+  "mch_id": 497,
+  "side": "enemy",
+  "name": "ゴースト・ファーブル",
+  "name_en": "Ghost Jean-Henri Fabre",
+  "image": "assets/enemies/497.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "友好の証",
+  "agi_pct": 0.4246,
+  "hp_pct": 0.6429,
+  "stats": {
+   "hp": 698,
+   "phy": 44,
+   "int": 231,
+   "agi": 68
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "一番PHYの低い敵のHPに自分のINTの55-65%ダメージ、一番PHYの低い敵のHPに自分のINT低下分の62-66%ダメージ"
+ },
+ {
+  "id": "e523",
+  "mch_id": 523,
+  "side": "enemy",
+  "name": "ゴースト・土方歳三",
+  "name_en": "Ghost Hijikata Toshizo",
+  "image": "assets/enemies/438.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "剣豪の一撃",
+  "agi_pct": 0.4544,
+  "hp_pct": 0.4087,
+  "stats": {
+   "hp": 249,
+   "phy": 165,
+   "int": 30,
+   "agi": 81
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "weaken",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にPHYの60〜70%分ダメージを与え、先頭の敵のPHYを自分のPHYの5％分ダウン"
+ },
+ {
+  "id": "e542",
+  "mch_id": 542,
+  "side": "enemy",
+  "name": "ゴースト・カラミティ・ジェーン",
+  "name_en": "Ghost Calamity Jane",
+  "image": "assets/enemies/494.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "織女星の蒼き煌めき",
+  "agi_pct": 0.5496,
+  "hp_pct": 0.6071,
+  "stats": {
+   "hp": 658,
+   "phy": 39,
+   "int": 226,
+   "agi": 115
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最後尾INT攻撃と睡眠"
+ },
+ {
+  "id": "e545",
+  "mch_id": 545,
+  "side": "enemy",
+  "name": "ゴースト・王キ",
+  "name_en": "Ghost Wang Ki",
+  "image": "assets/enemies/484.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "マハー・デーヴィ・リグ",
+  "agi_pct": 0.4365,
+  "hp_pct": 0.4742,
+  "stats": {
+   "hp": 440,
+   "phy": 174,
+   "int": 39,
+   "agi": 73
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭＋中衛PHY"
+ },
+ {
+  "id": "e558",
+  "mch_id": 558,
+  "side": "enemy",
+  "name": "ゴースト・ダーウィン",
+  "name_en": "Ghost Charles Darwin",
+  "image": "assets/enemies/479.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "世界の終焉を告げる魔笛",
+  "agi_pct": 0.8095,
+  "hp_pct": 0.6746,
+  "stats": {
+   "hp": 716,
+   "phy": 31,
+   "int": 70,
+   "agi": 189
+  },
+  "effects": [
+   {
+    "kind": "shield",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "他人バリア"
+ },
+ {
+  "id": "e559",
+  "mch_id": 559,
+  "side": "enemy",
+  "name": "ゴースト・平賀源内",
+  "name_en": "Ghost Gennai Hiraga",
+  "image": "assets/enemies/553.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ブレイブショット",
+  "agi_pct": 0.4325,
+  "hp_pct": 0.5238,
+  "stats": {
+   "hp": 547,
+   "phy": 38,
+   "int": 346,
+   "agi": 70
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にINTの35〜40%ダメージ"
+ },
+ {
+  "id": "e564",
+  "mch_id": 564,
+  "side": "enemy",
+  "name": "ゴースト・イソップ",
+  "name_en": "Ghost Aesop",
+  "image": "assets/enemies/564.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ラストエンペラー",
+  "agi_pct": 0.4087,
+  "hp_pct": 0.5873,
+  "stats": {
+   "hp": 637,
+   "phy": 229,
+   "int": 39,
+   "agi": 36
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最大HPの高い敵にINT攻撃"
+ },
+ {
+  "id": "e570",
+  "mch_id": 570,
+  "side": "enemy",
+  "name": "ゴースト・ダルタニャン",
+  "name_en": "Ghost D'Artagnan",
+  "image": "assets/enemies/570.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "黄金世紀の一閃",
+  "agi_pct": 0.5913,
+  "hp_pct": 0.4524,
+  "stats": {
+   "hp": 419,
+   "phy": 240,
+   "int": 82,
+   "agi": 125
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にPHYの55〜65％分ダメージを与え、先頭の敵にこのヒーローのPHYがダウンしている分の52~56％分ダメージ"
+ },
+ {
+  "id": "e578",
+  "mch_id": 578,
+  "side": "enemy",
+  "name": "ゴースト・マリー・アントワネット",
+  "name_en": "Ghost Marie Antoinette",
+  "image": "assets/enemies/504.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "猿神退治",
+  "agi_pct": 0.5972,
+  "hp_pct": 0.5317,
+  "stats": {
+   "hp": 551,
+   "phy": 47,
+   "int": 241,
+   "agi": 127
+  },
+  "effects": [
+   {
+    "kind": "poison",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もINTの高い敵にINTの50~60%分ダメージを与え、最もINTの高い敵のINTをこのヒーローのINTの10%分ダウン"
+ },
+ {
+  "id": "e666",
+  "mch_id": 666,
+  "side": "enemy",
+  "name": "ベーグル フラペチーノ",
+  "name_en": "Bagle-frappuccino",
+  "image": "assets/enemies/186.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "フィッシング 1.2",
+  "agi_pct": 0.3194,
+  "hp_pct": 0.4028,
+  "stats": {
+   "hp": 24,
+   "phy": 6,
+   "int": 18,
+   "agi": 11
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にINTの25〜45％分ダメージ"
+ },
+ {
+  "id": "e670",
+  "mch_id": 670,
+  "side": "enemy",
+  "name": "ベーグル フラペチーノ ドッピオ",
+  "name_en": "Bagle-frappuccino doppio",
+  "image": "assets/enemies/369.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "フィッシング 1.2",
+  "agi_pct": 0.3194,
+  "hp_pct": 0.4028,
+  "stats": {
+   "hp": 24,
+   "phy": 6,
+   "int": 18,
+   "agi": 11
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にINTの25〜45％分ダメージ"
+ },
+ {
+  "id": "e677",
+  "mch_id": 677,
+  "side": "enemy",
+  "name": "カメレオン フラペチーノ ドッピオ",
+  "name_en": "Chameleon-frappuccino doppio",
+  "image": "assets/enemies/418.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ウィズダムフラジオレット",
+  "agi_pct": 0.5655,
+  "hp_pct": 0.4286,
+  "stats": {
+   "hp": 305,
+   "phy": 55,
+   "int": 52,
+   "agi": 119
+  },
+  "effects": [
+   {
+    "kind": "heal",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "状態異常解除"
+ },
+ {
+  "id": "e683",
+  "mch_id": 683,
+  "side": "enemy",
+  "name": "ゴースト・伊能忠敬",
+  "name_en": "Ghost Inō Tadataka",
+  "image": "assets/enemies/683.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ウィズダムインクベリー",
+  "agi_pct": 0.8036,
+  "hp_pct": 0.496,
+  "stats": {
+   "hp": 492,
+   "phy": 20,
+   "int": 188,
+   "agi": 188
+  },
+  "effects": [
+   {
+    "kind": "poison",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "前衛の敵にINTの45％分ダメージ、中衛の敵にINTの35％分ダメージ、後衛の敵にINTの20％分ダメージ。最もINTの高い敵を毒状態にすることがある [LE3-Blueberry]"
+ },
+ {
+  "id": "e684",
+  "mch_id": 684,
+  "side": "enemy",
+  "name": "ゴースト・コナン・ドイル",
+  "name_en": "Ghost Arthur Conan Doyle",
+  "image": "assets/enemies/684.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ウィズダムインクベリー",
+  "agi_pct": 0.6587,
+  "hp_pct": 0.5,
+  "stats": {
+   "hp": 510,
+   "phy": 25,
+   "int": 212,
+   "agi": 153
+  },
+  "effects": [
+   {
+    "kind": "poison",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "前衛の敵にINTの45％分ダメージ、中衛の敵にINTの35％分ダメージ、後衛の敵にINTの20％分ダメージ。最もINTの高い敵を毒状態にすることがある [LE3-Blueberry]"
+ },
+ {
+  "id": "e686",
+  "mch_id": 686,
+  "side": "enemy",
+  "name": "ゴースト・ダビデ",
+  "name_en": "Ghost David",
+  "image": "assets/enemies/686.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ウィズダムインクベリー",
+  "agi_pct": 0.7817,
+  "hp_pct": 0.5476,
+  "stats": {
+   "hp": 576,
+   "phy": 74,
+   "int": 166,
+   "agi": 182
+  },
+  "effects": [
+   {
+    "kind": "poison",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "前衛の敵にINTの45％分ダメージ、中衛の敵にINTの35％分ダメージ、後衛の敵にINTの20％分ダメージ。最もINTの高い敵を毒状態にすることがある [LE3-Blueberry]"
+ },
+ {
+  "id": "e691",
+  "mch_id": 691,
+  "side": "enemy",
+  "name": "ゴースト・福沢諭吉",
+  "name_en": "Ghost Fukuzawa Yukichi",
+  "image": "assets/enemies/687.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ブレイブショット",
+  "agi_pct": 0.6528,
+  "hp_pct": 0.4246,
+  "stats": {
+   "hp": 294,
+   "phy": 65,
+   "int": 322,
+   "agi": 152
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にINTの35〜40%ダメージ"
+ },
+ {
+  "id": "e698",
+  "mch_id": 698,
+  "side": "enemy",
+  "name": "ゴースト・孫尚香",
+  "name_en": "Ghost Sun Shangxiang",
+  "image": "assets/enemies/688.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ブレイブハッショウ",
+  "agi_pct": 0.5734,
+  "hp_pct": 0.631,
+  "stats": {
+   "hp": 693,
+   "phy": 155,
+   "int": 64,
+   "agi": 120
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にPHYの25〜30％分ダメージを与え、味方全体のPHYをこのヒーローのPHYの8%分アップ"
+ },
+ {
+  "id": "e701",
+  "mch_id": 701,
+  "side": "enemy",
+  "name": "ゴースト・シートン",
+  "name_en": "Ghost Ernest Thompson Seton",
+  "image": "assets/enemies/685.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ウィズダムフラジオレット",
+  "agi_pct": 0.627,
+  "hp_pct": 0.6964,
+  "stats": {
+   "hp": 747,
+   "phy": 66,
+   "int": 69,
+   "agi": 142
+  },
+  "effects": [
+   {
+    "kind": "heal",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "状態異常解除"
+ },
+ {
+  "id": "e706",
+  "mch_id": 706,
+  "side": "enemy",
+  "name": "ゴースト・甲斐姫",
+  "name_en": "Ghost Kaihime",
+  "image": "assets/enemies/697.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ブレイブフライングタンジェリン",
+  "agi_pct": 0.6429,
+  "hp_pct": 0.4405,
+  "stats": {
+   "hp": 336,
+   "phy": 223,
+   "int": 45,
+   "agi": 150
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "weaken",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体のPHYをこのヒーローのPHYの8%分ダウンし、最後尾の敵にこのヒーローのPHYの40％分ダメージ [LE9 - Tangerine]"
+ },
+ {
+  "id": "e710",
+  "mch_id": 710,
+  "side": "enemy",
+  "name": "ゴースト・MCHアーティスト",
+  "name_en": "Ghost MCH Artist",
+  "image": "assets/enemies/712.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "聖体礼儀",
+  "agi_pct": 0.4405,
+  "hp_pct": 0.4444,
+  "stats": {
+   "hp": 378,
+   "phy": 53,
+   "int": 241,
+   "agi": 75
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "一番PHYの低い敵のHPに自分のINTの55-65%ダメージ、一番PHYの低い敵のHPに自分のINT低下分の62-66%ダメージ"
+ },
+ {
+  "id": "e712",
+  "mch_id": 712,
+  "side": "enemy",
+  "name": "ゴースト・MCHウォーリアー",
+  "name_en": "Ghost MCH Warrior",
+  "image": "assets/enemies/710.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "短橋狭馬",
+  "agi_pct": 0.5972,
+  "hp_pct": 0.5615,
+  "stats": {
+   "hp": 600,
+   "phy": 255,
+   "int": 42,
+   "agi": 127
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "一番PHYの低い敵のHPに、自分のPHYの50%-55%分ダメージ / 一番PHYの低い敵のHPに、自分のPHYの10%-15%分ダメージ / 最後尾の味方のPHYを、自分のPHYの8%分アップ"
+ },
+ {
+  "id": "e717",
+  "mch_id": 717,
+  "side": "enemy",
+  "name": "ゴースト・プラトン",
+  "name_en": "Ghost Plato",
+  "image": "assets/enemies/704.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ブレイブフライングタンジェリン",
+  "agi_pct": 0.5298,
+  "hp_pct": 0.4881,
+  "stats": {
+   "hp": 450,
+   "phy": 261,
+   "int": 64,
+   "agi": 110
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "weaken",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体のPHYをこのヒーローのPHYの8%分ダウンし、最後尾の敵にこのヒーローのPHYの40％分ダメージ [LE9 - Tangerine]"
+ },
+ {
+  "id": "e727",
+  "mch_id": 727,
+  "side": "enemy",
+  "name": "ゴースト・ライト兄弟",
+  "name_en": "Ghost Wright Brothers",
+  "image": "assets/enemies/725.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ブレイブショット",
+  "agi_pct": 0.8175,
+  "hp_pct": 0.4583,
+  "stats": {
+   "hp": 420,
+   "phy": 47,
+   "int": 257,
+   "agi": 193
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にINTの35〜40%ダメージ"
+ },
+ {
+  "id": "e731",
+  "mch_id": 731,
+  "side": "enemy",
+  "name": "ゴースト・サロメ",
+  "name_en": "Ghost Salome",
+  "image": "assets/enemies/731.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ブレイブミズラーブ",
+  "agi_pct": 0.8135,
+  "hp_pct": 0.627,
+  "stats": {
+   "hp": 684,
+   "phy": 208,
+   "int": 43,
+   "agi": 191
+  },
+  "effects": [
+   {
+    "kind": "bleed",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭＋中衛PHY"
+ },
+ {
+  "id": "e734",
+  "mch_id": 734,
+  "side": "enemy",
+  "name": "ゴースト・出雲阿国",
+  "name_en": "Ghost Izumo no Okuni",
+  "image": "assets/enemies/696.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ブレイブミズラーブ",
+  "agi_pct": 0.5159,
+  "hp_pct": 0.5516,
+  "stats": {
+   "hp": 579,
+   "phy": 313,
+   "int": 59,
+   "agi": 105
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭＋中衛PHY"
+ },
+ {
+  "id": "e741",
+  "mch_id": 741,
+  "side": "enemy",
+  "name": "ゴースト・樋口一葉",
+  "name_en": "Ghost Higuchi Ichiyō",
+  "image": "assets/enemies/741.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "グリーンリース",
+  "agi_pct": 0.7857,
+  "hp_pct": 0.4921,
+  "stats": {
+   "hp": 465,
+   "phy": 39,
+   "int": 311,
+   "agi": 183
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "haste",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の味方のPHY / AGIをINTの15％分アップ"
+ },
+ {
+  "id": "e748",
+  "mch_id": 748,
+  "side": "enemy",
+  "name": "ゴースト・徳川慶喜",
+  "name_en": "Ghost Tokugawa Yoshinobu",
+  "image": "assets/enemies/422.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "グリーンリース",
+  "agi_pct": 0.5298,
+  "hp_pct": 0.5397,
+  "stats": {
+   "hp": 567,
+   "phy": 57,
+   "int": 225,
+   "agi": 110
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "haste",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の味方のPHY / AGIをINTの15％分アップ"
+ },
+ {
+  "id": "e756",
+  "mch_id": 756,
+  "side": "enemy",
+  "name": "ゴースト・サトシ・ナカモト ALPHA CC",
+  "name_en": "Ghost SATOSHI・NAKAMOTO ALPHA CC",
+  "image": "assets/enemies/755.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "バックパス",
+  "agi_pct": 0.7758,
+  "hp_pct": 0.5615,
+  "stats": {
+   "hp": 600,
+   "phy": 222,
+   "int": 85,
+   "agi": 180
+  },
+  "effects": [
+   {
+    "kind": "bleed",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最後尾の味方のINTを、自分のPHYの15%分アップ / 最後尾の味方のAGIを、自分のPHYの15%分アップ"
+ },
+ {
+  "id": "e762",
+  "mch_id": 762,
+  "side": "enemy",
+  "name": "ゴースト・茶々",
+  "name_en": "Ghost Lady Chacha",
+  "image": "assets/enemies/762.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ムジカノーヴァ",
+  "agi_pct": 0.7083,
+  "hp_pct": 0.4484,
+  "stats": {
+   "hp": 399,
+   "phy": 68,
+   "int": 455,
+   "agi": 165
+  },
+  "effects": [
+   {
+    "kind": "heal",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もHPが低い味方に60〜70％の回復効果を与え、自分のINTを5％アップ"
+ },
+ {
+  "id": "e1050",
+  "mch_id": 1050,
+  "side": "enemy",
+  "name": "ゴースト・孫策",
+  "name_en": "Ghost Sun Ce",
+  "image": "assets/enemies/548.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "メガブレイズ",
+  "agi_pct": 0.5099,
+  "hp_pct": 0.5119,
+  "stats": {
+   "hp": 540,
+   "phy": 256,
+   "int": 31,
+   "agi": 104
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もMAXHPが高い敵のHPに、自分のPHYの80%-85%分ダメージ / 最もMAXHPが高い敵を気絶状態にすることがある / 自分のHPに、そのACTIONで対象に与えたダメージの10%-20%分ダメージ / 自分を気絶状態にすることがある"
+ },
+ {
+  "id": "e1063",
+  "mch_id": 1063,
+  "side": "enemy",
+  "name": "ゴースト・花木蘭",
+  "name_en": "Ghost Hua Mulan",
+  "image": "assets/enemies/1063.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "バックパス",
+  "agi_pct": 0.4643,
+  "hp_pct": 0.5913,
+  "stats": {
+   "hp": 639,
+   "phy": 239,
+   "int": 39,
+   "agi": 87
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最後尾の味方のINTを、自分のPHYの15%分アップ / 最後尾の味方のAGIを、自分のPHYの15%分アップ"
+ },
+ {
+  "id": "e1076",
+  "mch_id": 1076,
+  "side": "enemy",
+  "name": "ゴースト・シュレディンガー",
+  "name_en": "Ghost Erwin Schrödinger",
+  "image": "assets/enemies/714.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ぐらふぁい島の霊力開花",
+  "agi_pct": 0.619,
+  "hp_pct": 0.7421,
+  "stats": {
+   "hp": 786,
+   "phy": 59,
+   "int": 118,
+   "agi": 139
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もMAXHPが低い敵のHPに、自分のHP減少分の50%分ダメージ / 自分を恐怖状態にすることがある"
+ },
+ {
+  "id": "e1080",
+  "mch_id": 1080,
+  "side": "enemy",
+  "name": "ゴースト・モンテスキュー",
+  "name_en": "Ghost Montesquieu",
+  "image": "assets/enemies/729.png",
+  "rarity": 3,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "自我の目醒め",
+  "agi_pct": 0.623,
+  "hp_pct": 0.5198,
+  "stats": {
+   "hp": 546,
+   "phy": 42,
+   "int": 223,
+   "agi": 140
+  },
+  "effects": [
+   {
+    "kind": "poison",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最後尾の敵のHPに、自分のINTの45%分ダメージ / 中衛の敵のHPに、自分のINTの65%分ダメージ / 先頭の敵を混乱状態にすることがある"
+ },
+ {
+  "id": "e482",
+  "mch_id": 482,
+  "side": "enemy",
+  "name": "ゴースト・キュリー夫人",
+  "name_en": "Ghost Marie Curie",
+  "image": "assets/enemies/482.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "不思議な光",
+  "agi_pct": 0.4722,
+  "hp_pct": 0.7123,
+  "stats": {
+   "hp": 764,
+   "phy": 57,
+   "int": 247,
+   "agi": 89
+  },
+  "effects": [
+   {
+    "kind": "heal",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もHPが低い味方に60〜70％の回復効果を与え、先頭の味方のINTをINTの5%分アップ"
+ },
+ {
+  "id": "e486",
+  "mch_id": 486,
+  "side": "enemy",
+  "name": "ゴースト・伊達政宗",
+  "name_en": "Ghost Masamune Date",
+  "image": "assets/enemies/486.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "天下統一の一斬",
+  "agi_pct": 0.4861,
+  "hp_pct": 0.75,
+  "stats": {
+   "hp": 787,
+   "phy": 301,
+   "int": 163,
+   "agi": 92
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "weaken",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にPHYの65〜75％分ダメージを与え、先頭の敵のPHYを自分のPHYの10％分ダウン"
+ },
+ {
+  "id": "e488",
+  "mch_id": 488,
+  "side": "enemy",
+  "name": "ゴースト・ヤマトタケル",
+  "name_en": "Ghost Yamato Takeru",
+  "image": "assets/enemies/488.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "インペリアルチャージ",
+  "agi_pct": 0.4861,
+  "hp_pct": 0.8016,
+  "stats": {
+   "hp": 877,
+   "phy": 301,
+   "int": 40,
+   "agi": 92
+  },
+  "effects": [
+   {
+    "kind": "shield",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にPHYの65〜75%分ダメージを与え、自分のPHYを5％アップ"
+ },
+ {
+  "id": "e490",
+  "mch_id": 490,
+  "side": "enemy",
+  "name": "ゴースト・佐々木小次郎",
+  "name_en": "Ghost Kojiro Sasaki",
+  "image": "assets/enemies/490.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "暁に鳴く",
+  "agi_pct": 0.6468,
+  "hp_pct": 0.7183,
+  "stats": {
+   "hp": 766,
+   "phy": 339,
+   "int": 35,
+   "agi": 151
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "haste",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にPHYの35〜40％分ダメージを与え、自分のAGIを15%分アップ"
+ },
+ {
+  "id": "e493",
+  "mch_id": 493,
+  "side": "enemy",
+  "name": "ゴースト・マルクス",
+  "name_en": "Ghost Karl Marx",
+  "image": "assets/enemies/493.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "万能人の遺稿",
+  "agi_pct": 0.4127,
+  "hp_pct": 0.7877,
+  "stats": {
+   "hp": 852,
+   "phy": 56,
+   "int": 334,
+   "agi": 47
+  },
+  "effects": [
+   {
+    "kind": "poison",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にINTの45〜50%ダメージを与え、先頭の敵のINTを自分のINTの10％分ダウン"
+ },
+ {
+  "id": "e495",
+  "mch_id": 495,
+  "side": "enemy",
+  "name": "ゴースト・ナイチンゲール",
+  "name_en": "Ghost Florence Nightingale",
+  "image": "assets/enemies/495.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "攻めること火の如し",
+  "agi_pct": 0.4861,
+  "hp_pct": 0.6825,
+  "stats": {
+   "hp": 731,
+   "phy": 145,
+   "int": 182,
+   "agi": 92
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にPHYの35〜40％分ダメージを与え、最もHPの低い味方のINTをこのヒーローのINTの15％分アップし、自分のPHYを自分のINTの10%アップ"
+ },
+ {
+  "id": "e503",
+  "mch_id": 503,
+  "side": "enemy",
+  "name": "ゴースト・カール大帝",
+  "name_en": "Ghost Charles the Great",
+  "image": "assets/enemies/443.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "織女星の蒼き煌めき",
+  "agi_pct": 0.9048,
+  "hp_pct": 0.5278,
+  "stats": {
+   "hp": 550,
+   "phy": 90,
+   "int": 309,
+   "agi": 239
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最後尾INT攻撃と睡眠"
+ },
+ {
+  "id": "e546",
+  "mch_id": 546,
+  "side": "enemy",
+  "name": "ゴースト・上杉謙信",
+  "name_en": "Ghost Uesugi Kenshin",
+  "image": "assets/enemies/425.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "マン・オブ・ウォー",
+  "agi_pct": 0.7163,
+  "hp_pct": 0.7123,
+  "stats": {
+   "hp": 764,
+   "phy": 36,
+   "int": 222,
+   "agi": 166
+  },
+  "effects": [
+   {
+    "kind": "heal",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "自分のINTを自分のINTの25-30%アップ、自分のHPを回復係数の10%回復"
+ },
+ {
+  "id": "e569",
+  "mch_id": 569,
+  "side": "enemy",
+  "name": "ゴースト・明智光秀",
+  "name_en": "Ghost Akechi Mitsuhide",
+  "image": "assets/enemies/569.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "裏切りの一撃",
+  "agi_pct": 0.6091,
+  "hp_pct": 0.7063,
+  "stats": {
+   "hp": 761,
+   "phy": 193,
+   "int": 194,
+   "agi": 133
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にPHYの60〜70％分ダメージを与え、混乱状態にさせることがある。最もHPの低い味方のPHYをこのヒーローのPHYの10％アップ"
+ },
+ {
+  "id": "e604",
+  "mch_id": 604,
+  "side": "enemy",
+  "name": "ゴースト・ランスロット",
+  "name_en": "Ghost Lancelot",
+  "image": "assets/enemies/460.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ブバスティスの女主",
+  "agi_pct": 0.6389,
+  "hp_pct": 0.7024,
+  "stats": {
+   "hp": 753,
+   "phy": 309,
+   "int": 94,
+   "agi": 145
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最後尾にPHY攻撃、味方全体のPHY30％、INT20％戻し"
+ },
+ {
+  "id": "e610",
+  "mch_id": 610,
+  "side": "enemy",
+  "name": "ゴースト・アレキサンダー",
+  "name_en": "Ghost Alexander the Great",
+  "image": "assets/enemies/463.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "グランダルメ一斉射撃",
+  "agi_pct": 0.8413,
+  "hp_pct": 0.5992,
+  "stats": {
+   "hp": 648,
+   "phy": 195,
+   "int": 236,
+   "agi": 206
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にINTの45〜50%ダメージを与え、自分のINTを10％アップ"
+ },
+ {
+  "id": "e711",
+  "mch_id": 711,
+  "side": "enemy",
+  "name": "ゴースト・ピタゴラス",
+  "name_en": "Ghost Pythagoras",
+  "image": "assets/enemies/711.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ワイルドカード",
+  "agi_pct": 0.9722,
+  "hp_pct": 0.504,
+  "stats": {
+   "hp": 513,
+   "phy": 194,
+   "int": 194,
+   "agi": 302
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "スタン、PHYバフ、INTバフ"
+ },
+ {
+  "id": "e728",
+  "mch_id": 728,
+  "side": "enemy",
+  "name": "ゴースト・一休",
+  "name_en": "Ghost Ikkyu",
+  "image": "assets/enemies/713.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ウィズダムフクリュウ",
+  "agi_pct": 0.4167,
+  "hp_pct": 0.5794,
+  "stats": {
+   "hp": 630,
+   "phy": 72,
+   "int": 384,
+   "agi": 54
+  },
+  "effects": [
+   {
+    "kind": "poison",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にINTの20〜25%ダメージを与え、敵全体のINTをこのヒーローのINTの8%分ダウン"
+ },
+ {
+  "id": "e739",
+  "mch_id": 739,
+  "side": "enemy",
+  "name": "ゴースト・モンゴメリ",
+  "name_en": "Ghost Montgomery",
+  "image": "assets/enemies/739.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ウィズダムフクリュウ",
+  "agi_pct": 0.6091,
+  "hp_pct": 0.4643,
+  "stats": {
+   "hp": 429,
+   "phy": 435,
+   "int": 259,
+   "agi": 133
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "weaken",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にINTの20〜25%ダメージを与え、敵全体のINTをこのヒーローのINTの8%分ダウン"
+ },
+ {
+  "id": "e745",
+  "mch_id": 745,
+  "side": "enemy",
+  "name": "ゴースト・猿田彦",
+  "name_en": "Ghost Sarutahiko",
+  "image": "assets/enemies/715.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "神変浄化の音色",
+  "agi_pct": 0.75,
+  "hp_pct": 0.4583,
+  "stats": {
+   "hp": 420,
+   "phy": 66,
+   "int": 609,
+   "agi": 173
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最後尾INT攻撃と睡眠"
+ },
+ {
+  "id": "e749",
+  "mch_id": 749,
+  "side": "enemy",
+  "name": "ゴースト・金太郎",
+  "name_en": "Ghost Kintaro",
+  "image": "assets/enemies/718.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "愛を取らないでください",
+  "agi_pct": 0.5437,
+  "hp_pct": 0.6587,
+  "stats": {
+   "hp": 711,
+   "phy": 351,
+   "int": 35,
+   "agi": 114
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "bleed",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にPHYダメージ、PHYの一番低い敵に出血"
+ },
+ {
+  "id": "e774",
+  "mch_id": 774,
+  "side": "enemy",
+  "name": "ゴースト・石川五右衛門",
+  "name_en": "Ghost Goemon Ishikawa",
+  "image": "assets/enemies/774.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ジャングル大帝",
+  "agi_pct": 0.6726,
+  "hp_pct": 0.7579,
+  "stats": {
+   "hp": 813,
+   "phy": 238,
+   "int": 86,
+   "agi": 155
+  },
+  "effects": [
+   {
+    "kind": "bleed",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にPHYダメージ、PHYの一番低い敵に出血"
+ },
+ {
+  "id": "e775",
+  "mch_id": 775,
+  "side": "enemy",
+  "name": "ゴースト・パーシヴァル",
+  "name_en": "Ghost Percival",
+  "image": "assets/enemies/462.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "クラーケン",
+  "agi_pct": 0.8036,
+  "hp_pct": 0.8095,
+  "stats": {
+   "hp": 888,
+   "phy": 284,
+   "int": 32,
+   "agi": 188
+  },
+  "effects": [
+   {
+    "kind": "shield",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "前衛の敵にPHYの20％分ダメージ、中衛の敵に40%分のダメージ、後衛の敵に75%分のダメージ [LE2-Ocean] / 前衛の敵にPHYの20％分ダメージ、中衛の敵に40%分のダメージ、後衛の敵に75%分のダメージ"
+ },
+ {
+  "id": "e780",
+  "mch_id": 780,
+  "side": "enemy",
+  "name": "ゴースト・ポカホンタス",
+  "name_en": "Ghost Pocahontas",
+  "image": "assets/enemies/780.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "グリーンリース",
+  "agi_pct": 0.8274,
+  "hp_pct": 0.6885,
+  "stats": {
+   "hp": 744,
+   "phy": 55,
+   "int": 246,
+   "agi": 201
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "haste",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の味方のPHY / AGIをINTの15％分アップ"
+ },
+ {
+  "id": "e782",
+  "mch_id": 782,
+  "side": "enemy",
+  "name": "ゴースト・武蔵坊弁慶",
+  "name_en": "Ghost Benkei",
+  "image": "assets/enemies/782.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "黄金世紀の一閃",
+  "agi_pct": 0.8611,
+  "hp_pct": 0.6468,
+  "stats": {
+   "hp": 699,
+   "phy": 262,
+   "int": 40,
+   "agi": 215
+  },
+  "effects": [
+   {
+    "kind": "bleed",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にPHYの55〜65％分ダメージを与え、先頭の敵にこのヒーローのPHYがダウンしている分の52~56％分ダメージ"
+ },
+ {
+  "id": "e792",
+  "mch_id": 792,
+  "side": "enemy",
+  "name": "ゴースト・ニュートン",
+  "name_en": "Ghost Isaac Newton",
+  "image": "assets/enemies/792.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ワイルドカード",
+  "agi_pct": 0.6786,
+  "hp_pct": 0.7421,
+  "stats": {
+   "hp": 786,
+   "phy": 240,
+   "int": 141,
+   "agi": 157
+  },
+  "effects": [
+   {
+    "kind": "bleed",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "スタン、PHYバフ、INTバフ"
+ },
+ {
+  "id": "e793",
+  "mch_id": 793,
+  "side": "enemy",
+  "name": "ゴースト・服部半蔵",
+  "name_en": "Ghost Hanzo Hattori",
+  "image": "assets/enemies/789.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "神変浄化の音色",
+  "agi_pct": 0.7956,
+  "hp_pct": 0.619,
+  "stats": {
+   "hp": 669,
+   "phy": 82,
+   "int": 258,
+   "agi": 187
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最後尾INT攻撃と睡眠"
+ },
+ {
+  "id": "e797",
+  "mch_id": 797,
+  "side": "enemy",
+  "name": "ゴースト・ラファエロ",
+  "name_en": "Ghost Raffaello Santi",
+  "image": "assets/enemies/797.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "三銃士の一斉射撃",
+  "agi_pct": 0.9683,
+  "hp_pct": 0.5675,
+  "stats": {
+   "hp": 612,
+   "phy": 46,
+   "int": 310,
+   "agi": 286
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にINTの40〜45%ダメージを与え、自分のINTを5％アップ"
+ },
+ {
+  "id": "e802",
+  "mch_id": 802,
+  "side": "enemy",
+  "name": "ゴースト・貂蝉",
+  "name_en": "Ghost Diao Chan",
+  "image": "assets/enemies/432.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ドラゴンクエイク",
+  "agi_pct": 0.6885,
+  "hp_pct": 0.5833,
+  "stats": {
+   "hp": 633,
+   "phy": 76,
+   "int": 318,
+   "agi": 160
+  },
+  "effects": [
+   {
+    "kind": "poison",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にINTの25〜30%ダメージを与え、敵全体のINTをこのヒーローのINTの9%分ダウン"
+ },
+ {
+  "id": "e809",
+  "mch_id": 809,
+  "side": "enemy",
+  "name": "ゴースト・太公望",
+  "name_en": "Ghost Jiang Ziya",
+  "image": "assets/enemies/777.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "三銃士の一斉射撃",
+  "agi_pct": 0.5198,
+  "hp_pct": 0.7262,
+  "stats": {
+   "hp": 777,
+   "phy": 70,
+   "int": 309,
+   "agi": 108
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にINTの40〜45%ダメージを与え、自分のINTを5％アップ"
+ },
+ {
+  "id": "e811",
+  "mch_id": 811,
+  "side": "enemy",
+  "name": "ゴースト・イワン雷帝",
+  "name_en": "Ghost Ivan the Terrible",
+  "image": "assets/enemies/776.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ドラゴンクエイク",
+  "agi_pct": 0.5496,
+  "hp_pct": 0.9286,
+  "stats": {
+   "hp": 1011,
+   "phy": 57,
+   "int": 237,
+   "agi": 115
+  },
+  "effects": [
+   {
+    "kind": "shield",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にINTの25〜30%ダメージを与え、敵全体のINTをこのヒーローのINTの9%分ダウン"
+ },
+ {
+  "id": "e817",
+  "mch_id": 817,
+  "side": "enemy",
+  "name": "ゴースト・メアリ・リード",
+  "name_en": "Ghost Mary Read",
+  "image": "assets/enemies/796.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "インペリアルチャージ",
+  "agi_pct": 0.6944,
+  "hp_pct": 0.6964,
+  "stats": {
+   "hp": 747,
+   "phy": 381,
+   "int": 55,
+   "agi": 161
+  },
+  "effects": [
+   {
+    "kind": "bleed",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にPHYの65〜75%分ダメージを与え、自分のPHYを5％アップ"
+ },
+ {
+  "id": "e818",
+  "mch_id": 818,
+  "side": "enemy",
+  "name": "ゴースト・ベル・スター",
+  "name_en": "Ghost Belle Starr",
+  "image": "assets/enemies/818.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "現代の予言書",
+  "agi_pct": 0.7302,
+  "hp_pct": 0.7302,
+  "stats": {
+   "hp": 780,
+   "phy": 71,
+   "int": 311,
+   "agi": 168
+  },
+  "effects": [
+   {
+    "kind": "poison",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にINTの40〜45%ダメージを与え、先頭の敵のINTを自分のINTの5％分ダウン"
+ },
+ {
+  "id": "e833",
+  "mch_id": 833,
+  "side": "enemy",
+  "name": "ゴースト・ベートーヴェン",
+  "name_en": "Ghost Ludwig van Beethoven",
+  "image": "assets/enemies/423.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "三銃士の一斉射撃",
+  "agi_pct": 0.7679,
+  "hp_pct": 0.5734,
+  "stats": {
+   "hp": 624,
+   "phy": 95,
+   "int": 377,
+   "agi": 176
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にINTの40〜45%ダメージを与え、自分のINTを5％アップ"
+ },
+ {
+  "id": "e842",
+  "mch_id": 842,
+  "side": "enemy",
+  "name": "ゴースト・小野小町",
+  "name_en": "Ghost Ono no Komachi",
+  "image": "assets/enemies/434.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "三銃士の一斉射撃",
+  "agi_pct": 0.7381,
+  "hp_pct": 0.5734,
+  "stats": {
+   "hp": 624,
+   "phy": 26,
+   "int": 338,
+   "agi": 170
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にINTの40〜45%ダメージを与え、自分のINTを5％アップ"
+ },
+ {
+  "id": "e845",
+  "mch_id": 845,
+  "side": "enemy",
+  "name": "ゴースト・黒髭",
+  "name_en": "Ghost Blackbeard",
+  "image": "assets/enemies/506.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ククリ",
+  "agi_pct": 0.8889,
+  "hp_pct": 0.7698,
+  "stats": {
+   "hp": 828,
+   "phy": 243,
+   "int": 110,
+   "agi": 235
+  },
+  "effects": [
+   {
+    "kind": "bleed",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もAGIの高い敵にPHYの55-65%ダメージを与え、最もAGIの高い敵を恐怖状態にすることがある。最もAGIの高い敵のPHYを5％ダウン"
+ },
+ {
+  "id": "e867",
+  "mch_id": 867,
+  "side": "enemy",
+  "name": "ゴースト・ゴッホ",
+  "name_en": "Ghost Vincent van Gogh",
+  "image": "assets/enemies/424.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ブルーブロッサム",
+  "agi_pct": 0.9802,
+  "hp_pct": 0.5437,
+  "stats": {
+   "hp": 570,
+   "phy": 67,
+   "int": 324,
+   "agi": 333
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "haste",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の味方のINT / AGIをINTの10％分アップ"
+ },
+ {
+  "id": "e1053",
+  "mch_id": 1053,
+  "side": "enemy",
+  "name": "ゴースト・ゲーテ",
+  "name_en": "Ghost Goethe",
+  "image": "assets/enemies/743.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "エリートイチゴジェラート",
+  "agi_pct": 0.5813,
+  "hp_pct": 0.8353,
+  "stats": {
+   "hp": 903,
+   "phy": 57,
+   "int": 89,
+   "agi": 122
+  },
+  "effects": [
+   {
+    "kind": "heal",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "haste",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もHPが低い味方に30〜40%の回復効果を与え、最もPHYが高い味方のAGIをこのヒーローのAGIの9％アップ [LE7-Strawberry] / 最もHPが低い味方に30〜40%の回復効果を与え、最もPHYが高い味方のAGIをこのヒーローのAGIの9％アップ"
+ },
+ {
+  "id": "e1085",
+  "mch_id": 1085,
+  "side": "enemy",
+  "name": "ゴースト・スパルタクス",
+  "name_en": "Ghost Spartacus",
+  "image": "assets/enemies/1066.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "エリートフラジオレット",
+  "agi_pct": 0.5655,
+  "hp_pct": 0.9782,
+  "stats": {
+   "hp": 1113,
+   "phy": 57,
+   "int": 35,
+   "agi": 119
+  },
+  "effects": [
+   {
+    "kind": "heal",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "状態異常解除"
+ },
+ {
+  "id": "e1091",
+  "mch_id": 1091,
+  "side": "enemy",
+  "name": "ゴースト・ラクシュミー・バーイ",
+  "name_en": "Ghost Lakshmi Bai",
+  "image": "assets/enemies/431.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ギガブレイズ",
+  "agi_pct": 0.5377,
+  "hp_pct": 0.6667,
+  "stats": {
+   "hp": 714,
+   "phy": 284,
+   "int": 42,
+   "agi": 111
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もMAXHPが高い敵のHPに、自分のPHYの85%-90%分ダメージ / 最もMAXHPが高い敵を気絶状態にすることがある / 自分のHPに、そのACTIONで対象に与えたダメージの10%-20%分ダメージ / 自分を気絶状態にすることがある"
+ },
+ {
+  "id": "e1097",
+  "mch_id": 1097,
+  "side": "enemy",
+  "name": "ゴースト・猿飛佐助",
+  "name_en": "Ghost Sarutobi Sasuke",
+  "image": "assets/enemies/804.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "フル・スロットル",
+  "agi_pct": 0.9048,
+  "hp_pct": 0.7659,
+  "stats": {
+   "hp": 819,
+   "phy": 88,
+   "int": 82,
+   "agi": 239
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "haste",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "自分のAGIを5％アップし、先頭の敵のAGIをAGIの5％分ダウン"
+ },
+ {
+  "id": "e1118",
+  "mch_id": 1118,
+  "side": "enemy",
+  "name": "ゴースト・沖田総司",
+  "name_en": "Ghost Soji Okita",
+  "image": "assets/enemies/437.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "仏の掌",
+  "agi_pct": 0.8571,
+  "hp_pct": 0.6786,
+  "stats": {
+   "hp": 726,
+   "phy": 269,
+   "int": 71,
+   "agi": 212
+  },
+  "effects": [
+   {
+    "kind": "bleed",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "weaken",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体のPHYをこのヒーローのPHYの9%分ダウンし、最後尾の敵にこのヒーローのPHYの50％分ダメージ [LE9 - Tangerine]"
+ },
+ {
+  "id": "e1120",
+  "mch_id": 1120,
+  "side": "enemy",
+  "name": "ゴースト・ニコラ・テスラ",
+  "name_en": "Ghost Nikola Tesla",
+  "image": "assets/enemies/560.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "はかいこうせん",
+  "agi_pct": 0.7421,
+  "hp_pct": 0.7341,
+  "stats": {
+   "hp": 783,
+   "phy": 297,
+   "int": 65,
+   "agi": 172
+  },
+  "effects": [
+   {
+    "kind": "bleed",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もMAXHPが高い敵のHPに、自分のPHYの90%-95%分ダメージ / 最もMAXHPが高い敵を気絶状態にすることがある / 自分のHPに、そのACTIONで対象に与えたダメージの10%-20%分ダメージ / 自分を気絶状態にすることがある"
+ },
+ {
+  "id": "e1127",
+  "mch_id": 1127,
+  "side": "enemy",
+  "name": "ゴースト・武田信玄",
+  "name_en": "Ghost Takeda Shingen",
+  "image": "assets/enemies/519.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ブレイブリッパー",
+  "agi_pct": 0.9286,
+  "hp_pct": 0.8591,
+  "stats": {
+   "hp": 924,
+   "phy": 156,
+   "int": 79,
+   "agi": 244
+  },
+  "effects": [
+   {
+    "kind": "shield",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もAGIの高い敵にPHYの50-60%ダメージを与え、最もAGIの高い敵を恐怖状態にすることがある"
+ },
+ {
+  "id": "e1133",
+  "mch_id": 1133,
+  "side": "enemy",
+  "name": "ゴースト・エイブラハム・リンカーン",
+  "name_en": "Ghost Abraham Lincoln",
+  "image": "assets/enemies/505.png",
+  "rarity": 4,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "アルカロイド",
+  "agi_pct": 0.6825,
+  "hp_pct": 0.6667,
+  "stats": {
+   "hp": 714,
+   "phy": 91,
+   "int": 312,
+   "agi": 158
+  },
+  "effects": [
+   {
+    "kind": "poison",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "前衛の敵にINTの50％分ダメージ、中衛の敵にINTの40％分ダメージ、後衛の敵にINTの20％分ダメージ。最もINTの高い敵を毒状態にすることがある [LE3-Blueberry]"
+ },
+ {
+  "id": "e492",
+  "mch_id": 492,
+  "side": "enemy",
+  "name": "ゴースト・韓信",
+  "name_en": "Ghost Han Xin",
+  "image": "assets/enemies/492.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ディヴィシオ・レグノールム",
+  "agi_pct": 0.5575,
+  "hp_pct": 0.9187,
+  "stats": {
+   "hp": 999,
+   "phy": 306,
+   "int": 51,
+   "agi": 116
+  },
+  "effects": [
+   {
+    "kind": "heal",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "一番HPの低い味方のHPを、PHY回復係数の70%~80%分回復,自分のPHYを、自分のPHYの10%分アップ"
+ },
+ {
+  "id": "e738",
+  "mch_id": 738,
+  "side": "enemy",
+  "name": "ゴースト・ドストエフスキー",
+  "name_en": "Ghost Fyodor Dostoevsky",
+  "image": "assets/enemies/737.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ブレイブ三重奏",
+  "agi_pct": 0.9921,
+  "hp_pct": 0.7817,
+  "stats": {
+   "hp": 849,
+   "phy": 500,
+   "int": 134,
+   "agi": 396
+  },
+  "effects": [
+   {
+    "kind": "bleed",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "PHY低下分で攻撃"
+ },
+ {
+  "id": "e768",
+  "mch_id": 768,
+  "side": "enemy",
+  "name": "ゴースト・ジャックザリッパー",
+  "name_en": "Ghost Jack the Ripper",
+  "image": "assets/enemies/767.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "フル・スロットル",
+  "agi_pct": 1.0,
+  "hp_pct": 0.6151,
+  "stats": {
+   "hp": 666,
+   "phy": 999,
+   "int": 999,
+   "agi": 666
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "haste",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "自分のAGIを5％アップし、先頭の敵のAGIをAGIの5％分ダウン"
+ },
+ {
+  "id": "e770",
+  "mch_id": 770,
+  "side": "enemy",
+  "name": "ゴースト・チュン姉妹",
+  "name_en": "Ghost Trưng Sisters",
+  "image": "assets/enemies/430.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ブレイブ三重奏",
+  "agi_pct": 0.5377,
+  "hp_pct": 0.6032,
+  "stats": {
+   "hp": 651,
+   "phy": 566,
+   "int": 581,
+   "agi": 111
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "PHY低下分で攻撃"
+ },
+ {
+  "id": "e786",
+  "mch_id": 786,
+  "side": "enemy",
+  "name": "ゴースト・ETHEREMON-BLUE",
+  "name_en": "Ghost ETHEREMON-BLUE",
+  "image": "assets/enemies/786.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "死者の日",
+  "agi_pct": 0.9405,
+  "hp_pct": 0.9187,
+  "stats": {
+   "hp": 999,
+   "phy": 150,
+   "int": 999,
+   "agi": 259
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最後尾にPHY攻撃、味方全体のPHY30％、INT20％戻し"
+ },
+ {
+  "id": "e815",
+  "mch_id": 815,
+  "side": "enemy",
+  "name": "ゴースト・コロンブス",
+  "name_en": "Ghost Christopher Columbus",
+  "image": "assets/enemies/815.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ジャングル大帝",
+  "agi_pct": 0.6647,
+  "hp_pct": 0.9722,
+  "stats": {
+   "hp": 1089,
+   "phy": 147,
+   "int": 68,
+   "agi": 154
+  },
+  "effects": [
+   {
+    "kind": "shield",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にPHYダメージ、PHYの一番低い敵に出血"
+ },
+ {
+  "id": "e821",
+  "mch_id": 821,
+  "side": "enemy",
+  "name": "ゴースト・マゼラン",
+  "name_en": "Ghost Magellan",
+  "image": "assets/enemies/821.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "永遠の生命",
+  "agi_pct": 0.8492,
+  "hp_pct": 0.9524,
+  "stats": {
+   "hp": 1047,
+   "phy": 245,
+   "int": 81,
+   "agi": 208
+  },
+  "effects": [
+   {
+    "kind": "shield",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にPHYダメージ、PHYの一番低い敵に出血"
+ },
+ {
+  "id": "e823",
+  "mch_id": 823,
+  "side": "enemy",
+  "name": "ゴースト・天草四郎",
+  "name_en": "Ghost Amakusa Shirō",
+  "image": "assets/enemies/822.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "夕まずめ",
+  "agi_pct": 0.5734,
+  "hp_pct": 0.8472,
+  "stats": {
+   "hp": 909,
+   "phy": 83,
+   "int": 501,
+   "agi": 120
+  },
+  "effects": [
+   {
+    "kind": "heal",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の味方のHPを、回復係数の15%-25%分回復 / 先頭の味方のPHYを、自分のINTの7%-10%分アップ / 先頭の味方のAGIを、自分のINTの6%分アップ"
+ },
+ {
+  "id": "e831",
+  "mch_id": 831,
+  "side": "enemy",
+  "name": "ゴースト・シェイクスピア",
+  "name_en": "Ghost William Shakespeare",
+  "image": "assets/enemies/831.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ワイルドカード",
+  "agi_pct": 0.996,
+  "hp_pct": 0.9187,
+  "stats": {
+   "hp": 999,
+   "phy": 159,
+   "int": 999,
+   "agi": 597
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "スタン、PHYバフ、INTバフ"
+ },
+ {
+  "id": "e832",
+  "mch_id": 832,
+  "side": "enemy",
+  "name": "ゴースト・アン・ボニー",
+  "name_en": "Ghost Anne Bonny",
+  "image": "assets/enemies/830.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "アルカロイド",
+  "agi_pct": 0.6984,
+  "hp_pct": 0.8869,
+  "stats": {
+   "hp": 948,
+   "phy": 55,
+   "int": 317,
+   "agi": 162
+  },
+  "effects": [
+   {
+    "kind": "shield",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "前衛の敵にINTの50％分ダメージ、中衛の敵にINTの40％分ダメージ、後衛の敵にINTの20％分ダメージ。最もINTの高い敵を毒状態にすることがある [LE3-Blueberry]"
+ },
+ {
+  "id": "e834",
+  "mch_id": 834,
+  "side": "enemy",
+  "name": "ゴースト・モーツァルト",
+  "name_en": "Ghost Wolfgang Amadeus Mozart",
+  "image": "assets/enemies/441.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "三銃士の一斉射撃",
+  "agi_pct": 0.7758,
+  "hp_pct": 0.7222,
+  "stats": {
+   "hp": 771,
+   "phy": 349,
+   "int": 374,
+   "agi": 180
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にINTの40〜45%ダメージを与え、自分のINTを5％アップ"
+ },
+ {
+  "id": "e843",
+  "mch_id": 843,
+  "side": "enemy",
+  "name": "ゴースト・真田幸村",
+  "name_en": "Ghost Sanada Yukimura",
+  "image": "assets/enemies/791.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "レッドストライク",
+  "agi_pct": 0.9881,
+  "hp_pct": 0.9563,
+  "stats": {
+   "hp": 1053,
+   "phy": 300,
+   "int": 48,
+   "agi": 351
+  },
+  "effects": [
+   {
+    "kind": "shield",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にPHYの40~60%分ダメージ"
+ },
+ {
+  "id": "e844",
+  "mch_id": 844,
+  "side": "enemy",
+  "name": "ゴースト・ハンニバル",
+  "name_en": "Ghost Hannibal",
+  "image": "assets/enemies/844.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "現代の予言書",
+  "agi_pct": 0.9841,
+  "hp_pct": 0.6885,
+  "stats": {
+   "hp": 744,
+   "phy": 116,
+   "int": 304,
+   "agi": 346
+  },
+  "effects": [
+   {
+    "kind": "poison",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にINTの40〜45%ダメージを与え、先頭の敵のINTを自分のINTの5％分ダウン"
+ },
+ {
+  "id": "e856",
+  "mch_id": 856,
+  "side": "enemy",
+  "name": "ゴースト・ビリー・ザ・キッド",
+  "name_en": "Ghost Billy the Kid",
+  "image": "assets/enemies/487.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ドッグファイト",
+  "agi_pct": 0.9504,
+  "hp_pct": 0.8929,
+  "stats": {
+   "hp": 954,
+   "phy": 82,
+   "int": 353,
+   "agi": 263
+  },
+  "effects": [
+   {
+    "kind": "poison",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もINTの高い敵にINTの45~55%分ダメージを与え、最もINTの高い敵のINTをこのヒーローのINTの9%分ダウン"
+ },
+ {
+  "id": "e864",
+  "mch_id": 864,
+  "side": "enemy",
+  "name": "ゴースト・呂布",
+  "name_en": "Ghost Lü Bu",
+  "image": "assets/enemies/481.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ノルウェーの森",
+  "agi_pct": 0.8452,
+  "hp_pct": 0.875,
+  "stats": {
+   "hp": 942,
+   "phy": 322,
+   "int": 67,
+   "agi": 207
+  },
+  "effects": [
+   {
+    "kind": "shield",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭＋中衛PHY"
+ },
+ {
+  "id": "e881",
+  "mch_id": 881,
+  "side": "enemy",
+  "name": "ゴースト・サトシ・ナカモト OMEGA CC",
+  "name_en": "Ghost SATOSHI・NAKAMOTO OMEGA CC",
+  "image": "assets/enemies/498.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "極上の甘み",
+  "agi_pct": 0.877,
+  "hp_pct": 0.8214,
+  "stats": {
+   "hp": 897,
+   "phy": 339,
+   "int": 48,
+   "agi": 228
+  },
+  "effects": [
+   {
+    "kind": "heal",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "haste",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もHPが低い味方に40〜50%の回復効果を与え、最もPHYが高い味方のAGIをこのヒーローのAGIの13％アップ [LE7-Strawberry]"
+ },
+ {
+  "id": "e885",
+  "mch_id": 885,
+  "side": "enemy",
+  "name": "ゴースト・鉄腕アトム",
+  "name_en": "Ghost Astro boy",
+  "image": "assets/enemies/885.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ノルウェーの森",
+  "agi_pct": 0.7302,
+  "hp_pct": 0.9643,
+  "stats": {
+   "hp": 1077,
+   "phy": 303,
+   "int": 80,
+   "agi": 168
+  },
+  "effects": [
+   {
+    "kind": "shield",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭＋中衛PHY"
+ },
+ {
+  "id": "e888",
+  "mch_id": 888,
+  "side": "enemy",
+  "name": "ゴースト・巴御前",
+  "name_en": "Ghost Tomoe Gozen",
+  "image": "assets/enemies/485.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "旋風斬り",
+  "agi_pct": 0.9048,
+  "hp_pct": 0.9365,
+  "stats": {
+   "hp": 1029,
+   "phy": 481,
+   "int": 349,
+   "agi": 239
+  },
+  "effects": [
+   {
+    "kind": "bleed",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にPHYの55〜65％分ダメージを与え、混乱状態にさせることがある。最もHPの低い味方のPHYをこのヒーローのPHYの5％アップ"
+ },
+ {
+  "id": "e904",
+  "mch_id": 904,
+  "side": "enemy",
+  "name": "ゴースト・源義経",
+  "name_en": "Ghost Minamoto no Yoshitsune",
+  "image": "assets/enemies/459.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "スタンスピーカー",
+  "agi_pct": 0.9246,
+  "hp_pct": 0.869,
+  "stats": {
+   "hp": 939,
+   "phy": 363,
+   "int": 62,
+   "agi": 242
+  },
+  "effects": [
+   {
+    "kind": "bleed",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "一番HPの低い敵のHPに、自分のINTの20%-35%分ダメージ / 一番HPの低い敵を気絶状態にすることがある"
+ },
+ {
+  "id": "e919",
+  "mch_id": 919,
+  "side": "enemy",
+  "name": "ゴースト・坂本龍馬",
+  "name_en": "Ghost Ryoma Sakamoto",
+  "image": "assets/enemies/453.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "グリーンリース",
+  "agi_pct": 0.869,
+  "hp_pct": 0.7937,
+  "stats": {
+   "hp": 858,
+   "phy": 130,
+   "int": 295,
+   "agi": 219
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "haste",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の味方のPHY / AGIをINTの15％分アップ"
+ },
+ {
+  "id": "e928",
+  "mch_id": 928,
+  "side": "enemy",
+  "name": "ゴースト・ラスプーチン",
+  "name_en": "Ghost Grigori Rasputin",
+  "image": "assets/enemies/475.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "グランダルメ一斉射撃",
+  "agi_pct": 0.8532,
+  "hp_pct": 0.8532,
+  "stats": {
+   "hp": 915,
+   "phy": 177,
+   "int": 309,
+   "agi": 209
+  },
+  "effects": [
+   {
+    "kind": "shield",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にINTの45〜50%ダメージを与え、自分のINTを10％アップ"
+ },
+ {
+  "id": "e954",
+  "mch_id": 954,
+  "side": "enemy",
+  "name": "ゴースト・虞美人",
+  "name_en": "Ghost Consort Yu",
+  "image": "assets/enemies/466.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "幻想曲とフーガ ト短調",
+  "agi_pct": 0.8651,
+  "hp_pct": 0.7877,
+  "stats": {
+   "hp": 852,
+   "phy": 363,
+   "int": 114,
+   "agi": 218
+  },
+  "effects": [
+   {
+    "kind": "bleed",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "PHY低下分で攻撃"
+ },
+ {
+  "id": "e972",
+  "mch_id": 972,
+  "side": "enemy",
+  "name": "ゴースト・曹操",
+  "name_en": "Ghost Cao Cao",
+  "image": "assets/enemies/467.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "英雄の一撃",
+  "agi_pct": 0.7619,
+  "hp_pct": 0.9028,
+  "stats": {
+   "hp": 975,
+   "phy": 352,
+   "int": 129,
+   "agi": 175
+  },
+  "effects": [
+   {
+    "kind": "bleed",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の敵にPHYの70〜80％分ダメージを与え、自分のPHYを10％アップ"
+ },
+ {
+  "id": "e984",
+  "mch_id": 984,
+  "side": "enemy",
+  "name": "ゴースト・レオナルド・ダ・ビンチ",
+  "name_en": "Ghost Leonardo da Vinci",
+  "image": "assets/enemies/464.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "グランダルメ一斉射撃",
+  "agi_pct": 0.7222,
+  "hp_pct": 0.881,
+  "stats": {
+   "hp": 945,
+   "phy": 96,
+   "int": 403,
+   "agi": 167
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にINTの45〜50%ダメージを与え、自分のINTを10％アップ"
+ },
+ {
+  "id": "e990",
+  "mch_id": 990,
+  "side": "enemy",
+  "name": "ゴースト・葛飾北斎",
+  "name_en": "Ghost Hokusai",
+  "image": "assets/enemies/895.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "バガヴァッド・ギーター",
+  "agi_pct": 0.8214,
+  "hp_pct": 0.9841,
+  "stats": {
+   "hp": 1206,
+   "phy": 52,
+   "int": 332,
+   "agi": 194
+  },
+  "effects": [
+   {
+    "kind": "heal",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "状態異常解除"
+ },
+ {
+  "id": "e992",
+  "mch_id": 992,
+  "side": "enemy",
+  "name": "ゴースト・クレオパトラ",
+  "name_en": "Ghost Cleopatra",
+  "image": "assets/enemies/433.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "Jurassic D.N.A type:A3",
+  "agi_pct": 0.9563,
+  "hp_pct": 0.996,
+  "stats": {
+   "hp": 1392,
+   "phy": 120,
+   "int": 192,
+   "agi": 264
+  },
+  "effects": [
+   {
+    "kind": "shield",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "自分のPHYを、自分の最大HPの5%分ダウン / 自分のINTを、自分の最大HPの5%分ダウン / 一番INTの低い敵のHPに、自分の最大HPの8%-15%分ダメージ / 一番AGIの低い敵のHPに、自分の最大HPの8%-15%分ダメージ"
+ },
+ {
+  "id": "e1004",
+  "mch_id": 1004,
+  "side": "enemy",
+  "name": "ゴースト・劉邦",
+  "name_en": "Ghost Liu Bang",
+  "image": "assets/enemies/1004.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "神託の軍馬",
+  "agi_pct": 0.9643,
+  "hp_pct": 0.9921,
+  "stats": {
+   "hp": 1329,
+   "phy": 206,
+   "int": 173,
+   "agi": 284
+  },
+  "effects": [
+   {
+    "kind": "shield",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "haste",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "味方全体のAGIを自分のAGIの5〜15%分アップ"
+ },
+ {
+  "id": "e1130",
+  "mch_id": 1130,
+  "side": "enemy",
+  "name": "ゴースト・周瑜",
+  "name_en": "Ghost Zhou Yu",
+  "image": "assets/enemies/1130.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "グリーンリース",
+  "agi_pct": 0.6329,
+  "hp_pct": 0.8651,
+  "stats": {
+   "hp": 927,
+   "phy": 111,
+   "int": 242,
+   "agi": 144
+  },
+  "effects": [
+   {
+    "kind": "shield",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "先頭の味方のPHY / AGIをINTの15％分アップ"
+ },
+ {
+  "id": "e1140",
+  "mch_id": 1140,
+  "side": "enemy",
+  "name": "ゴースト・チンギス・ハン",
+  "name_en": "Ghost Genghis Khan",
+  "image": "assets/enemies/451.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "温州路",
+  "agi_pct": 0.9325,
+  "hp_pct": 0.8413,
+  "stats": {
+   "hp": 906,
+   "phy": 312,
+   "int": 60,
+   "agi": 249
+  },
+  "effects": [
+   {
+    "kind": "shield",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "weaken",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体のPHYをこのヒーローのPHYの10%分ダウンし、最後尾の敵にこのヒーローのPHYの60％分ダメージ [LE9 - Tangerine] / 敵全体のPHYをこのヒーローのPHYの10%分ダウンし、最後尾の敵にこのヒーローのPHYの60％分ダメージ"
+ },
+ {
+  "id": "e1142",
+  "mch_id": 1142,
+  "side": "enemy",
+  "name": "ゴースト・ジャンヌ・ダルク",
+  "name_en": "Ghost Joan of Arc",
+  "image": "assets/enemies/429.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "紫電一閃",
+  "agi_pct": 0.5238,
+  "hp_pct": 0.9603,
+  "stats": {
+   "hp": 1056,
+   "phy": 214,
+   "int": 234,
+   "agi": 109
+  },
+  "effects": [
+   {
+    "kind": "shield",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "自分のPHYを、自分のINTの100%分アップ / 一番HPの低い敵のHPに、自分のPHYの60%-65%分ダメージ / 自分のPHYを、自分のINTの95%分ダウン / 一番HPの低い敵を衰弱状態にすることがある"
+ },
+ {
+  "id": "e1147",
+  "mch_id": 1147,
+  "side": "enemy",
+  "name": "ゴースト・リチャード1世",
+  "name_en": "Ghost Richard I",
+  "image": "assets/enemies/426.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "温州路",
+  "agi_pct": 0.8274,
+  "hp_pct": 0.8968,
+  "stats": {
+   "hp": 957,
+   "phy": 354,
+   "int": 73,
+   "agi": 201
+  },
+  "effects": [
+   {
+    "kind": "bleed",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "weaken",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体のPHYをこのヒーローのPHYの10%分ダウンし、最後尾の敵にこのヒーローのPHYの60％分ダメージ [LE9 - Tangerine] / 敵全体のPHYをこのヒーローのPHYの10%分ダウンし、最後尾の敵にこのヒーローのPHYの60％分ダメージ"
+ },
+ {
+  "id": "e1148",
+  "mch_id": 1148,
+  "side": "enemy",
+  "name": "ゴースト・項羽",
+  "name_en": "Ghost Xiang Yu",
+  "image": "assets/enemies/893.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ブバスティスの女主",
+  "agi_pct": 0.8373,
+  "hp_pct": 0.9683,
+  "stats": {
+   "hp": 1086,
+   "phy": 302,
+   "int": 66,
+   "agi": 205
+  },
+  "effects": [
+   {
+    "kind": "shield",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最後尾にPHY攻撃、味方全体のPHY30％、INT20％戻し"
+ },
+ {
+  "id": "e1151",
+  "mch_id": 1151,
+  "side": "enemy",
+  "name": "ゴースト・ブリュンヒルド",
+  "name_en": "Ghost Brunhild",
+  "image": "assets/enemies/473.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "永遠の生命",
+  "agi_pct": 0.75,
+  "hp_pct": 0.8214,
+  "stats": {
+   "hp": 897,
+   "phy": 347,
+   "int": 53,
+   "agi": 173
+  },
+  "effects": [
+   {
+    "kind": "bleed",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にPHYダメージ、PHYの一番低い敵に出血"
+ },
+ {
+  "id": "e1154",
+  "mch_id": 1154,
+  "side": "enemy",
+  "name": "ゴースト・ジョージ・ワシントン",
+  "name_en": "Ghost George Washington",
+  "image": "assets/enemies/452.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "雑賀衆",
+  "agi_pct": 0.7579,
+  "hp_pct": 0.9464,
+  "stats": {
+   "hp": 1044,
+   "phy": 104,
+   "int": 310,
+   "agi": 174
+  },
+  "effects": [
+   {
+    "kind": "shield",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最もAGIの高い敵にINTの50-60%ダメージを与え、最もAGIの高い敵を混乱状態にすることがある。最もAGIの高い敵のINTを5％ダウン"
+ },
+ {
+  "id": "e1155",
+  "mch_id": 1155,
+  "side": "enemy",
+  "name": "ゴースト・アインシュタイン",
+  "name_en": "Ghost Albert Einstein",
+  "image": "assets/enemies/427.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "サラブーエ伯爵のコレクション",
+  "agi_pct": 0.9603,
+  "hp_pct": 0.9087,
+  "stats": {
+   "hp": 984,
+   "phy": 81,
+   "int": 270,
+   "agi": 271
+  },
+  "effects": [
+   {
+    "kind": "shield",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "INTイチゴ"
+ },
+ {
+  "id": "e1164",
+  "mch_id": 1164,
+  "side": "enemy",
+  "name": "ゴースト・武則天",
+  "name_en": "Ghost Wu Zetian",
+  "image": "assets/enemies/1164.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "樹の種火",
+  "agi_pct": 0.7956,
+  "hp_pct": 0.9464,
+  "stats": {
+   "hp": 1044,
+   "phy": 66,
+   "int": 284,
+   "agi": 187
+  },
+  "effects": [
+   {
+    "kind": "shield",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最後尾の敵のHPに、自分のINTの50%分ダメージ / 中衛の敵のHPに、自分のINTの70%分ダメージ / 先頭の敵を混乱状態にすることがある"
+ },
+ {
+  "id": "e1165",
+  "mch_id": 1165,
+  "side": "enemy",
+  "name": "ゴースト・ヴァスコ・ダ・ガマ",
+  "name_en": "Ghost Vasco da Gama",
+  "image": "assets/enemies/1165.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "ローシュ・ハッシャーナー",
+  "agi_pct": 0.9167,
+  "hp_pct": 0.9881,
+  "stats": {
+   "hp": 1317,
+   "phy": 27,
+   "int": 27,
+   "agi": 240
+  },
+  "effects": [
+   {
+    "kind": "shield",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "他人バリア"
+ },
+ {
+  "id": "e1173",
+  "mch_id": 1173,
+  "side": "enemy",
+  "name": "ゴースト・安倍晴明",
+  "name_en": "Ghost Abe no Seimei",
+  "image": "assets/enemies/428.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "三銃士の一斉射撃",
+  "agi_pct": 0.75,
+  "hp_pct": 0.8869,
+  "stats": {
+   "hp": 948,
+   "phy": 81,
+   "int": 350,
+   "agi": 173
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "敵全体にINTの40〜45%ダメージを与え、自分のINTを5％アップ"
+ },
+ {
+  "id": "e1175",
+  "mch_id": 1175,
+  "side": "enemy",
+  "name": "ゴースト・諸葛亮",
+  "name_en": "Ghost Zhuge Liang",
+  "image": "assets/enemies/596.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "セージファイヤー",
+  "agi_pct": 0.8333,
+  "hp_pct": 0.9405,
+  "stats": {
+   "hp": 1038,
+   "phy": 41,
+   "int": 370,
+   "agi": 203
+  },
+  "effects": [
+   {
+    "kind": "poison",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "最後尾の敵のHPに、自分のINTの50%分ダメージ / 中衛の敵のHPに、自分のINTの75%分ダメージ / 先頭の敵を混乱状態にすることがある"
+ },
+ {
+  "id": "e1177",
+  "mch_id": 1177,
+  "side": "enemy",
+  "name": "ゴースト・卑弥呼",
+  "name_en": "Ghost Himiko",
+  "image": "assets/enemies/448.png",
+  "rarity": 5,
+  "faction": 0,
+  "attributes": [],
+  "skill_name": "友好の証",
+  "agi_pct": 0.6528,
+  "hp_pct": 0.8591,
+  "stats": {
+   "hp": 924,
+   "phy": 109,
+   "int": 372,
+   "agi": 152
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "一番PHYの低い敵のHPに自分のINTの55-65%ダメージ、一番PHYの低い敵のHPに自分のINT低下分の62-66%ダメージ"
+ }
+]

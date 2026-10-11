@@ -1,0 +1,45 @@
+{
+ "source": "https://github.com/bearko/mycryptoheroes",
+ "factions": {
+  "1": {
+   "ja": "朱雀",
+   "en": "SUZAKU"
+  },
+  "2": {
+   "ja": "青龍",
+   "en": "SEIRYU"
+  },
+  "3": {
+   "ja": "玄武",
+   "en": "GENBU"
+  },
+  "4": {
+   "ja": "黄竜",
+   "en": "KOURYU"
+  },
+  "5": {
+   "ja": "白虎",
+   "en": "BYAKKO"
+  }
+ },
+ "backgrounds": [
+  "assets/backgrounds/1001.webp",
+  "assets/backgrounds/1003.webp",
+  "assets/backgrounds/1023.webp",
+  "assets/backgrounds/1038.webp",
+  "assets/backgrounds/1050.webp",
+  "assets/backgrounds/2105.webp",
+  "assets/backgrounds/2405.webp",
+  "assets/backgrounds/2705.webp"
+ ],
+ "counts": {
+  "heroes": 194,
+  "enemies": 200,
+  "extensions": 24
+ },
+ "credits": {
+  "chris": "ドット絵：こじもこ",
+  "navi_ain": "ドット絵：こじもこ",
+  "mch_images": "ヒーロー・エクステンション・エネミー画像: My Crypto Heroes（MCH Co., Ltd.）"
+ }
+}
