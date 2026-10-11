@@ -45,6 +45,7 @@ export const PLAYERS = [
     name: "クリスくん",
     nameEn: "Chris",
     skillName: "ガッツ",
+    short: "無料更新 +3／ステージ",
     text: "毎ステージ、マーケットの無料更新を3回得る。",
     effect: { freeRerolls: 3 },
     images: {
@@ -60,6 +61,7 @@ export const PLAYERS = [
     name: "マインちゃん",
     nameEn: "Mine",
     skillName: "ナビゲート",
+    short: "マーケットランク +2",
     text: "マーケットランク+2の状態でクエストを開始する（高レアリティのヒーローが早く出現する）。",
     effect: { rankBonus: 2 },
     images: {
@@ -75,6 +77,7 @@ export const PLAYERS = [
     name: "MAI",
     nameEn: "MAI",
     skillName: "推し活",
+    short: "勝利ごとに1体の効果量 +8%",
     text: "バトルに勝利するたび、パーティのランダムなヒーロー1体のスキル効果量が永続で+8%。",
     effect: { winBuff: 8 },
     images: {
@@ -147,13 +150,21 @@ export const CRYPTO_ENERGY = {
 
 /** 宝箱（参考作 のイベント相当）で選べる報酬 */
 export const TREASURES = [
-  { id: "gum", weight: 3, image: "assets/icons/gum.png", name: "GUM", text: (stage) => `GUM +${treasureGum(stage)}` },
+  {
+    id: "gum",
+    weight: 3,
+    image: "assets/icons/gum.png",
+    name: "GUM",
+    text: (stage) => `GUM +${treasureGum(stage)}`,
+    short: (stage) => `+${treasureGum(stage)}`,
+  },
   {
     id: "hero",
     weight: 3,
     image: "assets/icons/mch_icon.png",
     name: "ヒーロー獲得",
     text: () => "いまのランクで出る最高レアリティのヒーローを1体獲得",
+    short: () => "最高レア ×1",
   },
   {
     id: "extension",
@@ -161,16 +172,39 @@ export const TREASURES = [
     image: "assets/icons/emblem.webp",
     name: "エクステンション",
     text: () => "エクステンションを3つから選んで獲得",
+    short: () => "3つから選択",
   },
-  { id: "ce", weight: 2, image: "assets/icons/ce.png", name: "クリプトエナジー", text: () => "ヒーロー1体のLvを+1（最大Lv4）" },
-  { id: "reroll", weight: 2, image: "assets/icons/cp.png", name: "無料更新", text: () => "マーケットの無料更新+3回" },
-  { id: "maxhp", weight: 2, image: "assets/battle-icons/hp.png", name: "最大HPアップ", text: () => "パーティの最大HPを永続+60" },
+  {
+    id: "ce",
+    weight: 2,
+    image: "assets/icons/ce.png",
+    name: "クリプトエナジー",
+    text: () => "ヒーロー1体のLvを+1（最大Lv4）",
+    short: () => "Lv +1",
+  },
+  {
+    id: "reroll",
+    weight: 2,
+    image: "assets/icons/cp.png",
+    name: "無料更新",
+    text: () => "マーケットの無料更新+3回",
+    short: () => "↻ +3",
+  },
+  {
+    id: "maxhp",
+    weight: 2,
+    image: "assets/battle-icons/hp.png",
+    name: "最大HP",
+    text: () => "パーティの最大HPを永続+60",
+    short: () => "+60",
+  },
   {
     id: "life",
     weight: 1,
     image: "assets/battle-icons/resurrection.png",
-    name: "ライフ回復",
+    name: "ライフ",
     text: () => "ライフ+2（最大10）",
+    short: () => "+2",
   },
 ];
 

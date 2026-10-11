@@ -1,47 +1,39 @@
-// マーケット画面（ヒーローの購入・売却・配置）。
+// マーケット画面（ヒーローの購入・売却・配置）。スマホ1画面に収まるレイアウト。
 
 import { h, img } from "./h.js";
-import { extensionIcon, gumAmount, materialCard, materialDetail, unitCard, unitDetail } from "./components.js";
+import { compactMaterial, compactUnit, extensionIcon, gumAmount, materialCard, unitCard } from "./components.js";
 import { COLUMN_NAMES, materialById, playerById } from "../engine/content.js";
-import { MATERIAL_SLOT, WINS_TO_CLEAR, START_LIVES, marketOdds } from "../engine/balance.js";
+import { MATERIAL_SLOT, WINS_TO_CLEAR, marketOdds, sellValue } from "../engine/balance.js";
 import { effectiveRank, rerollCost } from "../engine/market.js";
 import { canStartBattle, playerTeam, runMods, targetMaterial } from "../engine/run.js";
 
 const RARITY_SHORT = ["", "C", "U", "R", "E", "L"];
 
+function stat(label, value, cls = "") {
+  return h("div", { class: `stat ${cls}` }, h("small", null, label), h("b", null, value));
+}
+
 export function hud(app) {
   const run = app.run;
+  const player = playerById(run.playerId);
   return h(
     "header",
     { class: "hud" },
-    h("div", { class: "hud-item" }, h("span", { class: "hud-label" }, "ステージ"), h("b", null, run.stage)),
     h(
-      "div",
-      { class: "hud-item lives" },
-      h("span", { class: "hud-label" }, "ライフ"),
-      h("b", null, run.lives),
-      h("small", null, `/${START_LIVES}`),
-      run.revived ? h("span", { class: "revived", title: "復活済み" }, img("assets/battle-icons/resurrection.png", "mini-icon")) : null,
+      "button",
+      { class: `hud-avatar ${player.id}`, onClick: () => app.actions.showPlayer(), "aria-label": player.name },
+      img(player.images.idle, player.pixelated === false ? "" : "pixel", player.name),
     ),
-    h(
-      "div",
-      { class: "hud-item" },
-      h("span", { class: "hud-label" }, "勝利"),
-      h("b", null, run.wins),
-      h("small", null, `/${WINS_TO_CLEAR}`),
-    ),
-    h("div", { class: "hud-item gum-item" }, gumAmount(run.gum, "big")),
-    h("div", { class: "hud-item" }, h("span", { class: "hud-label" }, "マーケットランク"), h("b", null, effectiveRank(run))),
+    stat("ステージ", run.stage),
+    stat("ライフ", run.lives, `lives${run.lives <= 3 ? " danger" : ""}`),
+    stat("勝利", `${run.wins}/${WINS_TO_CLEAR}`),
+    h("div", { class: "hud-gum" }, gumAmount(run.gum, "big")),
     h(
       "div",
       { class: "hud-actions" },
-      h("button", { class: "icon-btn", onClick: () => app.actions.showHelp(), title: "遊び方・用語集" }, "？"),
-      h(
-        "button",
-        { class: "icon-btn", onClick: () => app.actions.toggleSound(), title: "サウンド" },
-        app.audio.muted ? "♪×" : "♪",
-      ),
-      h("button", { class: "icon-btn", onClick: () => app.actions.confirmQuit(), title: "タイトルへ" }, "≡"),
+      h("button", { class: "icon-btn", onClick: () => app.actions.showHelp(), "aria-label": "遊び方" }, "?"),
+      h("button", { class: "icon-btn", onClick: () => app.actions.toggleSound(), "aria-label": "サウンド" }, app.audio.muted ? "×" : "♪"),
+      h("button", { class: "icon-btn", onClick: () => app.actions.confirmQuit(), "aria-label": "メニュー" }, "≡"),
     ),
   );
 }
@@ -60,7 +52,7 @@ function slotView(app, zone, index) {
   if (!unit) classes.push("empty");
   if (isSelected(sel, "unit", zone, index)) classes.push("selected");
   if (targeting && unit) classes.push("targetable");
-  if (sel && !isSelected(sel, "unit", zone, index) && (sel.type === "unit" || sel.type === "offer")) classes.push("droppable");
+  if (sel && !isSelected(sel, "unit", zone, index)) classes.push("droppable");
   if (app.ui.flash?.zone === zone && app.ui.flash?.index === index) classes.push("flash");
 
   const el = h(
@@ -84,60 +76,49 @@ function slotView(app, zone, index) {
         app.actions.drop(e.dataTransfer.getData("text/plain"), { zone, index });
       },
     },
-    unit ? unitCard(app.db.def(unit.defId), { level: unit.level }) : h("div", { class: "slot-empty" }, zone === "party" ? "" : "控え"),
-    unit && (unit.permMult || unit.cdReduce) ? h("span", { class: "unit-boost", title: "マテリアル等で強化済み" }, "+") : null,
+    unit
+      ? unitCard(app.db.def(unit.defId), { level: unit.level })
+      : zone === "party"
+        ? h("span", { class: "slot-label" }, COLUMN_NAMES[index % COLUMN_NAMES.length])
+        : null,
+    unit && (unit.permMult || unit.cdReduce) ? h("span", { class: "unit-boost" }, "+") : null,
   );
   return el;
 }
 
-function boardView(app) {
+function boardSection(app) {
   const run = app.run;
   const team = playerTeam(run, app.db);
   return h(
     "section",
-    { class: "panel board-panel" },
+    { class: "board" },
     h(
       "div",
-      { class: "panel-head" },
-      h("h2", null, "パーティ"),
-      h("div", { class: "party-hp" }, img("assets/battle-icons/hp.png", "mini-icon"), `パーティHP ${team.maxHp}`),
+      { class: "board-head" },
+      h("span", { class: "party-hp", title: "パーティHP" }, img("assets/battle-icons/hp.png", "mini-icon"), team.maxHp),
     ),
     h(
       "div",
-      { class: "col-labels" },
-      COLUMN_NAMES.map((n) => h("span", null, n)),
-    ),
-    h(
-      "div",
-      { class: "grid party-grid" },
+      { class: "party-grid" },
       run.party.map((_, i) => slotView(app, "party", i)),
     ),
-    h("div", { class: "panel-head sub" }, h("h3", null, "控え"), h("small", null, "控えのヒーローはバトルに参加しません")),
     h(
       "div",
-      { class: "grid bench-grid" },
+      { class: "bench-grid" },
       run.bench.map((_, i) => slotView(app, "bench", i)),
     ),
   );
 }
 
 function offerView(app, offer, index) {
-  const sel = app.ui.selected;
   const run = app.run;
-  if (!offer) {
-    return h("div", { class: `offer sold${index === MATERIAL_SLOT ? " material-slot" : ""}` }, h("span", null, "SOLD"));
-  }
-  const affordable = run.gum >= offer.cost;
-  const card =
-    offer.type === "hero" ? unitCard(app.db.def(offer.defId), { level: 0 }) : materialCard(materialById(offer.id));
+  if (!offer) return h("div", { class: `offer sold${index === MATERIAL_SLOT ? " material-slot" : ""}` }, "SOLD");
   const owned =
-    offer.type === "hero"
-      ? [...run.party, ...run.bench].filter((u) => u && u.defId === offer.defId).length
-      : 0;
-  const el = h(
+    offer.type === "hero" ? [...run.party, ...run.bench].filter((u) => u && u.defId === offer.defId).length : 0;
+  return h(
     "div",
     {
-      class: `offer${isSelected(sel, "offer", index) ? " selected" : ""}${affordable ? "" : " expensive"}${
+      class: `offer${isSelected(app.ui.selected, "offer", index) ? " selected" : ""}${run.gum >= offer.cost ? "" : " expensive"}${
         offer.type === "material" ? " material-slot" : ""
       }`,
       draggable: "true",
@@ -147,29 +128,39 @@ function offerView(app, offer, index) {
         e.dataTransfer.effectAllowed = "copy";
       },
     },
-    card,
-    owned ? h("span", { class: "owned-badge", title: "所持数（3体で合成）" }, `所持${owned}`) : null,
+    offer.type === "hero" ? unitCard(app.db.def(offer.defId), { level: 0 }) : materialCard(materialById(offer.id)),
+    owned ? h("span", { class: "owned-badge" }, `×${owned}`) : null,
     h("div", { class: "price" }, gumAmount(offer.cost)),
   );
-  return el;
 }
 
-function marketView(app) {
+function marketSection(app) {
   const run = app.run;
   const odds = marketOdds(effectiveRank(run));
   const cost = rerollCost(run);
   const locked = run.market.locked;
   return h(
     "section",
-    { class: "panel market-panel" },
+    { class: "market" },
     h(
       "div",
-      { class: "panel-head" },
-      h("h2", null, "マーケット"),
+      { class: "market-head" },
+      h("span", { class: "rank-chip", title: "マーケットランク" }, "R", h("b", null, effectiveRank(run))),
       h(
         "div",
-        { class: "odds", title: "マーケットランクごとのレアリティ出現率" },
-        odds.map((w, i) => (w > 0 ? h("span", { class: `odds-item r${i + 1}` }, `${RARITY_SHORT[i + 1]} ${w}%`) : null)),
+        { class: "odds" },
+        odds.map((w, i) => (w > 0 ? h("span", { class: `odds-item r${i + 1}` }, `${RARITY_SHORT[i + 1]}${w}`) : null)),
+      ),
+      h(
+        "button",
+        { class: "btn small reroll-btn", onClick: () => app.actions.reroll(), "aria-label": "ラインナップ更新" },
+        "↻ ",
+        cost === 0 ? h("span", { class: "free" }, `×${run.freeRerolls}`) : gumAmount(cost),
+      ),
+      h(
+        "button",
+        { class: `btn small lock-btn${locked ? " active" : ""}`, onClick: () => app.actions.toggleLock(), "aria-label": "取り置き" },
+        locked ? "取置中" : "取置",
       ),
     ),
     h(
@@ -177,161 +168,88 @@ function marketView(app) {
       { class: `offers${locked ? " locked" : ""}` },
       run.market.offers.map((o, i) => offerView(app, o, i)),
     ),
-    h(
-      "div",
-      { class: "market-actions" },
-      h(
-        "button",
-        { class: "btn", onClick: () => app.actions.reroll(), disabled: run.pending.length ? true : null },
-        "ラインナップ更新 ",
-        cost === 0 ? h("span", { class: "free" }, `無料 ×${run.freeRerolls}`) : gumAmount(cost),
-      ),
-      h(
-        "button",
-        {
-          class: `btn${locked ? " active" : ""}`,
-          onClick: () => app.actions.toggleLock(),
-          title: "取り置きすると、次のステージも同じラインナップになります",
-        },
-        locked ? "取り置き中" : "取り置き",
-      ),
-      h("span", { class: "item-uses" }, run.itemUses > 0 ? "マテリアル購入 残り1回" : "マテリアル購入済み"),
-    ),
-    h("p", { class: "hint market-hint" }, "タップで詳細、もう一度タップで購入。空いている枠へドラッグしても購入できます。"),
   );
 }
 
-function detailView(app) {
+function infoBar(app) {
   const run = app.run;
   const sel = app.ui.selected;
-  const mods = runMods(run, app.db);
-  let body = h(
-    "div",
-    { class: "detail-empty" },
-    h("p", null, "ヒーローやマテリアルをタップすると詳細が表示されます。"),
-    h(
-      "ul",
-      { class: "tips" },
-      h("li", null, "同じヒーローを3体集めるとLv2、Lv2を2体でLv3に合成。合成するとエクステンションを獲得できます。"),
-      h("li", null, "パーティのヒーローをタップ → 別の枠をタップで入れ替え。ドラッグでも動かせます。"),
-      h("li", null, "スキルの「隣接する味方」は上下左右の枠です（斜めは含みません）。"),
-    ),
-  );
-  if (sel?.type === "offer") {
+  const ev = run.pending[0];
+  let body;
+  if (ev?.type === "target") {
+    const m = targetMaterial(ev.id);
+    body = h(
+      "div",
+      { class: "compact target" },
+      h("div", { class: "compact-art material" }, img(m.image, "", m.name)),
+      h(
+        "div",
+        { class: "compact-body" },
+        h("div", { class: "compact-title" }, h("span", { class: "compact-name" }, m.name)),
+        h("div", { class: "compact-fx" }, h("span", { class: "fx-chip" }, m.text)),
+      ),
+      h("div", { class: "compact-actions" }, h("span", { class: "target-hint" }, "対象を選択")),
+    );
+  } else if (sel?.type === "offer" && run.market.offers[sel.index]) {
     const offer = run.market.offers[sel.index];
-    if (offer?.type === "hero") {
-      body = unitDetail(app.db.def(offer.defId), {
-        actions: h("button", { class: "btn primary", onClick: () => app.actions.buy(sel.index) }, "購入する ", gumAmount(offer.cost)),
+    const buy = h("button", { class: "btn primary", onClick: () => app.actions.buy(sel.index) }, "購入", gumAmount(offer.cost));
+    if (offer.type === "hero") {
+      const def = app.db.def(offer.defId);
+      body = compactUnit(def, {
+        actions: [buy, h("button", { class: "btn small info-btn", onClick: () => app.actions.showUnit(offer.defId) }, "詳細")],
       });
-    } else if (offer?.type === "material") {
-      body = materialDetail(
-        materialById(offer.id),
-        h("button", { class: "btn primary", onClick: () => app.actions.buy(sel.index) }, "購入する ", gumAmount(offer.cost)),
-      );
+    } else {
+      body = compactMaterial(materialById(offer.id), [buy]);
     }
-  } else if (sel?.type === "unit") {
+  } else if (sel?.type === "unit" && run[sel.zone][sel.index]) {
     const unit = run[sel.zone][sel.index];
-    if (unit) {
-      const def = app.db.def(unit.defId);
-      body = unitDetail(def, {
-        unit,
-        sellBonus: mods.sellBonus,
-        actions: [
-          h("button", { class: "btn danger", onClick: () => app.actions.sell(sel.zone, sel.index) }, "売却する"),
-          h("span", { class: "hint" }, "別の枠をタップすると移動します"),
-        ],
-      });
-    }
-  }
-  return h("section", { class: "panel detail-panel" }, body);
-}
-
-function playerPanel(app) {
-  const run = app.run;
-  const player = playerById(run.playerId);
-  const counts = new Map();
-  for (const id of run.extensions) counts.set(id, (counts.get(id) || 0) + 1);
-  return h(
-    "section",
-    { class: "panel player-panel" },
-    h(
+    const def = app.db.def(unit.defId);
+    const value = sellValue(def, unit.level, runMods(run, app.db).sellBonus);
+    body = compactUnit(def, {
+      unit,
+      actions: [
+        h("button", { class: "btn danger", onClick: () => app.actions.sell(sel.zone, sel.index) }, "売却", gumAmount(`+${value}`)),
+        h("button", { class: "btn small info-btn", onClick: () => app.actions.showUnit(unit.defId, sel) }, "詳細"),
+      ],
+    });
+  } else {
+    const counts = new Map();
+    for (const id of run.extensions) counts.set(id, (counts.get(id) || 0) + 1);
+    body = h(
       "div",
-      { class: "player-card" },
-      h(
-        "div",
-        { class: `player-portrait ${player.id}` },
-        img(player.images.idle, player.pixelated === false ? "" : "pixel", player.name),
-      ),
-      h(
-        "div",
-        { class: "player-info" },
-        h("div", { class: "player-name" }, player.name),
-        h("div", { class: "player-skill" }, h("b", null, `プレイヤースキル「${player.skillName}」`), h("p", null, player.text)),
-      ),
-    ),
-    h(
-      "div",
-      { class: "ext-list" },
-      h("h3", null, "エクステンション"),
+      { class: "ext-strip" },
+      h("span", { class: "strip-label" }, "EXT"),
       counts.size
         ? h(
             "div",
-            { class: "ext-icons" },
+            { class: "ext-list" },
             [...counts.entries()].map(([id, n]) => {
-              const ext = app.db.ext(id);
-              const el = extensionIcon(ext, n);
+              const el = extensionIcon(app.db.ext(id), n);
               el.addEventListener("click", () => app.actions.showExtension(id));
               return el;
             }),
           )
-        : h("p", { class: "hint" }, "合成や宝箱で獲得できます"),
-    ),
-  );
-}
-
-function targetBanner(app) {
-  const ev = app.run.pending[0];
-  if (ev?.type !== "target") return null;
-  const m = targetMaterial(ev.id);
-  return h(
-    "div",
-    { class: "target-banner" },
-    img(m.image, "mini-icon"),
-    h("span", null, `${m.name}：${m.text}。対象のヒーローをタップしてください。`),
-  );
+        : h("span", { class: "strip-empty" }, "—"),
+    );
+  }
+  return h("section", { class: "info-bar" }, body);
 }
 
 export function marketScreen(app) {
-  const run = app.run;
-  const check = canStartBattle(run);
+  const check = canStartBattle(app.run);
   return h(
     "div",
     { class: "screen market-screen" },
     hud(app),
-    targetBanner(app),
-    h(
-      "main",
-      { class: "market-layout" },
-      boardView(app),
-      marketView(app),
-      detailView(app),
-      playerPanel(app),
-    ),
+    h("main", { class: "market-main" }, boardSection(app), marketSection(app), infoBar(app)),
     h(
       "footer",
       { class: "market-footer" },
       h(
         "button",
-        {
-          class: "btn battle-btn",
-          disabled: check.ok ? null : true,
-          title: check.ok ? "" : check.error,
-          onClick: () => app.actions.startBattle(),
-        },
+        { class: `btn battle-btn${check.ok ? "" : " off"}`, onClick: () => app.actions.startBattle() },
         "バトル開始",
       ),
-      !check.ok ? h("span", { class: "hint" }, check.error) : null,
     ),
   );
 }
-

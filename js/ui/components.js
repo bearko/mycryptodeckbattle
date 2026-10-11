@@ -3,7 +3,7 @@
 import { h, img } from "./h.js";
 import { RARITY, baseCooldown, unitHp, sellValue } from "../engine/balance.js";
 import { FACTIONS, KIND_ICONS, KIND_LABELS } from "../engine/content.js";
-import { effectLevelTable, effectText, hasChargeSkill, triggerLabel } from "../engine/units.js";
+import { baseEffects, effectLevelTable, effectText, hasChargeSkill, triggerLabel } from "../engine/units.js";
 
 export function rarityBadge(rarity) {
   return h("span", { class: `rarity-badge r${rarity}` }, RARITY[rarity].name);
@@ -119,6 +119,77 @@ export function unitDetail(def, { unit = null, sellBonus = 0, actions = null } =
   );
 }
 
+/** 効果の短い表記（情報バー・バトル用） */
+export function effectShort(kind, value) {
+  switch (kind) {
+    case "haste":
+      return `隣接チャージ+${value}秒`;
+    case "slow":
+      return `敵チャージ-${value}秒`;
+    case "buff":
+      return `隣接効果量+${value}%`;
+    case "weaken":
+      return `敵効果量-${value}%`;
+    default:
+      return `${KIND_LABELS[kind]} ${value}`;
+  }
+}
+
+function effectChips(def, level, permMult = 0) {
+  const cd = hasChargeSkill(def) ? baseCooldown(def) : null;
+  return baseEffects(def, level).map((e) => {
+    let v = e.value * (1 + permMult / 100);
+    v = e.kind === "haste" || e.kind === "slow" ? Math.round(v * 10) / 10 : Math.round(v);
+    return h(
+      "span",
+      { class: `fx-chip kind-${e.kind}` },
+      h("span", { class: `trigger trigger-${e.trigger}` }, e.trigger === "start" ? "開始" : `${cd}s`),
+      img(KIND_ICONS[e.kind], "kind-icon"),
+      effectShort(e.kind, v),
+    );
+  });
+}
+
+/** 情報バー用のコンパクトなユニット表示 */
+export function compactUnit(def, { unit = null, actions = [] } = {}) {
+  const level = unit?.level ?? 1;
+  return h(
+    "div",
+    { class: "compact" },
+    h("div", { class: `compact-art r${def.rarity}` }, img(def.image, "pixel", def.name)),
+    h(
+      "div",
+      { class: "compact-body" },
+      h(
+        "div",
+        { class: "compact-title" },
+        h("span", { class: "compact-name" }, def.name),
+        unit ? levelStars(level) : null,
+        h("span", { class: `rarity-dot r${def.rarity}`, title: RARITY[def.rarity].name }, RARITY[def.rarity].name[0]),
+        def.faction ? factionBadge(def.faction) : null,
+        unit?.permMult || unit?.cdReduce ? h("span", { class: "boost-mark" }, "+") : null,
+      ),
+      h("div", { class: "compact-fx" }, effectChips(def, level, unit?.permMult || 0)),
+    ),
+    h("div", { class: "compact-actions" }, actions),
+  );
+}
+
+export function compactMaterial(material, actions = []) {
+  return h(
+    "div",
+    { class: "compact" },
+    h("div", { class: "compact-art material" }, img(material.image, "", material.name)),
+    h(
+      "div",
+      { class: "compact-body" },
+      h("div", { class: "compact-title" }, h("span", { class: "compact-name" }, material.name)),
+      h("div", { class: "compact-fx" }, h("span", { class: "fx-chip" }, material.text)),
+    ),
+    h("div", { class: "compact-actions" }, actions),
+  );
+}
+
 export function materialCard(material) {
   return h(
     "div",
@@ -145,7 +216,6 @@ export function materialDetail(material, actions = null) {
       ),
     ),
     h("p", { class: "material-text" }, material.text),
-    h("p", { class: "hint" }, "購入するとすぐに効果を発揮します（1ステージに1回まで）。"),
     actions ? h("div", { class: "detail-actions" }, actions) : null,
   );
 }

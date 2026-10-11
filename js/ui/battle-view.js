@@ -5,7 +5,7 @@ import { playSprite, popText, centerOf } from "./effects.js";
 import { createBattle, stepBattle } from "../engine/battle.js";
 import { TICK, SUDDEN_DEATH_AT, PARTY_SIZE } from "../engine/balance.js";
 import { KIND_ICONS } from "../engine/content.js";
-import { effectText, triggerLabel } from "../engine/units.js";
+import { effectShort, toast } from "./components.js";
 
 const SPEEDS = [1, 2, 4];
 const KIND_SE = {
@@ -51,7 +51,7 @@ export class BattleView {
       h(
         "div",
         { class: "side-info" },
-        h("div", { class: "side-name" }, isPlayer ? side.name : `エネミー：${side.name}`),
+        h("div", { class: "side-name" }, side.name),
         h(
           "div",
           { class: "hpbar" },
@@ -79,12 +79,13 @@ export class BattleView {
         "div",
         { class: `fighter r${f.rarity}` },
         h("div", { class: "fighter-art" }, img(f.image, "pixel", f.name), h("span", { class: `lv lv${f.level}` }, `Lv${f.level}`)),
-        h("div", { class: "fighter-name" }, f.name),
         h("div", { class: "charge" }, h("div", { class: "charge-fill" })),
         h("span", { class: "mult" }),
         f.multicast > 1 ? h("span", { class: "multicast" }, `×${f.multicast}`) : null,
       );
-      card.title = `${f.name} Lv${f.level}\n${f.effects.map((e) => `【${triggerLabel(e.trigger, f.cd)}】${effectText(e.kind, e.value)}`).join("\n")}`;
+      const summary = `${f.name} Lv${f.level}　${f.effects.map((e) => `[${e.trigger === "start" ? "開始" : `${f.cd}s`}] ${effectShort(e.kind, e.value)}`).join("　")}`;
+      card.title = summary;
+      card.addEventListener("click", () => toast(summary));
       this.cards[index].set(slot, card);
       grid.append(card);
     }
@@ -105,7 +106,7 @@ export class BattleView {
     );
     this.enemyView = this.sideView(1);
     this.playerView = this.sideView(0);
-    this.centerEl = h("div", { class: "battle-center" }, h("div", { class: "stage-label" }, `ステージ ${this.app.run.stage}`), this.timerEl, controls);
+    this.centerEl = h("div", { class: "battle-center" }, h("div", { class: "stage-label" }, `ステージ${this.app.run.stage}`), this.timerEl, controls);
     const root = h(
       "div",
       { class: "screen battle-screen", style: { backgroundImage: `url(${this.background})` } },

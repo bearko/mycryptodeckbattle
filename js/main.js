@@ -18,10 +18,12 @@ import {
   extensionInfoModal,
   extensionModal,
   helpModal,
+  playerModal,
   resultPanel,
   selectScreen,
   titleScreen,
   treasureModal,
+  unitModal,
 } from "./ui/screens.js";
 
 const root = document.getElementById("app");
@@ -71,7 +73,6 @@ function currentModal() {
 
 function render() {
   if (app.screen === "battle") return;
-  const scrollY = window.scrollY;
   clear(root);
   let screen;
   switch (app.screen) {
@@ -91,7 +92,6 @@ function render() {
   root.append(screen);
   const modal = currentModal();
   if (modal) root.append(modal);
-  window.scrollTo(0, scrollY);
 }
 
 function validSave() {
@@ -140,10 +140,10 @@ function afterBuy(res, target) {
   if (res.merges?.length) {
     const last = res.merges[res.merges.length - 1];
     audio.se("merge");
-    toast(`合成！ ${app.db.def(last.defId).name}がLv${last.level}になった`, "good");
+    toast(`合成！ ${app.db.def(last.defId).name} Lv${last.level}`, "good");
     flashAt({ zone: last.zone, index: last.index });
   } else if (res.material?.target) {
-    toast(`${res.material.name}を使うヒーローを選んでください`);
+    toast("対象のヒーローを選択");
   } else if (res.material) {
     toast(`${res.material.name}：${res.material.text}`, "good");
   }
@@ -177,12 +177,20 @@ const actions = {
     render();
   },
   confirmQuit() {
-    app.ui.modal = () =>
-      confirmModal(app, "タイトルに戻りますか？（進行状況は保存され、「つづきから」で再開できます）", () => actions.toTitle());
+    app.ui.modal = () => confirmModal(app, "タイトルに戻りますか？（「つづきから」で再開できます）", () => actions.toTitle());
     render();
   },
   showHelp() {
     app.ui.modal = () => helpModal(app);
+    render();
+  },
+  showPlayer() {
+    app.ui.modal = () => playerModal(app);
+    render();
+  },
+  showUnit(defId, pos = null) {
+    const unit = pos ? app.run[pos.zone][pos.index] : null;
+    app.ui.modal = () => unitModal(app, defId, unit);
     render();
   },
   showExtension(id) {
@@ -207,7 +215,7 @@ const actions = {
       if (!res.ok) toast(res.error, "error");
       else {
         audio.se("merge");
-        toast(`${app.db.def(res.unit.defId).name}を強化しました`, "good");
+        toast(`${app.db.def(res.unit.defId).name} 強化`, "good");
         flashAt({ zone, index });
       }
       save();
@@ -252,7 +260,7 @@ const actions = {
     if (!res.ok) toast(res.error, "error");
     else {
       audio.se("sell");
-      toast(`${app.db.def(res.unit.defId).name}を売却 +${res.value} GUM`);
+      toast(`売却 +${res.value} GUM`);
     }
     app.ui.selected = null;
     save();
@@ -285,7 +293,7 @@ const actions = {
   },
   toggleLock() {
     const locked = toggleLock(app.run);
-    toast(locked ? "ラインナップを取り置きしました（次のステージに持ち越し）" : "取り置きを解除しました");
+    toast(locked ? "取り置き：次のステージに持ち越し" : "取り置き解除");
     save();
     render();
   },
@@ -301,7 +309,7 @@ const actions = {
     const res = Run.chooseExtension(app.run, app.db, id);
     if (!res.ok) return toast(res.error, "error");
     audio.se("buff");
-    toast(`${res.extension.name}を獲得！`, "good");
+    toast(`${res.extension.name} 獲得`, "good");
     save();
     render();
   },
@@ -318,7 +326,6 @@ const actions = {
     clear(root);
     app.battleView = new BattleView(app, prep, background(0));
     root.append(app.battleView.el);
-    window.scrollTo(0, 0);
     audio.playBgm("bgm_battle");
     app.battleView.start();
   },
