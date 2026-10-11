@@ -1,0 +1,825 @@
+/* =========================================================================
+   バトル画面・VS演出・結果テロップ
+   ========================================================================= */
+
+.battle-screen {
+  position: relative;
+}
+
+.battle-inner {
+  position: relative;
+  height: 100%;
+  max-width: var(--col);
+  margin: 0 auto;
+  padding: max(8px, env(safe-area-inset-top)) 10px max(8px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+
+.battle-side {
+  flex: 1 1 0;
+  min-height: 0;
+  max-height: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.battle-side.enemy {
+  animation: enter-from-top 0.5s var(--spring) both;
+}
+
+.battle-side.player {
+  animation: enter-from-bottom 0.5s var(--spring) both;
+}
+
+@keyframes enter-from-top {
+  from {
+    transform: translateY(-30px);
+    opacity: 0;
+  }
+}
+
+@keyframes enter-from-bottom {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+}
+
+.side-head {
+  --side: var(--ally);
+  flex: none;
+  position: relative;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 10px 6px 8px;
+  background: linear-gradient(100deg, color-mix(in srgb, var(--side) 22%, #12151c), #12151c 60%);
+  box-shadow: inset 3px 0 0 var(--side), inset 1px 1px 0 var(--edge-hi);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+}
+
+.battle-side.enemy .side-head {
+  --side: var(--enemy);
+}
+
+.side-head.hit {
+  animation: head-hit 0.3s ease-out;
+}
+
+@keyframes head-hit {
+  30% {
+    background: color-mix(in srgb, var(--bad) 55%, #12151c);
+    transform: translateX(-3px);
+  }
+}
+
+.side-leader {
+  width: 44px;
+  height: 50px;
+  flex: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.side-leader img {
+  max-height: 50px;
+  max-width: 44px;
+}
+
+.side-leader.enemy img {
+  max-height: 44px;
+  transform: scaleX(-1);
+}
+
+.side-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.side-name {
+  font-family: var(--font-display);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+}
+
+/* HPバー（受けたダメージは白い残像が遅れて減る） */
+.hpbar {
+  position: relative;
+  height: 16px;
+  background: #07080b;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+}
+
+.hpbar-trail {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: #fff7d6;
+  transition: width 0.5s ease-in 0.28s;
+}
+
+.hpbar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(180deg, #a4ffb0, #2fc25a);
+  transition: width 0.1s linear;
+}
+
+.battle-side.enemy .hpbar-fill {
+  background: linear-gradient(180deg, #ffa1ae, #e2334f);
+}
+
+.hpbar-fill.low {
+  animation: blink 0.6s infinite;
+}
+
+.hpbar-shield {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: repeating-linear-gradient(45deg, rgba(143, 212, 255, 0.9) 0 6px, rgba(190, 232, 255, 0.9) 6px 12px);
+  transition: width 0.12s linear;
+}
+
+.hpbar-text {
+  position: absolute;
+  inset: 0;
+  text-align: center;
+  font-family: var(--font-num);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 700;
+  text-shadow: 0 1px 2px #000, 0 0 3px #000;
+}
+
+.side-status {
+  display: flex;
+  gap: 10px;
+  margin-top: 2px;
+  height: 18px;
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.st {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.shield-st b {
+  color: var(--shield);
+}
+
+.bleed-st b {
+  color: #ff7d8c;
+}
+
+.poison-st b {
+  color: #c79bff;
+}
+
+.battle-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.fighter {
+  position: relative;
+  min-height: 0;
+  padding: 3px 4px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: radial-gradient(ellipse at 50% 120%, color-mix(in srgb, var(--rc) 40%, transparent), transparent 70%),
+    linear-gradient(170deg, rgba(52, 58, 75, 0.92), rgba(18, 21, 29, 0.94) 70%);
+  box-shadow: inset 1px 1px 0 var(--edge-hi), inset -1px -1px 0 var(--edge-lo), inset 0 -3px 0 var(--rc);
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+}
+
+.fighter.empty {
+  background: rgba(0, 0, 0, 0.25);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  cursor: default;
+}
+
+.fighter-art {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  max-height: 64px;
+  aspect-ratio: 1;
+}
+
+.fighter-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.55));
+  animation: bob 2.2s ease-in-out infinite;
+  animation-delay: var(--bd, 0s);
+}
+
+.battle-side.enemy .fighter-art img {
+  transform: scaleX(-1);
+  animation-name: bob-flip;
+}
+
+@keyframes bob-flip {
+  0%,
+  100% {
+    transform: scaleX(-1);
+  }
+  50% {
+    transform: scaleX(-1) translateY(-4px);
+  }
+}
+
+.fighter .lv {
+  position: absolute;
+  right: -6px;
+  top: -2px;
+}
+
+.charge {
+  flex: none;
+  width: 90%;
+  height: 5px;
+  margin-top: 3px;
+  background: #07080b;
+  overflow: hidden;
+  transform: skewX(-20deg);
+}
+
+.charge-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-2), var(--accent));
+}
+
+.charge.ready .charge-fill {
+  background: #fff;
+  box-shadow: 0 0 6px #fff;
+}
+
+.mult {
+  position: absolute;
+  left: 4px;
+  top: 2px;
+  font-family: var(--font-num);
+  font-size: 10px;
+  font-weight: 700;
+  z-index: 1;
+}
+
+.mult.up {
+  color: var(--good);
+}
+
+.mult.down {
+  color: var(--bad);
+}
+
+.multicast {
+  position: absolute;
+  right: 4px;
+  bottom: 9px;
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 10px;
+  color: var(--accent);
+}
+
+.fighter.cast {
+  animation: cast 0.35s ease-out;
+}
+
+.battle-side.enemy .fighter.cast {
+  animation: cast-enemy 0.35s ease-out;
+}
+
+@keyframes cast {
+  35% {
+    transform: translateY(-9px) scale(1.08);
+    filter: brightness(1.6);
+  }
+}
+
+@keyframes cast-enemy {
+  35% {
+    transform: translateY(9px) scale(1.08);
+    filter: brightness(1.6);
+  }
+}
+
+.skill-pop {
+  position: absolute;
+  z-index: 7;
+  transform: translate(-50%, -100%);
+  padding: 1px 8px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  white-space: nowrap;
+  color: #111;
+  background: var(--ally);
+  clip-path: polygon(5px 0, 100% 0, calc(100% - 5px) 100%, 0 100%);
+  pointer-events: none;
+  animation: skill-pop 0.9s ease-out forwards;
+}
+
+.skill-pop.enemy {
+  background: var(--enemy);
+  color: #fff;
+}
+
+@keyframes skill-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -60%) scaleX(0.3);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, -100%) scaleX(1);
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -150%);
+  }
+}
+
+.battle-center {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 3px 8px;
+  background: rgba(10, 12, 17, 0.8);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+}
+
+.stage-label {
+  font-family: var(--font-num);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.timer {
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 22px;
+  min-width: 56px;
+  text-align: center;
+}
+
+.timer.sudden {
+  color: #ffb36b;
+  animation: blink 0.6s infinite;
+}
+
+.battle-controls {
+  display: flex;
+  gap: 3px;
+}
+
+.fx-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* エフェクトはUIより彩度を落とす */
+.fx-sprite {
+  position: absolute;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  z-index: 5;
+  opacity: 0.85;
+  filter: saturate(0.75);
+}
+
+.pop-text {
+  position: absolute;
+  z-index: 6;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-num);
+  font-size: var(--fs, 22px);
+  font-weight: 700;
+  pointer-events: none;
+  text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 0 0 8px rgba(0, 0, 0, 0.6);
+  animation: pop 1s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+  white-space: nowrap;
+}
+
+.pop-text.damage {
+  color: #fff;
+}
+.pop-text.damage.big {
+  color: var(--accent);
+}
+.pop-text.shield {
+  color: var(--shield);
+}
+.pop-text.heal {
+  color: var(--good);
+}
+.pop-text.bleed {
+  color: #ff7d8c;
+  font-size: 15px;
+}
+.pop-text.poison {
+  color: #c79bff;
+  font-size: 15px;
+}
+.pop-text.buff {
+  color: var(--accent);
+  font-size: 13px;
+}
+.pop-text.debuff {
+  color: #ff9b6b;
+  font-size: 13px;
+}
+.pop-text.sudden {
+  color: #ffb36b;
+}
+.pop-text.ext {
+  font-family: var(--font-display);
+  color: var(--accent);
+  font-size: 14px;
+}
+
+@keyframes pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -20%) scale(1.8);
+  }
+  12% {
+    opacity: 1;
+    transform: translate(-50%, -55%) scale(1);
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -150%) scale(0.95);
+  }
+}
+
+.battle-banner {
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  top: 44%;
+  z-index: 8;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 34px;
+  color: #fff;
+  text-shadow: 3px 3px 0 #b8432a;
+  background: linear-gradient(90deg, transparent, rgba(20, 8, 6, 0.9) 20%, rgba(20, 8, 6, 0.9) 80%, transparent);
+  border-top: 3px solid #ffb36b;
+  border-bottom: 3px solid #ffb36b;
+  transform: rotate(-4deg);
+  animation: banner 1.4s forwards;
+}
+
+@keyframes banner {
+  0% {
+    opacity: 0;
+    transform: rotate(-4deg) scaleY(0.1);
+  }
+  12%,
+  82% {
+    opacity: 1;
+    transform: rotate(-4deg) scaleY(1);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ------------------------------------------------------------- VS 演出 */
+
+.battle-intro {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  overflow: hidden;
+  cursor: pointer;
+  background: rgba(5, 6, 10, 0.88);
+  animation: fade-in 0.15s both;
+}
+
+.battle-intro.leave {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.vs-half {
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  height: 58%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16%;
+}
+
+.vs-half.ally {
+  top: -6%;
+  background: linear-gradient(120deg, #0f2a33, #145466);
+  clip-path: polygon(0 0, 100% 0, 100% 72%, 0 100%);
+  animation: vs-ally 0.45s cubic-bezier(0.7, 0, 0.2, 1) both;
+}
+
+.vs-half.enemy {
+  bottom: -6%;
+  justify-content: flex-end;
+  background: linear-gradient(300deg, #3a0f1a, #6b1830);
+  clip-path: polygon(0 28%, 100% 0, 100% 100%, 0 100%);
+  animation: vs-enemy 0.45s cubic-bezier(0.7, 0, 0.2, 1) both;
+}
+
+@keyframes vs-ally {
+  from {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes vs-enemy {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+.vs-half::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(-60deg, rgba(255, 255, 255, 0.05) 0 8px, transparent 8px 20px);
+  animation: stripes-drift 4s linear infinite;
+}
+
+.vs-figure {
+  position: relative;
+  height: 62%;
+  display: flex;
+  align-items: flex-end;
+  animation: vs-figure 0.5s var(--spring) 0.25s both;
+}
+
+.vs-figure img {
+  height: 100%;
+  filter: drop-shadow(8px 8px 0 rgba(0, 0, 0, 0.5));
+}
+
+.vs-figure.enemy img {
+  transform: scaleX(-1);
+}
+
+.vs-figure.mai {
+  height: 46%;
+}
+
+@keyframes vs-figure {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}
+
+.vs-name {
+  position: relative;
+  font-family: var(--font-display);
+  font-size: 18px;
+  max-width: 50%;
+  line-height: 1.2;
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.6);
+  animation: enter-left 0.4s var(--spring) 0.3s both;
+}
+
+.vs-word {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(-8deg);
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 84px;
+  color: var(--accent);
+  text-shadow: 5px 5px 0 #000;
+  animation: vs-slam 0.4s cubic-bezier(0.3, 1.6, 0.4, 1) 0.4s both;
+}
+
+@keyframes vs-slam {
+  from {
+    transform: translate(-50%, -50%) rotate(-8deg) scale(3);
+    opacity: 0;
+  }
+}
+
+/* MCH パッシブカットイン（スタイルは css/cutins/passive_skill_cutin.css） */
+.cutin {
+  z-index: 20;
+  pointer-events: none;
+  animation: cutin 0.8s ease-out forwards;
+}
+
+.cutin .mch-passive-cutin {
+  position: absolute;
+  inset: 0;
+  top: 50%;
+}
+
+.cutin-content {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cutin .mch-passive-cutin-unit__image {
+  width: 64px;
+  height: 64px;
+}
+
+.cutin .mch-passive-cutin-unit__skill-name {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+}
+
+@keyframes cutin {
+  0% {
+    opacity: 0;
+    transform: translate(60%, -50%) skewY(-10deg);
+  }
+  20%,
+  80% {
+    opacity: 1;
+    transform: translate(0, -50%) skewY(-10deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-60%, -50%) skewY(-10deg);
+  }
+}
+
+/* ------------------------------------------------------------- 結果（テロップの手前にキャラクター） */
+
+.result-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  overflow: hidden;
+  background: rgba(5, 6, 10, 0.62);
+  animation: fade-in 0.25s both;
+}
+
+.result-band {
+  position: absolute;
+  left: -15%;
+  right: -15%;
+  top: 22%;
+  height: 104px;
+  display: flex;
+  align-items: center;
+  padding-left: 18%;
+  background: linear-gradient(90deg, #0d0f15, #1d2231 60%, #0d0f15);
+  border-top: 4px solid var(--accent);
+  border-bottom: 4px solid var(--accent);
+  transform: rotate(-7deg);
+  animation: band-in 0.4s cubic-bezier(0.7, 0, 0.2, 1) both;
+}
+
+.result-overlay.lose .result-band {
+  border-color: #5d6478;
+}
+
+.result-band span {
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: clamp(56px, 19vw, 92px);
+  letter-spacing: 0.04em;
+  color: #fff;
+  text-shadow: 5px 5px 0 var(--accent);
+  animation: telop-num 0.45s var(--spring) 0.15s both;
+}
+
+.result-overlay.lose .result-band span {
+  color: #b9bfcc;
+  text-shadow: 5px 5px 0 #2a2f3c;
+}
+
+.result-figure {
+  position: absolute;
+  right: 4%;
+  top: 8%;
+  height: 38%;
+  z-index: 3;
+  display: flex;
+  align-items: flex-end;
+  animation: telop-figure 0.5s var(--spring) 0.3s both;
+}
+
+.result-figure img {
+  height: 100%;
+  filter: drop-shadow(8px 8px 0 rgba(0, 0, 0, 0.5));
+}
+
+.result-figure.mai {
+  height: 26%;
+  top: 14%;
+}
+
+.result-panel {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 4;
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: enter-up 0.45s var(--spring) 0.35s both;
+}
+
+.result-stage {
+  font-family: var(--font-num);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.result-rows {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  align-items: center;
+}
+
+.result-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.result-row small {
+  color: var(--muted);
+}
+
+.result-row b {
+  font-family: var(--font-num);
+  font-size: 22px;
+}
+
+.result-row .win-gauge .segs i {
+  width: 8px;
+  height: 14px;
+}
+
+.result-row.lives b {
+  color: var(--bad);
+}
+
+.result-row.buffed b,
+.result-row.revived b {
+  color: var(--accent);
+}
+
+.mini-unit {
+  width: 34px;
+  height: 34px;
+}
+
+.result-panel .btn.big {
+  width: 100%;
+}

@@ -48,12 +48,13 @@ python3 -m http.server 8080
 - [docs/research.md](docs/research.md): 参考作 の仕組みの調査結果と、確認できなかった点
 - [docs/glossary.md](docs/glossary.md): 参考作 → マイクリ用語の対応表
 - [docs/design.md](docs/design.md): MVP の設計、独自に決めた数値、スキル生成・CPUの仕組み
+- [docs/ui.md](docs/ui.md): UI の設計（リアクション・質感・アニメーション・常に動く背景・色の優先度）
 
 ## 構成
 
 | パス | 内容 |
 | --- | --- |
-| `index.html`, `css/`, `js/main.js`, `js/ui/` | 画面（素の HTML / CSS / ES Modules、ビルド不要） |
+| `index.html`, `css/`, `js/main.js`, `js/ui/` | 画面（素の HTML / CSS / ES Modules、ビルド不要）。`css/theme.css` が共通の質感、`js/ui/ambient.js`・`speech.js`・`fx.js`・`transition.js` が演出 |
 | `js/engine/` | ゲームロジック（DOM非依存。ブラウザとNodeの両方で動く） |
 | `js/engine/balance.js` | バランス数値の集約先 |
 | `content/extensions.json` | エクステンション（トリンケット相当）の効果定義 |

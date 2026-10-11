@@ -1,0 +1,616 @@
+/* =========================================================================
+   モーダル（選択・説明・ヘルプ）
+   ========================================================================= */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(5, 6, 10, 0.72);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
+  animation: fade-in 0.2s ease both;
+}
+
+.modal {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  max-height: 100%;
+  padding: 16px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: modal-in 0.42s cubic-bezier(0.2, 0.9, 0.2, 1) both;
+}
+
+@keyframes modal-in {
+  from {
+    clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+    transform: translateX(-12px);
+  }
+  to {
+    clip-path: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut));
+  }
+}
+
+.modal-title {
+  flex: none;
+  font-size: 22px;
+  text-align: center;
+  transform: skewX(-8deg);
+  text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.6);
+}
+
+.modal-title::after {
+  content: "";
+  display: block;
+  width: 60px;
+  height: 3px;
+  margin: 6px auto 0;
+  background: var(--accent);
+  transform: skewX(-30deg);
+}
+
+.modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.modal-close,
+.modal-actions {
+  flex: none;
+}
+
+.modal-close {
+  align-self: center;
+  min-width: 150px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.confirm-text {
+  text-align: center;
+  font-size: 15px;
+  font-weight: 700;
+  margin: 8px 0;
+}
+
+/* ------------------------------------------------------------- 選択カード */
+
+.choice-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  perspective: 700px;
+}
+
+.choice-card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+  background: linear-gradient(110deg, #2c3142, #161a23 70%);
+  box-shadow: inset 1px 1px 0 var(--edge-hi), inset -1px -1px 0 var(--edge-lo), inset 3px 0 0 var(--accent);
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  animation: card-deal 0.45s var(--spring) both;
+  animation-delay: calc(0.12s + var(--i, 0) * 0.09s);
+  transition: transform 0.15s var(--spring), filter 0.15s;
+}
+
+@keyframes card-deal {
+  from {
+    opacity: 0;
+    transform: translateX(40px) rotateY(-40deg);
+  }
+}
+
+.choice-card:hover,
+.choice-card:active {
+  transform: translateX(4px);
+  filter: brightness(1.2);
+}
+
+.choice-card.picked {
+  animation: picked 0.4s ease-out forwards;
+}
+
+@keyframes picked {
+  40% {
+    transform: scale(1.05);
+    filter: brightness(1.8);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.choice-art {
+  flex: none;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle, rgba(255, 210, 63, 0.22), transparent 70%), #0d0f15;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+}
+
+.choice-art img {
+  max-width: 52px;
+  max-height: 52px;
+}
+
+.choice-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.choice-name {
+  font-family: var(--font-display);
+  font-size: 16px;
+}
+
+.choice-card p {
+  margin: 3px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.owned-count {
+  font-family: var(--font-num);
+  color: var(--accent);
+  font-size: 12px;
+  margin-left: 4px;
+}
+
+/* 宝箱は MCH の金宝箱モーダルと同じ金のグラデーション */
+.treasure-modal .modal {
+  background: linear-gradient(to left top, #ffe766, #998100);
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.6), inset -1px -1px 0 rgba(0, 0, 0, 0.4);
+}
+
+.treasure-modal .modal::before {
+  border-color: #fff;
+}
+
+.treasure-modal .modal-title {
+  color: #2a1f00;
+  text-shadow: 2px 2px 0 rgba(255, 255, 255, 0.5);
+}
+
+.treasure-modal .modal-title::after {
+  background: #2a1f00;
+}
+
+.treasure-chest {
+  align-self: center;
+  width: 64px;
+  height: 64px;
+  color: #3a2b00;
+  animation: chest-open 0.7s var(--spring) both;
+}
+
+@keyframes chest-open {
+  0% {
+    transform: scale(0.3) rotate(-15deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.2) rotate(6deg);
+  }
+}
+
+.treasure-modal .choice-card {
+  background: linear-gradient(110deg, #1d1a10, #12100a 70%);
+}
+
+/* ------------------------------------------------------------- 説明（ユニット詳細など） */
+
+.detail-head {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.detail-art {
+  width: 100px;
+  height: 100px;
+  flex: none;
+  background: radial-gradient(circle at 50% 70%, color-mix(in srgb, var(--rc, var(--accent-2)) 45%, transparent), transparent 70%), #0d0f15;
+  box-shadow: inset 0 0 0 2px var(--rc, var(--line));
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.detail-art img {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+}
+
+.detail-art.material img {
+  width: 80px;
+  height: 80px;
+}
+
+.detail-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.detail-name {
+  font-family: var(--font-display);
+  font-size: 19px;
+  line-height: 1.2;
+}
+
+.detail-name .lv {
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.detail-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 6px 0;
+  align-items: center;
+}
+
+.rarity-badge {
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 11px;
+  padding: 0 7px;
+  color: #111;
+  background: var(--rc);
+  clip-path: polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%);
+}
+
+.rarity-badge.mat {
+  background: var(--accent-2);
+}
+
+.attrs {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.detail-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.detail-notes {
+  color: var(--accent);
+  font-size: 12px;
+}
+
+.skill-block {
+  margin-top: 10px;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.3);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.skill-name {
+  font-family: var(--font-display);
+  color: var(--accent);
+}
+
+.skill-lines {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+}
+
+.skill-line {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  margin: 5px 0;
+}
+
+.values b {
+  color: var(--muted);
+  font-family: var(--font-num);
+}
+
+.values b.cur {
+  color: var(--text);
+  font-size: 16px;
+}
+
+.values .sep {
+  color: #5d6475;
+  margin: 0 2px;
+}
+
+.merge-rule {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.source-text {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.material-text {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.ext-info {
+  text-align: center;
+}
+
+.big-ext {
+  width: 96px;
+  height: 96px;
+}
+
+/* プレイヤー詳細 */
+
+.player-card {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.player-portrait {
+  width: 80px;
+  height: 120px;
+  flex: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.player-portrait img {
+  max-height: 120px;
+  max-width: 80px;
+}
+
+.player-name {
+  font-family: var(--font-display);
+  font-size: 20px;
+}
+
+.player-skill {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.player-card p {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+.player-info h3 {
+  margin: 12px 0 6px;
+  font-size: 15px;
+}
+
+.ext-detail-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ext-detail-list li {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.ext-detail-list img {
+  width: 40px;
+  height: 40px;
+}
+
+.ext-detail-list p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* ------------------------------------------------------------- ヘルプ（ページめくり） */
+
+.help-modal .modal {
+  height: min(620px, 100%);
+}
+
+.help-tabs {
+  flex: none;
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.help-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.help-tab {
+  flex: none;
+  border: 0;
+  padding: 5px 10px;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--muted);
+  clip-path: polygon(5px 0, 100% 0, calc(100% - 5px) 100%, 0 100%);
+}
+
+.help-tab.active {
+  background: var(--accent);
+  color: #111;
+}
+
+.help-pages {
+  flex: 1 1 auto;
+  min-height: 0;
+  position: relative;
+  perspective: 900px;
+}
+
+.help-page {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 2px 2px 8px;
+}
+
+.help-page.flip-next {
+  animation: flip-next 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  transform-origin: 0 50%;
+}
+
+.help-page.flip-prev {
+  animation: flip-prev 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  transform-origin: 100% 50%;
+}
+
+@keyframes flip-next {
+  0% {
+    opacity: 0;
+    transform: rotateY(-60deg) translateX(40px);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes flip-prev {
+  0% {
+    opacity: 0;
+    transform: rotateY(60deg) translateX(-40px);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.help-page h3 {
+  color: var(--accent);
+  font-size: 17px;
+  margin-bottom: 8px;
+}
+
+.help-page ol,
+.help-page ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.help-page li {
+  margin-bottom: 6px;
+}
+
+.help-figure {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin: 4px 0 12px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.help-figure img {
+  width: 44px;
+  height: 44px;
+}
+
+.help-figure .arrow {
+  color: var(--accent);
+  font-size: 20px;
+  margin: 0 6px;
+}
+
+.help-nav {
+  flex: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.help-nav .page-no {
+  font-family: var(--font-num);
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.glossary {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 5px 10px;
+  margin: 0;
+}
+
+.glossary dt {
+  font-weight: 700;
+  color: var(--accent-2);
+}
+
+.glossary dd {
+  margin: 0;
+  color: var(--muted);
+}
+
+.credits {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 0;
+}
+
+.help-modal .modal-body {
+  display: flex;
+  overflow: hidden;
+}
+
+.help-modal .help-pages {
+  flex: 1 1 auto;
+}
+
+.menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+  padding: 4px 10px;
+}

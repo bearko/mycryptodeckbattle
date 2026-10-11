@@ -1,4 +1,5 @@
 // マーケット画面（ヒーローの購入・売却・配置）。スマホ1画面に収まるレイアウト。
+// 演出用に、各枠には data-uid、マーケット枠には data-offer を付けている（main.js が参照する）。
 
 import { h, img } from "./h.js";
 import { compactMaterial, compactUnit, extensionIcon, gumAmount, materialCard, pips, unitCard } from "./components.js";
@@ -11,7 +12,20 @@ import { allUnits, countCopies, mergePreview, mergeProgress } from "../engine/ro
 const RARITY_SHORT = ["", "C", "U", "R", "E", "L"];
 
 function stat(label, value, cls = "") {
-  return h("div", { class: `stat ${cls}` }, h("small", null, label), h("b", null, value));
+  return h("div", { class: `stat ${cls}` }, h("small", null, label), h("b", { class: "num" }, value));
+}
+
+export function winGauge(wins, total = WINS_TO_CLEAR, label = "勝利") {
+  return h(
+    "div",
+    { class: "win-gauge", "aria-label": `${label} ${wins}/${total}` },
+    h("small", null, `${label} ${wins}/${total}`),
+    h(
+      "div",
+      { class: "segs" },
+      Array.from({ length: total }, (_, i) => h("i", { class: i < wins ? "on" : "" })),
+    ),
+  );
 }
 
 export function hud(app) {
@@ -27,14 +41,13 @@ export function hud(app) {
     ),
     stat("ステージ", run.stage),
     stat("ライフ", run.lives, `lives${run.lives <= 3 ? " danger" : ""}`),
-    stat("勝利", `${run.wins}/${WINS_TO_CLEAR}`),
+    winGauge(run.wins),
     h("div", { class: "hud-gum" }, gumAmount(run.gum, "big")),
     h(
       "div",
       { class: "hud-actions" },
       h("button", { class: "icon-btn", onClick: () => app.actions.showHelp(), "aria-label": "遊び方" }, "?"),
-      h("button", { class: "icon-btn", onClick: () => app.actions.toggleSound(), "aria-label": "サウンド" }, app.audio.muted ? "×" : "♪"),
-      h("button", { class: "icon-btn", onClick: () => app.actions.confirmQuit(), "aria-label": "メニュー" }, "≡"),
+      h("button", { class: "icon-btn", onClick: () => app.actions.showMenu(), "aria-label": "メニュー" }, "≡"),
     ),
   );
 }
@@ -72,12 +85,14 @@ function slotView(app, zone, index) {
   if (targeting && unit) classes.push("targetable");
   if (sel && !isSelected(sel, "unit", zone, index)) classes.push("droppable");
   if (unit && matchId === unit.defId && !isSelected(sel, "unit", zone, index) && unit.level < 3) classes.push("match");
+  if (unit && app.ui.arriving?.has(unit.uid)) classes.push("arriving");
   if (app.ui.flash?.zone === zone && app.ui.flash?.index === index) classes.push(app.ui.flash.levelUp ? "levelup" : "flash");
 
   const el = h(
     "div",
     {
       class: classes.join(" "),
+      dataset: { zone, index: String(index), uid: unit ? String(unit.uid) : "" },
       draggable: unit && !targeting ? "true" : null,
       onClick: () => app.actions.clickSlot(zone, index),
       onDragstart: (e) => {
@@ -96,7 +111,11 @@ function slotView(app, zone, index) {
       },
     },
     unit
-      ? unitCard(app.db.def(unit.defId), { level: unit.level, extra: unitProgress(run, unit) })
+      ? unitCard(app.db.def(unit.defId), {
+          level: unit.level,
+          extra: unitProgress(run, unit),
+          seed: (zone === "party" ? 0 : 6) + index,
+        })
       : zone === "party"
         ? h("span", { class: "slot-label" }, COLUMN_NAMES[index % COLUMN_NAMES.length])
         : null,
@@ -114,6 +133,7 @@ function boardSection(app) {
     h(
       "div",
       { class: "board-head" },
+      h("span", { class: "sec-label" }, "PARTY"),
       h("span", { class: "party-hp", title: "パーティHP" }, img("assets/battle-icons/hp.png", "mini-icon"), team.maxHp),
     ),
     h(
@@ -131,7 +151,11 @@ function boardSection(app) {
 
 function offerView(app, offer, index) {
   const run = app.run;
-  if (!offer) return h("div", { class: `offer sold${index === MATERIAL_SLOT ? " material-slot" : ""}` }, "SOLD");
+  const deal = app.ui.deal ? " deal" : "";
+  const style = { "--d": `${index * 0.06}s` };
+  if (!offer) {
+    return h("div", { class: `offer sold${deal}${index === MATERIAL_SLOT ? " material-slot" : ""}`, style }, "SOLD");
+  }
   const merge = offer.type === "hero" ? mergePreview(run, offer.defId) : null;
   const lv1 = offer.type === "hero" ? countCopies(run, offer.defId, 1) : 0;
   let badge = null;
@@ -140,9 +164,11 @@ function offerView(app, offer, index) {
   return h(
     "div",
     {
-      class: `offer${isSelected(app.ui.selected, "offer", index) ? " selected" : ""}${run.gum >= offer.cost ? "" : " expensive"}${
+      class: `offer${deal}${isSelected(app.ui.selected, "offer", index) ? " selected" : ""}${run.gum >= offer.cost ? "" : " expensive"}${
         offer.type === "material" ? " material-slot" : ""
       }${merge ? " merge-ready" : ""}`,
+      style,
+      dataset: { offer: String(index) },
       draggable: "true",
       onClick: () => app.actions.clickOffer(index),
       onDragstart: (e) => {
@@ -176,7 +202,7 @@ function marketSection(app) {
       h(
         "button",
         { class: "btn small reroll-btn", onClick: () => app.actions.reroll(), "aria-label": "ラインナップ更新" },
-        "↻ ",
+        h("span", { class: "spin" }, "↻"),
         cost === 0 ? h("span", { class: "free" }, `×${run.freeRerolls}`) : gumAmount(cost),
       ),
       h(
@@ -193,26 +219,29 @@ function marketSection(app) {
   );
 }
 
-function infoBar(app) {
+function infoContent(app) {
   const run = app.run;
   const sel = app.ui.selected;
   const ev = run.pending[0];
-  let body;
   if (ev?.type === "target") {
     const m = targetMaterial(ev.id);
-    body = h(
-      "div",
-      { class: "compact target" },
-      h("div", { class: "compact-art material" }, img(m.image, "", m.name)),
-      h(
+    return {
+      key: `target-${ev.id}`,
+      body: h(
         "div",
-        { class: "compact-body" },
-        h("div", { class: "compact-title" }, h("span", { class: "compact-name" }, m.name)),
-        h("div", { class: "compact-fx" }, h("span", { class: "fx-chip" }, m.text)),
+        { class: "compact target" },
+        h("div", { class: "compact-art material" }, img(m.image, "", m.name)),
+        h(
+          "div",
+          { class: "compact-body" },
+          h("div", { class: "compact-title" }, h("span", { class: "compact-name" }, m.name)),
+          h("div", { class: "compact-fx" }, h("span", { class: "fx-chip" }, m.text)),
+        ),
+        h("div", { class: "compact-actions" }, h("span", { class: "target-hint" }, "対象を選択")),
       ),
-      h("div", { class: "compact-actions" }, h("span", { class: "target-hint" }, "対象を選択")),
-    );
-  } else if (sel?.type === "offer" && run.market.offers[sel.index]) {
+    };
+  }
+  if (sel?.type === "offer" && run.market.offers[sel.index]) {
     const offer = run.market.offers[sel.index];
     const merge = offer.type === "hero" ? mergePreview(run, offer.defId) : null;
     const buy = h(
@@ -224,30 +253,38 @@ function infoBar(app) {
     if (offer.type === "hero") {
       const def = app.db.def(offer.defId);
       const lv1 = countCopies(run, offer.defId, 1);
-      body = compactUnit(def, {
-        progress: lv1 ? h("span", { class: "progress-chip" }, pips(Math.min(3, lv1 + 1), 3, "preview"), `→Lv2`) : null,
-        actions: [buy, h("button", { class: "btn small info-btn", onClick: () => app.actions.showUnit(offer.defId) }, "詳細")],
-      });
-    } else {
-      body = compactMaterial(materialById(offer.id), [buy]);
+      return {
+        key: `offer-${sel.index}-${offer.defId}`,
+        body: compactUnit(def, {
+          progress: lv1 ? h("span", { class: "progress-chip" }, pips(Math.min(3, lv1 + 1), 3, "preview"), "→Lv2") : null,
+          actions: [buy, h("button", { class: "btn small info-btn", onClick: () => app.actions.showUnit(offer.defId) }, "詳細")],
+        }),
+      };
     }
-  } else if (sel?.type === "unit" && run[sel.zone][sel.index]) {
+    return { key: `offer-${sel.index}-${offer.id}`, body: compactMaterial(materialById(offer.id), [buy]) };
+  }
+  if (sel?.type === "unit" && run[sel.zone][sel.index]) {
     const unit = run[sel.zone][sel.index];
     const def = app.db.def(unit.defId);
     const value = sellValue(def, unit.level, runMods(run, app.db).sellBonus);
     const prog = mergeProgress(run, unit);
-    body = compactUnit(def, {
-      unit,
-      progress: prog ? h("span", { class: "progress-chip" }, pips(prog.have, prog.need), `→Lv${prog.next}`) : null,
-      actions: [
-        h("button", { class: "btn danger", onClick: () => app.actions.sell(sel.zone, sel.index) }, "売却", gumAmount(`+${value}`)),
-        h("button", { class: "btn small info-btn", onClick: () => app.actions.showUnit(unit.defId, sel) }, "詳細"),
-      ],
-    });
-  } else {
-    const counts = new Map();
-    for (const id of run.extensions) counts.set(id, (counts.get(id) || 0) + 1);
-    body = h(
+    return {
+      key: `unit-${unit.uid}`,
+      body: compactUnit(def, {
+        unit,
+        progress: prog ? h("span", { class: "progress-chip" }, pips(prog.have, prog.need), `→Lv${prog.next}`) : null,
+        actions: [
+          h("button", { class: "btn danger", onClick: () => app.actions.sell(sel.zone, sel.index) }, "売却", gumAmount(`+${value}`)),
+          h("button", { class: "btn small info-btn", onClick: () => app.actions.showUnit(unit.defId, sel) }, "詳細"),
+        ],
+      }),
+    };
+  }
+  const counts = new Map();
+  for (const id of run.extensions) counts.set(id, (counts.get(id) || 0) + 1);
+  return {
+    key: "idle",
+    body: h(
       "div",
       { class: "ext-strip" },
       mergeGuide(app),
@@ -263,9 +300,15 @@ function infoBar(app) {
             }),
           )
         : h("span", { class: "strip-empty" }, "—"),
-    );
-  }
-  return h("section", { class: "info-bar" }, body);
+    ),
+  };
+}
+
+function infoBar(app) {
+  const { key, body } = infoContent(app);
+  const turn = app.ui.infoKey !== undefined && app.ui.infoKey !== key;
+  app.ui.infoKey = key;
+  return h("section", { class: "info-bar panel" }, h("div", { class: `info-page${turn ? " turn" : ""}` }, body));
 }
 
 /** 「同じヒーロー3体 → Lv2」の図解。いちばん合成に近いヒーローの絵を使う */
@@ -294,7 +337,8 @@ function mergeGuide(app) {
 
 export function marketScreen(app) {
   const check = canStartBattle(app.run);
-  return h(
+  const player = playerById(app.run.playerId);
+  const screen = h(
     "div",
     { class: "screen market-screen" },
     hud(app),
@@ -302,11 +346,9 @@ export function marketScreen(app) {
     h(
       "footer",
       { class: "market-footer" },
-      h(
-        "button",
-        { class: `btn battle-btn${check.ok ? "" : " off"}`, onClick: () => app.actions.startBattle() },
-        "バトル開始",
-      ),
+      h("button", { class: `btn battle-btn${check.ok ? "" : " off"}`, onClick: () => app.actions.startBattle() }, "バトル開始"),
     ),
   );
+  screen.style.setProperty("--player", player.color);
+  return screen;
 }

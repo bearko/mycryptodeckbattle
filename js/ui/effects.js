@@ -51,10 +51,11 @@ export function playSprite(layer, key, x, y, { scale = 1.4, speed = 1 } = {}) {
 
 /** layer 内の (x, y) にテキストをポップアップさせる */
 export function popText(layer, text, x, y, cls = "") {
-  if (layer.childElementCount > 60) return;
+  if (layer.childElementCount > 60) return null;
   const el = h("div", { class: `pop-text ${cls}`, style: { left: `${x}px`, top: `${y}px` } }, text);
   layer.append(el);
   setTimeout(() => el.remove(), 1100);
+  return el;
 }
 
 /** layer を基準にした要素の中心座標 */

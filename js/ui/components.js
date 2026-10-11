@@ -19,15 +19,20 @@ export function levelStars(level) {
 }
 
 export function gumAmount(value, cls = "") {
-  return h("span", { class: `gum ${cls}` }, img("assets/icons/gum.png", "gum-icon"), String(value));
+  return h("span", { class: `gum ${cls}` }, img("assets/icons/gum.png", "gum-icon"), h("span", { class: "n" }, String(value)));
+}
+
+/** 再描画しても呼吸アニメの位相が飛ばないよう、現在時刻からずらしを決める */
+export function bobDelay(seed = 0, period = 2.4) {
+  return `${-(((performance.now() / 1000) + seed * 0.37) % period).toFixed(2)}s`;
 }
 
 /** ヒーロー/エネミーのカード（マーケット・パーティ・バトル共通） */
-export function unitCard(def, { level = 1, compact = false, extra = null } = {}) {
+export function unitCard(def, { level = 1, compact = false, extra = null, seed = 0 } = {}) {
   const main = def.effects[0];
   return h(
     "div",
-    { class: `unit-card r${def.rarity}${compact ? " compact" : ""}` },
+    { class: `unit-card r${def.rarity}${compact ? " compact" : ""}`, style: { "--bd": bobDelay(seed) } },
     h(
       "div",
       { class: "unit-art" },
@@ -244,11 +249,18 @@ export function extensionIcon(ext, count = 1) {
   );
 }
 
-export function modal(title, body, { className = "", footer = null } = {}) {
+export function modal(title, body, { className = "", footer = null, header = null } = {}) {
   return h(
     "div",
     { class: `modal-backdrop ${className}` },
-    h("div", { class: "modal" }, title ? h("h2", { class: "modal-title" }, title) : null, h("div", { class: "modal-body" }, body), footer),
+    h(
+      "div",
+      { class: "modal gadget" },
+      header,
+      title ? h("h2", { class: "modal-title" }, title) : null,
+      h("div", { class: "modal-body" }, body),
+      footer,
+    ),
   );
 }
 
