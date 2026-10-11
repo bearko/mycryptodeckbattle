@@ -40,6 +40,11 @@ FACTIONS = {
 # エネミー画像の重複を除いた代表を何体使うか（レアリティ帯ごと）
 ENEMIES_PER_TIER = 40
 
+# 版権コラボのキャラクター。元データでは category が original のため個別に除外する。
+# 順位（agi_pct など）の計算には含めたまま出力だけ外し、他のユニットの数値を変えない。
+EXCLUDED_HERO_IDS = {2035}  # 猿田彦
+EXCLUDED_ENEMY_IMAGES = {"Image/Enemies/715.png"}  # ゴースト・猿田彦
+
 BACKGROUND_IDS = ["1001", "1003", "1023", "1038", "1050", "2105", "2405", "2705"]
 
 
@@ -179,6 +184,8 @@ def build_heroes(src: Path):
     out_dir = ROOT / "assets/heroes"
     out_dir.mkdir(parents=True, exist_ok=True)
     for h in pool:
+        if h["id"] in EXCLUDED_HERO_IDS:
+            continue
         passive = h["passive"]
         desc = passive["description"]["ja"]
         kinds = [classify_effect(e["description"]) for e in desc["effects"]]
@@ -253,6 +260,8 @@ def build_enemies(src: Path):
         step = max(1, len(members) / ENEMIES_PER_TIER)
         picked = [members[int(i * step)] for i in range(min(ENEMIES_PER_TIER, len(members)))]
         for e in picked:
+            if e["image_file_path"] in EXCLUDED_ENEMY_IMAGES:
+                continue
             skill = e["active_skills"][0]
             text = skill["description"]["ja"]["text"]
             kinds = [classify_effect(p) for p in split_enemy_text(text)]

@@ -20,6 +20,9 @@ export function createDb({ heroes, enemies, extensions }) {
     heroes,
     enemies,
     extensions,
+    has(id) {
+      return defs.has(id);
+    },
     def(id) {
       const d = defs.get(id);
       if (!d) throw new Error(`unknown unit def: ${id}`);

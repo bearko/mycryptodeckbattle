@@ -168,6 +168,7 @@ function validSave() {
   const run = loadRun();
   if (!run || run.version !== Run.RUN_VERSION) return null;
   if (run.phase === "clear" || run.phase === "gameover") return null;
+  if (!Run.usesKnownUnits(run, app.db)) return null;
   return run;
 }
 

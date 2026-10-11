@@ -1507,44 +1507,6 @@
   "source_text": "バトル開始時に100%の確率で発動 / PHYが最も高い敵のPHYを自身のPHYの30%ダウン / PHYが最も低い敵のPHYを対象のPHYの20%アップ / 自身のPHYを自身のPHYの5%アップ / 自身のAGIを自身のPHYの5%アップ"
  },
  {
-  "id": "h2035",
-  "mch_id": 2035,
-  "side": "hero",
-  "name": "猿田彦",
-  "name_en": "Sarutahiko",
-  "image": "assets/heroes/2035.png",
-  "rarity": 2,
-  "faction": 4,
-  "attributes": [
-   "理系学問",
-   "日本",
-   "伝承",
-   "手塚"
-  ],
-  "skill_name": "西暦3344年",
-  "agi_pct": 0.2694,
-  "hp_pct": 0.3834,
-  "stats": {
-   "hp": 300,
-   "phy": 66,
-   "int": 86,
-   "agi": 88
-  },
-  "effects": [
-   {
-    "kind": "damage",
-    "weight": 0.65,
-    "trigger": "charge"
-   },
-   {
-    "kind": "buff",
-    "weight": 0.35,
-    "trigger": "charge"
-   }
-  ],
-  "source_text": "自身がActive Skillを使用した後に40%の確率で発動 / 先頭の敵のINTを自身のPHYの20%アップ / 自身のINTを自身のINTの20 ~ 30%アップ"
- },
- {
   "id": "h2036",
   "mch_id": 2036,
   "side": "hero",

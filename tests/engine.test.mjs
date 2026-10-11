@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { loadDb } from "./load-db.mjs";
 import { createBattle, stepBattle, runBattle } from "../js/engine/battle.js";
-import { newRun, buy, sell, finishBattle, advance, prepareBattle, chooseExtension, chooseTreasure } from "../js/engine/run.js";
+import { newRun, buy, sell, finishBattle, advance, prepareBattle, chooseExtension, chooseTreasure, usesKnownUnits } from "../js/engine/run.js";
 import { acquireUnit, allUnits, emptyRoster } from "../js/engine/roster.js";
 import { rollMarket } from "../js/engine/market.js";
 import { createRng } from "../js/engine/rng.js";
@@ -236,4 +236,12 @@ test("合成プレビューと進み具合", async () => {
   assert.equal(mergePreview(g, id), 3); // Lv1×2 + Lv2×1 の状態で買うと Lv3 まで連鎖
   const lv2 = allUnits(g).find((u) => u.unit.level === 2).unit;
   assert.deepEqual(mergeProgress(g, lv2), { have: 1, need: 2, next: 3 });
+});
+
+test("版権コラボのユニットはデータに含めず、それを参照する古い保存データは無効", () => {
+  assert.ok(!db.has("h2035"));
+  assert.ok(!db.enemies.some((e) => e.image.endsWith("/715.png")));
+  const run = newRun(db, { playerId: "chris", seed: 7 });
+  assert.ok(usesKnownUnits(run, db));
+  assert.ok(!usesKnownUnits({ ...run, heroPool: [...run.heroPool, "h2035"] }, db));
 });

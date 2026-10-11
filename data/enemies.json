@@ -4137,34 +4137,6 @@
   "source_text": "敵全体にINTの20〜25%ダメージを与え、敵全体のINTをこのヒーローのINTの8%分ダウン"
  },
  {
-  "id": "e745",
-  "mch_id": 745,
-  "side": "enemy",
-  "name": "ゴースト・猿田彦",
-  "name_en": "Ghost Sarutahiko",
-  "image": "assets/enemies/715.png",
-  "rarity": 4,
-  "faction": 0,
-  "attributes": [],
-  "skill_name": "神変浄化の音色",
-  "agi_pct": 0.75,
-  "hp_pct": 0.4583,
-  "stats": {
-   "hp": 420,
-   "phy": 66,
-   "int": 609,
-   "agi": 173
-  },
-  "effects": [
-   {
-    "kind": "damage",
-    "weight": 1.0,
-    "trigger": "charge"
-   }
-  ],
-  "source_text": "最後尾INT攻撃と睡眠"
- },
- {
   "id": "e749",
   "mch_id": 749,
   "side": "enemy",

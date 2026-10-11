@@ -69,6 +69,17 @@ export function newRun(db, { playerId, seed }) {
   return run;
 }
 
+/** 保存データが、データ更新で削除されたユニットを参照していないか */
+export function usesKnownUnits(run, db) {
+  const ids = [
+    ...run.heroPool,
+    ...run.enemyPool,
+    ...allUnits(run).map(({ unit }) => unit.defId),
+    ...run.market.offers.filter((o) => o?.type === "hero").map((o) => o.defId),
+  ];
+  return ids.every((id) => db.has(id));
+}
+
 export function startStage(run, db) {
   const player = playerById(run.playerId);
   const mods = runMods(run, db);
