@@ -1,11 +1,12 @@
 // マーケット画面（ヒーローの購入・売却・配置）。スマホ1画面に収まるレイアウト。
 
 import { h, img } from "./h.js";
-import { compactMaterial, compactUnit, extensionIcon, gumAmount, materialCard, unitCard } from "./components.js";
+import { compactMaterial, compactUnit, extensionIcon, gumAmount, materialCard, pips, unitCard } from "./components.js";
 import { COLUMN_NAMES, materialById, playerById } from "../engine/content.js";
 import { MATERIAL_SLOT, WINS_TO_CLEAR, marketOdds, sellValue } from "../engine/balance.js";
 import { effectiveRank, rerollCost } from "../engine/market.js";
 import { canStartBattle, playerTeam, runMods, targetMaterial } from "../engine/run.js";
+import { allUnits, countCopies, mergePreview, mergeProgress } from "../engine/roster.js";
 
 const RARITY_SHORT = ["", "C", "U", "R", "E", "L"];
 
@@ -43,17 +44,35 @@ function isSelected(sel, type, a, b) {
   return type === "offer" ? sel.index === a : sel.zone === a && sel.index === b;
 }
 
+/** 選択中のマーケット枠/ヒーローと同じヒーローの defId（合成相手のハイライト用） */
+function selectedDefId(app) {
+  const sel = app.ui.selected;
+  if (sel?.type === "offer") {
+    const o = app.run.market.offers[sel.index];
+    return o?.type === "hero" ? o.defId : null;
+  }
+  if (sel?.type === "unit") return app.run[sel.zone][sel.index]?.defId ?? null;
+  return null;
+}
+
+function unitProgress(run, unit) {
+  const p = mergeProgress(run, unit);
+  return p ? pips(p.have, p.need) : null;
+}
+
 function slotView(app, zone, index) {
   const run = app.run;
   const unit = run[zone][index];
   const sel = app.ui.selected;
+  const matchId = selectedDefId(app);
   const targeting = run.pending[0]?.type === "target";
   const classes = ["slot", zone];
   if (!unit) classes.push("empty");
   if (isSelected(sel, "unit", zone, index)) classes.push("selected");
   if (targeting && unit) classes.push("targetable");
   if (sel && !isSelected(sel, "unit", zone, index)) classes.push("droppable");
-  if (app.ui.flash?.zone === zone && app.ui.flash?.index === index) classes.push("flash");
+  if (unit && matchId === unit.defId && !isSelected(sel, "unit", zone, index) && unit.level < 3) classes.push("match");
+  if (app.ui.flash?.zone === zone && app.ui.flash?.index === index) classes.push(app.ui.flash.levelUp ? "levelup" : "flash");
 
   const el = h(
     "div",
@@ -77,7 +96,7 @@ function slotView(app, zone, index) {
       },
     },
     unit
-      ? unitCard(app.db.def(unit.defId), { level: unit.level })
+      ? unitCard(app.db.def(unit.defId), { level: unit.level, extra: unitProgress(run, unit) })
       : zone === "party"
         ? h("span", { class: "slot-label" }, COLUMN_NAMES[index % COLUMN_NAMES.length])
         : null,
@@ -113,14 +132,17 @@ function boardSection(app) {
 function offerView(app, offer, index) {
   const run = app.run;
   if (!offer) return h("div", { class: `offer sold${index === MATERIAL_SLOT ? " material-slot" : ""}` }, "SOLD");
-  const owned =
-    offer.type === "hero" ? [...run.party, ...run.bench].filter((u) => u && u.defId === offer.defId).length : 0;
+  const merge = offer.type === "hero" ? mergePreview(run, offer.defId) : null;
+  const lv1 = offer.type === "hero" ? countCopies(run, offer.defId, 1) : 0;
+  let badge = null;
+  if (merge) badge = h("span", { class: "merge-badge" }, `Lv${merge}↑`);
+  else if (lv1) badge = h("span", { class: "owned-badge" }, pips(lv1, 3));
   return h(
     "div",
     {
       class: `offer${isSelected(app.ui.selected, "offer", index) ? " selected" : ""}${run.gum >= offer.cost ? "" : " expensive"}${
         offer.type === "material" ? " material-slot" : ""
-      }`,
+      }${merge ? " merge-ready" : ""}`,
       draggable: "true",
       onClick: () => app.actions.clickOffer(index),
       onDragstart: (e) => {
@@ -129,7 +151,7 @@ function offerView(app, offer, index) {
       },
     },
     offer.type === "hero" ? unitCard(app.db.def(offer.defId), { level: 0 }) : materialCard(materialById(offer.id)),
-    owned ? h("span", { class: "owned-badge" }, `×${owned}`) : null,
+    badge,
     h("div", { class: "price" }, gumAmount(offer.cost)),
   );
 }
@@ -192,10 +214,18 @@ function infoBar(app) {
     );
   } else if (sel?.type === "offer" && run.market.offers[sel.index]) {
     const offer = run.market.offers[sel.index];
-    const buy = h("button", { class: "btn primary", onClick: () => app.actions.buy(sel.index) }, "購入", gumAmount(offer.cost));
+    const merge = offer.type === "hero" ? mergePreview(run, offer.defId) : null;
+    const buy = h(
+      "button",
+      { class: `btn primary${merge ? " merge" : ""}`, onClick: () => app.actions.buy(sel.index) },
+      merge ? `Lv${merge}↑` : "購入",
+      gumAmount(offer.cost),
+    );
     if (offer.type === "hero") {
       const def = app.db.def(offer.defId);
+      const lv1 = countCopies(run, offer.defId, 1);
       body = compactUnit(def, {
+        progress: lv1 ? h("span", { class: "progress-chip" }, pips(Math.min(3, lv1 + 1), 3, "preview"), `→Lv2`) : null,
         actions: [buy, h("button", { class: "btn small info-btn", onClick: () => app.actions.showUnit(offer.defId) }, "詳細")],
       });
     } else {
@@ -205,8 +235,10 @@ function infoBar(app) {
     const unit = run[sel.zone][sel.index];
     const def = app.db.def(unit.defId);
     const value = sellValue(def, unit.level, runMods(run, app.db).sellBonus);
+    const prog = mergeProgress(run, unit);
     body = compactUnit(def, {
       unit,
+      progress: prog ? h("span", { class: "progress-chip" }, pips(prog.have, prog.need), `→Lv${prog.next}`) : null,
       actions: [
         h("button", { class: "btn danger", onClick: () => app.actions.sell(sel.zone, sel.index) }, "売却", gumAmount(`+${value}`)),
         h("button", { class: "btn small info-btn", onClick: () => app.actions.showUnit(unit.defId, sel) }, "詳細"),
@@ -218,6 +250,7 @@ function infoBar(app) {
     body = h(
       "div",
       { class: "ext-strip" },
+      mergeGuide(app),
       h("span", { class: "strip-label" }, "EXT"),
       counts.size
         ? h(
@@ -233,6 +266,30 @@ function infoBar(app) {
     );
   }
   return h("section", { class: "info-bar" }, body);
+}
+
+/** 「同じヒーロー3体 → Lv2」の図解。いちばん合成に近いヒーローの絵を使う */
+function mergeGuide(app) {
+  const run = app.run;
+  const units = allUnits(run)
+    .map(({ unit }) => unit)
+    .filter((u) => u.level === 1)
+    .sort((a, b) => countCopies(run, b.defId, 1) - countCopies(run, a.defId, 1));
+  const sample = units[0];
+  const image = sample ? app.db.def(sample.defId).image : "assets/icons/mch_icon.png";
+  const have = sample ? countCopies(run, sample.defId, 1) : 0;
+  return h(
+    "button",
+    { class: "merge-guide", onClick: () => app.actions.showHelp(), "aria-label": "レベルアップの方法" },
+    h(
+      "span",
+      { class: "guide-row" },
+      [0, 1, 2].map((i) => img(image, `pixel guide-unit${i < have ? " on" : ""}`)),
+      h("span", { class: "guide-arrow" }, "→"),
+      h("span", { class: "guide-lv" }, "Lv2"),
+    ),
+    h("span", { class: "guide-caption" }, "同じヒーロー3体で"),
+  );
 }
 
 export function marketScreen(app) {

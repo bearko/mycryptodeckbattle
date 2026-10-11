@@ -138,3 +138,17 @@ export function levelUp(owner, zone, index) {
   const merges = unit.level <= 2 ? resolveMerges(owner, unit.defId) : [];
   return { unit, merges };
 }
+
+/** そのヒーローを1体買ったときに合成で到達するLv。合成しないなら null */
+export function mergePreview(owner, defId) {
+  const lv1 = countCopies(owner, defId, 1);
+  if (lv1 + 1 < 3) return null;
+  return countCopies(owner, defId, 2) + 1 >= 2 ? 3 : 2;
+}
+
+/** 所持ヒーローの次のLvまでの進み具合。{ have, need, next }（Lv3以上は null） */
+export function mergeProgress(owner, unit) {
+  if (unit.level === 1) return { have: countCopies(owner, unit.defId, 1), need: 3, next: 2 };
+  if (unit.level === 2) return { have: countCopies(owner, unit.defId, 2), need: 2, next: 3 };
+  return null;
+}

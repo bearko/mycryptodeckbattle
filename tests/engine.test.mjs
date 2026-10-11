@@ -220,3 +220,20 @@ test("CPU対戦相手は同じシードなら同じ編成になる", () => {
   assert.ok(a.units.length >= 3);
   assert.ok(a.units.every((u) => u.unit.defId.startsWith("e")));
 });
+
+test("合成プレビューと進み具合", async () => {
+  const { mergePreview, mergeProgress } = await import("../js/engine/roster.js");
+  const g = ghost();
+  const id = db.heroes[0].id;
+  assert.equal(mergePreview(g, id), null);
+  acquireUnit(g, id);
+  assert.deepEqual(mergeProgress(g, allUnits(g)[0].unit), { have: 1, need: 3, next: 2 });
+  acquireUnit(g, id);
+  assert.equal(mergePreview(g, id), 2);
+  acquireUnit(g, id); // Lv2
+  acquireUnit(g, id);
+  acquireUnit(g, id);
+  assert.equal(mergePreview(g, id), 3); // Lv1×2 + Lv2×1 の状態で買うと Lv3 まで連鎖
+  const lv2 = allUnits(g).find((u) => u.unit.level === 2).unit;
+  assert.deepEqual(mergeProgress(g, lv2), { have: 1, need: 2, next: 3 });
+});

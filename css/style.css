@@ -2254,3 +2254,192 @@ h3 {
     gap: 8px;
   }
 }
+
+/* ---------------------------------------------------------------- レベルアップ（合成）の見える化 */
+
+.pips {
+  display: inline-flex;
+  gap: 2px;
+  align-items: center;
+  line-height: 0;
+}
+
+.pips i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1px solid rgba(242, 193, 78, 0.8);
+  background: transparent;
+}
+
+.pips i.on {
+  background: var(--gold);
+  border-color: var(--gold);
+}
+
+.unit-card .pips {
+  flex: none;
+  margin-top: 2px;
+}
+
+.slot.match {
+  border-color: var(--gold) !important;
+  border-style: solid;
+  box-shadow: 0 0 10px rgba(242, 193, 78, 0.55);
+}
+
+.offer.merge-ready {
+  border-color: var(--gold);
+  animation: merge-glow 1.2s ease-in-out infinite;
+}
+
+@keyframes merge-glow {
+  50% {
+    box-shadow: 0 0 14px rgba(242, 193, 78, 0.85);
+  }
+}
+
+.merge-badge {
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  background: linear-gradient(180deg, #ffe08a, var(--gold));
+  color: #2b1d00;
+  font-family: var(--font-dot);
+  font-size: 11px;
+  padding: 0 6px;
+  border-radius: 8px;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+.owned-badge {
+  background: rgba(17, 19, 26, 0.9);
+  padding: 2px 4px;
+  border: 1px solid rgba(242, 193, 78, 0.6);
+}
+
+.progress-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--gold);
+  font-family: var(--font-dot);
+}
+
+.pips.preview i.on:last-of-type {
+  animation: pulse-text 1s infinite;
+}
+
+.btn.primary.merge {
+  background: linear-gradient(180deg, #ffe08a, var(--gold));
+  border-color: #fff0b8;
+  color: #2b1d00;
+  font-family: var(--font-dot);
+}
+
+.slot.levelup {
+  animation: levelup-flash 1.4s ease-out;
+}
+
+.slot.levelup::after {
+  content: "LV UP!";
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  z-index: 3;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-dot);
+  font-size: 18px;
+  color: var(--gold);
+  text-shadow: 2px 2px 0 #000, -1px -1px 0 #000;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: levelup-text 1.4s ease-out forwards;
+}
+
+@keyframes levelup-flash {
+  0% {
+    background: rgba(255, 231, 102, 0.85);
+    box-shadow: 0 0 24px rgba(255, 231, 102, 0.9);
+  }
+  100% {
+    background: transparent;
+    box-shadow: none;
+  }
+}
+
+@keyframes levelup-text {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -10%) scale(0.6);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -60%) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -140%) scale(1);
+  }
+}
+
+.merge-guide {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(242, 193, 78, 0.45);
+  background: rgba(242, 193, 78, 0.08);
+  cursor: pointer;
+}
+
+.guide-row {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.guide-unit {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  opacity: 0.35;
+}
+
+.guide-unit.on {
+  opacity: 1;
+}
+
+.guide-arrow {
+  color: var(--gold);
+  margin: 0 2px;
+}
+
+.guide-lv {
+  font-family: var(--font-dot);
+  font-size: 13px;
+  color: #9be7a0;
+  padding: 0 4px;
+  border: 1px solid #4f8a54;
+  border-radius: 4px;
+  background: #11131a;
+}
+
+.guide-caption {
+  font-size: 10px;
+  color: var(--gold);
+  white-space: nowrap;
+}
+
+.merge-rule {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--gold);
+}

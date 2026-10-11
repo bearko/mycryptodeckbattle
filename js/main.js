@@ -101,15 +101,26 @@ function validSave() {
   return run;
 }
 
-function flashAt(pos) {
-  app.ui.flash = pos;
+function flashAt(pos, levelUp = false) {
+  const flash = { ...pos, levelUp };
+  app.ui.flash = flash;
   setTimeout(() => {
-    if (app.ui.flash === pos) {
+    if (app.ui.flash === flash) {
       app.ui.flash = null;
-      const el = root.querySelector(".slot.flash");
-      if (el) el.classList.remove("flash");
+      root.querySelectorAll(".slot.flash, .slot.levelup").forEach((el) => el.classList.remove("flash", "levelup"));
     }
-  }, 900);
+  }, 1400);
+}
+
+const TIP_KEY = "mcdb.tip.merge";
+function mergeTipOnce() {
+  try {
+    if (localStorage.getItem(TIP_KEY)) return;
+    localStorage.setItem(TIP_KEY, "1");
+  } catch {
+    return;
+  }
+  setTimeout(() => toast("同じヒーローを3体集めると Lv UP！"), 900);
 }
 
 function goMarket() {
@@ -140,8 +151,10 @@ function afterBuy(res, target) {
   if (res.merges?.length) {
     const last = res.merges[res.merges.length - 1];
     audio.se("merge");
-    toast(`合成！ ${app.db.def(last.defId).name} Lv${last.level}`, "good");
-    flashAt({ zone: last.zone, index: last.index });
+    toast(`Lv UP！ ${app.db.def(last.defId).name} Lv${last.level}`, "good");
+    flashAt({ zone: last.zone, index: last.index }, true);
+  } else if (res.unit) {
+    mergeTipOnce();
   } else if (res.material?.target) {
     toast("対象のヒーローを選択");
   } else if (res.material) {
@@ -210,13 +223,16 @@ const actions = {
 
   clickSlot(zone, index) {
     const run = app.run;
-    if (run.pending[0]?.type === "target") {
+    const ev = run.pending[0];
+    if (ev?.type === "target") {
       const res = Run.applyTarget(run, app.db, zone, index);
       if (!res.ok) toast(res.error, "error");
       else {
+        const name = app.db.def(res.unit.defId).name;
+        const levelUp = ev.id === "ce";
         audio.se("merge");
-        toast(`${app.db.def(res.unit.defId).name} 強化`, "good");
-        flashAt({ zone, index });
+        toast(levelUp ? `Lv UP！ ${name} Lv${res.unit.level}` : `${name} 強化`, "good");
+        flashAt({ zone, index }, levelUp);
       }
       save();
       return render();

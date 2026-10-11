@@ -40,6 +40,15 @@ export function unitCard(def, { level = 1, compact = false, extra = null } = {})
   );
 }
 
+/** 合成の進み具合を ●●○ で表す */
+export function pips(have, need, cls = "") {
+  return h(
+    "span",
+    { class: `pips ${cls}`, "aria-label": `${have}/${need}` },
+    Array.from({ length: need }, (_, i) => h("i", { class: i < have ? "on" : "" })),
+  );
+}
+
 const VALUE_TOKEN = "\u0000";
 
 /** 効果文の中の数値を「Lv1 / Lv2 / Lv3」の並びにして、現在Lvを強調する */
@@ -114,6 +123,11 @@ export function unitDetail(def, { unit = null, sellBonus = 0, actions = null } =
       ),
     ),
     skillBlock(def, level),
+    h(
+      "p",
+      { class: "merge-rule" },
+      "Lvアップ：同じヒーローを3体集めるとLv2、Lv2を2体でLv3（購入した瞬間に自動で合成）。クリプトエナジーでも1Lv上がります。",
+    ),
     h("details", { class: "source-text" }, h("summary", null, "元のスキル（MCH）"), h("p", null, def.source_text)),
     actions ? h("div", { class: "detail-actions" }, actions) : null,
   );
@@ -151,7 +165,7 @@ function effectChips(def, level, permMult = 0) {
 }
 
 /** 情報バー用のコンパクトなユニット表示 */
-export function compactUnit(def, { unit = null, actions = [] } = {}) {
+export function compactUnit(def, { unit = null, actions = [], progress = null } = {}) {
   const level = unit?.level ?? 1;
   return h(
     "div",
@@ -168,6 +182,7 @@ export function compactUnit(def, { unit = null, actions = [] } = {}) {
         h("span", { class: `rarity-dot r${def.rarity}`, title: RARITY[def.rarity].name }, RARITY[def.rarity].name[0]),
         def.faction ? factionBadge(def.faction) : null,
         unit?.permMult || unit?.cdReduce ? h("span", { class: "boost-mark" }, "+") : null,
+        progress,
       ),
       h("div", { class: "compact-fx" }, effectChips(def, level, unit?.permMult || 0)),
     ),
