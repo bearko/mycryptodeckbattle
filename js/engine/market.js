@@ -52,27 +52,43 @@ export function rollMarket(owner, db, rng) {
   owner.market.offers = Array.from({ length: MARKET_SLOTS }, (_, i) => rollSlot(owner, db, rng, i));
 }
 
-/** 取り置きしていたラインナップを引き継ぎ、売り切れた枠だけ補充する */
-export function refillMarket(owner, db, rng) {
-  owner.market.offers = owner.market.offers.map((o, i) => o ?? rollSlot(owner, db, rng, i));
+/**
+ * 取り置き（locked）した枠を残し、それ以外を入れ替える（更新・次のステージで使う）。
+ * keepAll は旧仕様（ラインナップ全体の取り置き）の保存データ用。
+ */
+export function restockMarket(owner, db, rng, { keepAll = false } = {}) {
+  const offers = owner.market.offers;
+  owner.market.offers = Array.from({ length: MARKET_SLOTS }, (_, i) => {
+    const o = offers[i];
+    return o && (o.locked || keepAll) ? o : rollSlot(owner, db, rng, i);
+  });
+}
+
+/** 入れ替えられる枠（取り置きしていない枠・売り切れの枠）があるか */
+function hasRestockable(owner) {
+  return owner.market.offers.length < MARKET_SLOTS || owner.market.offers.some((o) => !o || !o.locked);
 }
 
 export function rerollCost(owner) {
   return owner.freeRerolls > 0 ? 0 : REROLL_COST;
 }
 
+/** ラインナップ更新。取り置きした枠はそのまま残る */
 export function reroll(owner, db, rng) {
+  if (!hasRestockable(owner)) return { ok: false, error: "すべて取り置き中です" };
   if (owner.freeRerolls > 0) owner.freeRerolls -= 1;
   else if (owner.gum >= REROLL_COST) owner.gum -= REROLL_COST;
   else return { ok: false, error: "GUMが足りません" };
-  rollMarket(owner, db, rng);
-  owner.market.locked = false;
+  restockMarket(owner, db, rng);
   return { ok: true };
 }
 
-export function toggleLock(owner) {
-  owner.market.locked = !owner.market.locked;
-  return owner.market.locked;
+/** 1枠ずつの取り置き（GUMが足りなくてもできる）。戻り値は取り置き後の状態、枠が空なら null */
+export function toggleOfferLock(owner, index) {
+  const offer = owner.market.offers[index];
+  if (!offer) return null;
+  offer.locked = !offer.locked;
+  return offer.locked;
 }
 
 /**

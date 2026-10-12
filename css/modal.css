@@ -654,3 +654,7 @@
   font-weight: 400;
   color: var(--role);
 }
+
+.detail-notes.down {
+  color: var(--bad);
+}

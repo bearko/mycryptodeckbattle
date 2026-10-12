@@ -32,6 +32,17 @@
   "assets/backgrounds/2405.webp",
   "assets/backgrounds/2705.webp"
  ],
+ "battleBackgrounds": [
+  "assets/backgrounds/2105.webp",
+  "assets/backgrounds/2405.webp",
+  "assets/backgrounds/2805.webp",
+  "assets/backgrounds/2705.webp",
+  "assets/backgrounds/2301.webp",
+  "assets/backgrounds/2205.webp",
+  "assets/backgrounds/2605.webp",
+  "assets/backgrounds/2505.webp",
+  "assets/backgrounds/2905.webp"
+ ],
  "counts": {
   "heroes": 193,
   "enemies": 199,

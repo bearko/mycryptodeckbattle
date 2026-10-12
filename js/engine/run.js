@@ -12,7 +12,7 @@ import {
   lifeLoss,
 } from "./balance.js";
 import { CRYPTO_ENERGY, TREASURES, materialById, playerById, treasureGum } from "./content.js";
-import { effectiveRank, poolByRarity, refillMarket, rollMarket, topRarity, buyOffer, sellUnit } from "./market.js";
+import { effectiveRank, poolByRarity, restockMarket, topRarity, buyOffer, sellUnit } from "./market.js";
 import { acquireUnit, allUnits, canAcquire, emptyRoster, levelUp } from "./roster.js";
 import { buildTeam, collectMods } from "./units.js";
 import { buildCpuOpponent } from "./cpu.js";
@@ -53,7 +53,7 @@ export function newRun(db, { playerId, seed }) {
     heroPool: [],
     enemyPool: [],
     nextUid: 1,
-    market: { offers: [], locked: false },
+    market: { offers: [] },
     extensions: [],
     pending: [],
     phase: "market",
@@ -88,9 +88,9 @@ export function startStage(run, db) {
   run.freeRerolls += (player.effect.freeRerolls || 0) + mods.freeReroll;
   run.itemUses = MATERIAL_USES_PER_STAGE;
   withRng(run, (rng) => {
-    if (run.market.locked && run.market.offers.length) refillMarket(run, db, rng);
-    else rollMarket(run, db, rng);
-    run.market.locked = false;
+    // 取り置きした枠は次のステージへ持ち越す（market.locked は旧仕様の全体取り置き）
+    restockMarket(run, db, rng, { keepAll: Boolean(run.market.locked) });
+    delete run.market.locked;
     if (TREASURE_STAGES.includes(run.stage)) run.pending.push(treasureEvent(run, rng));
   });
   run.phase = "market";

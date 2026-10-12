@@ -46,6 +46,8 @@ EXCLUDED_HERO_IDS = {2035}  # 猿田彦
 EXCLUDED_ENEMY_IMAGES = {"Image/Enemies/715.png"}  # ゴースト・猿田彦
 
 BACKGROUND_IDS = ["1001", "1003", "1023", "1038", "1050", "2105", "2405", "2705"]
+# バトル用（MCHの色違いの背景）。ステージごとに順番に使う
+BATTLE_BACKGROUND_IDS = ["2105", "2405", "2805", "2705", "2301", "2205", "2605", "2505", "2905"]
 
 
 def find_source() -> Path:
@@ -412,17 +414,18 @@ def copy_misc(src: Path):
         from PIL import Image  # type: ignore
     except ImportError:
         Image = None
-    backgrounds = []
-    for bid in BACKGROUND_IDS:
+    def convert(bid):
         s = src / f"Image/Backgrounds/{bid}.png"
         if Image is not None:
             dst = bg_dir / f"{bid}.webp"
-            Image.open(s).convert("RGB").save(dst, "WEBP", quality=72, method=6)
+            if not dst.exists():
+                Image.open(s).convert("RGB").save(dst, "WEBP", quality=72, method=6)
         else:
             dst = bg_dir / f"{bid}.png"
             shutil.copyfile(s, dst)
-        backgrounds.append(str(dst.relative_to(ROOT)))
-    return backgrounds
+        return str(dst.relative_to(ROOT))
+
+    return [convert(bid) for bid in BACKGROUND_IDS], [convert(bid) for bid in BATTLE_BACKGROUND_IDS]
 
 
 def main():
@@ -436,7 +439,7 @@ def main():
     heroes = build_heroes(src)
     enemies = build_enemies(src)
     extensions = build_extensions(src)
-    backgrounds = copy_misc(src)
+    backgrounds, battle_backgrounds = copy_misc(src)
 
     data_dir = ROOT / "data"
     data_dir.mkdir(exist_ok=True)
@@ -453,6 +456,7 @@ def main():
             "source": "https://github.com/bearko/mycryptoheroes",
             "factions": FACTIONS,
             "backgrounds": backgrounds,
+            "battleBackgrounds": battle_backgrounds,
             "counts": {"heroes": len(heroes), "enemies": len(enemies), "extensions": len(extensions)},
             "credits": {
                 "chris": "ドット絵：こじもこ",

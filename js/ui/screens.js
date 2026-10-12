@@ -3,11 +3,12 @@
 // 文字（ロゴやテロップ）の手前にキャラクターを重ねて、UIを空間の一部として見せる。
 
 import { h, img } from "./h.js";
-import { extensionIcon, gumAmount, modal, unitCard, unitDetail } from "./components.js";
+import { extensionIcon, factionBadge, gumAmount, levelStars, modal, rarityBadge, unitCard, unitDetail } from "./components.js";
 import { winGauge } from "./market-view.js";
-import { KIND_ICONS, PLAYERS, TREASURES, playerById, treasureById } from "../engine/content.js";
-import { ROLES } from "./battle-fx.js";
-import { START_LIVES, WINS_TO_CLEAR } from "../engine/balance.js";
+import { COLUMN_NAMES, KIND_ICONS, PLAYERS, TREASURES, playerById, treasureById } from "../engine/content.js";
+import { ROLES, mainKind } from "./battle-fx.js";
+import { PARTY_COLS, START_LIVES, WINS_TO_CLEAR } from "../engine/balance.js";
+import { effectText, triggerLabel } from "../engine/units.js";
 
 function playerImg(player, src, cls = "") {
   return img(src, `${player.pixelated === false ? "" : "pixel"} ${cls}`, player.name);
@@ -413,9 +414,129 @@ export function resultPanel(app, result) {
       { class: "result-panel panel" },
       h("div", { class: "result-stage" }, `STAGE ${result.stage}`),
       h("div", { class: "result-rows" }, rows),
+      reviewRows(app, app.battleView?.battle),
       h("button", { class: "btn primary big", onClick: () => app.actions.next() }, nextLabel),
     ),
   );
+}
+
+// ---------------------------------------------------------------------------
+// 振り返り（結果画面で両パーティのヒーローをタップすると、そのバトルでのスキルと活躍を確認できる）
+// ---------------------------------------------------------------------------
+
+/** 前衛→中衛→後衛の順に並べる */
+const byLane = (a, b) => (a.slot % PARTY_COLS) - (b.slot % PARTY_COLS) || a.slot - b.slot;
+
+function mvpSlot(side) {
+  if (!side.fighters.length) return null;
+  return side.fighters.reduce((a, c) => (c.contribution > a.contribution ? c : a)).slot;
+}
+
+function reviewRows(app, battle) {
+  if (!battle) return null;
+  return h(
+    "div",
+    { class: "review" },
+    [1, 0].map((index) => {
+      const side = battle.sides[index];
+      const mvp = mvpSlot(side);
+      return h(
+        "div",
+        { class: `review-row ${index === 0 ? "player" : "enemy"}` },
+        h("span", { class: "review-label" }, index === 0 ? "自分" : "相手"),
+        h(
+          "div",
+          { class: "review-units" },
+          side.fighters
+            .slice()
+            .sort(byLane)
+            .map((f) => {
+              const kind = mainKind(f);
+              return h(
+                "button",
+                {
+                  class: `review-unit r${f.rarity}`,
+                  style: { "--role": ROLES[kind].color },
+                  "aria-label": `${f.name}のスキル`,
+                  onClick: () => app.actions.showFighter(index, f.slot),
+                },
+                img(f.image, `pixel${index === 1 ? " flip" : ""}`, f.name),
+                h("span", { class: `lv lv${f.level}` }, `Lv${f.level}`),
+                img(KIND_ICONS[kind], "review-kind"),
+                f.slot === mvp && f.contribution > 0 ? h("span", { class: "mvp" }, "MVP") : null,
+              );
+            }),
+        ),
+      );
+    }),
+  );
+}
+
+const formatValue = (kind, v) => (kind === "haste" || kind === "slow" ? v.toFixed(1) : Math.round(v));
+
+/** 振り返り用の詳細: バトルでの最終値（エクステンション・強化込み）と活躍 */
+export function fighterModal(app, battle, sideIndex, slot, onClose) {
+  const side = battle.sides[sideIndex];
+  const f = side.fighters.find((x) => x.slot === slot);
+  const def = app.db.def(f.defId);
+  const isEnemy = sideIndex === 1;
+  const multPct = Math.round((f.mult - 1) * 100);
+  const body = h(
+    "div",
+    { class: "unit-detail review-detail" },
+    h(
+      "div",
+      { class: "detail-head" },
+      h("div", { class: `detail-art r${def.rarity}` }, img(def.image, `pixel${isEnemy ? " flip" : ""}`, def.name)),
+      h(
+        "div",
+        { class: "detail-title" },
+        h("div", { class: "detail-name" }, def.name, levelStars(f.level)),
+        h(
+          "div",
+          { class: "detail-badges" },
+          h("span", { class: `side-chip ${isEnemy ? "enemy" : "player"}` }, isEnemy ? "相手" : "自分"),
+          h("span", { class: "lane-chip" }, COLUMN_NAMES[f.slot % PARTY_COLS]),
+          rarityBadge(def.rarity),
+          def.faction ? factionBadge(def.faction) : null,
+          f.slot === mvpSlot(side) && f.contribution > 0 ? h("span", { class: "mvp" }, "MVP") : null,
+        ),
+        h(
+          "div",
+          { class: "detail-stats" },
+          h("span", null, f.cd ? `チャージ ${f.cd}秒` : "パッシブのみ"),
+          h("span", null, `発動 ${f.casts}回`),
+          h("span", null, `活躍度 ${Math.round(f.contribution)}`),
+        ),
+        multPct ? h("div", { class: `detail-notes${multPct < 0 ? " down" : ""}` }, `バトル中の効果量 ${multPct > 0 ? "+" : ""}${multPct}%`) : null,
+      ),
+    ),
+    h(
+      "div",
+      { class: "skill-block" },
+      h("div", { class: "skill-name" }, def.skill_name),
+      h(
+        "ul",
+        { class: "skill-lines" },
+        f.effects.map((e) =>
+          h(
+            "li",
+            { class: `skill-line kind-${e.kind}` },
+            h("span", { class: `trigger trigger-${e.trigger}` }, triggerLabel(e.trigger, f.cd)),
+            img(KIND_ICONS[e.kind], "kind-icon"),
+            h("span", { class: "skill-text" }, effectText(e.kind, formatValue(e.kind, e.value))),
+            f.multicast > 1 && e.trigger === "charge" ? h("b", { class: "multicast-note" }, `×${f.multicast}`) : null,
+          ),
+        ),
+      ),
+    ),
+    h("p", { class: "merge-rule" }, "このバトルでの数値（エクステンション・Lvを反映）。活躍度はダメージ・回復・シールドなどの合計です。"),
+    h("details", { class: "source-text" }, h("summary", null, "元のスキル（MCH）"), h("p", null, def.source_text)),
+  );
+  return modal(null, body, {
+    className: "detail-modal review-modal",
+    footer: h("button", { class: "btn modal-close", onClick: onClose }, "閉じる"),
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -443,7 +564,7 @@ function helpPages(app) {
     ["クエスト", "1回の挑戦。10勝でクリア、ライフが尽きると失敗。"],
     ["ステージ", "マーケットでの準備→バトルの1サイクル。"],
     ["GUM", "マーケットで使う通貨。ステージ開始時に獲得。"],
-    ["マーケット", "ヒーローとマテリアルを購入する場所。↻でラインナップ更新、取置で次のステージに持ち越し。"],
+    ["マーケット", "ヒーローとマテリアルを購入する場所。↻でラインナップ更新。南京錠をタップすると1枠ずつ取り置きでき、更新しても次のステージでも残る（GUMが足りなくても取り置ける）。"],
     ["マーケットランク（R）", "ステージごとに上がり、高レアリティのヒーローが出やすくなる。C/U/R/E/L の数字は出現率（%）。"],
     ["合成", "同じヒーローLv1×3→Lv2、Lv2×2→Lv3。合成のたびにエクステンションを獲得。"],
     ["パーティ / 控え", "上の6枠（前衛・中衛・後衛 × 2段）がバトルに参加。下の4枠は控えで待機。"],

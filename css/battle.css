@@ -881,3 +881,130 @@
 .result-panel .btn.big {
   width: 100%;
 }
+
+/* ------------------------------------------------------------- 振り返り（結果画面で両パーティを確認） */
+
+.review {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.review-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.review-label {
+  flex: none;
+  width: 30px;
+  padding: 2px 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 11px;
+  color: #0b0d12;
+  background: var(--ally);
+  clip-path: polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%);
+}
+
+.review-row.enemy .review-label {
+  background: var(--enemy);
+  color: #fff;
+}
+
+.review-units {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.review-unit {
+  position: relative;
+  aspect-ratio: 1;
+  max-height: 46px;
+  padding: 2px;
+  border: 0;
+  cursor: pointer;
+  background: linear-gradient(170deg, rgba(52, 58, 75, 0.95), rgba(18, 21, 29, 0.95) 70%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12), inset 0 -3px 0 var(--role);
+  clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
+}
+
+.review-unit:active {
+  transform: scale(0.94);
+}
+
+.review-unit > img.pixel {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.review-unit .lv {
+  position: absolute;
+  right: 1px;
+  top: 1px;
+  transform: scale(0.75);
+  transform-origin: 100% 0;
+}
+
+.review-kind {
+  position: absolute;
+  left: 2px;
+  bottom: 4px;
+  width: 13px;
+  height: 13px;
+}
+
+.mvp {
+  display: inline-block;
+  padding: 0 4px;
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 10px;
+  line-height: 14px;
+  color: #241900;
+  background: linear-gradient(180deg, #fff1a8, var(--accent));
+}
+
+.review-unit .mvp {
+  position: absolute;
+  left: 1px;
+  top: 1px;
+  padding: 0 2px;
+  font-size: 8px;
+  line-height: 10px;
+}
+
+img.flip {
+  transform: scaleX(-1);
+}
+
+.side-chip,
+.lane-chip {
+  display: inline-block;
+  padding: 1px 6px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  color: #0b0d12;
+  background: var(--ally);
+}
+
+.side-chip.enemy {
+  color: #fff;
+  background: var(--enemy);
+}
+
+.lane-chip {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.multicast-note {
+  margin-left: auto;
+  font-family: var(--font-num);
+  color: var(--accent);
+}

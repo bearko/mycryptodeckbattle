@@ -3,7 +3,7 @@
 import { createDb } from "./engine/units.js";
 import * as Run from "./engine/run.js";
 import { moveUnit, allUnits } from "./engine/roster.js";
-import { reroll, toggleLock, effectiveRank } from "./engine/market.js";
+import { reroll, toggleOfferLock, effectiveRank } from "./engine/market.js";
 import { randomSeed, withRng } from "./engine/rng.js";
 import { battleSummary, runBattle } from "./engine/battle.js";
 import { PLAYERS, playerById } from "./engine/content.js";
@@ -25,6 +25,7 @@ import {
   endScreen,
   extensionInfoModal,
   extensionModal,
+  fighterModal,
   helpModal,
   menuModal,
   playerModal,
@@ -67,6 +68,12 @@ function save() {
 function background(offset = 0) {
   const list = app.backgrounds;
   return new URL(list[((app.run?.stage ?? 0) + offset) % list.length], document.baseURI).href;
+}
+
+/** バトル背景（MCHの色違いの背景をステージごとに順番に使う） */
+function battleBackground() {
+  const list = app.battleBackgrounds?.length ? app.battleBackgrounds : app.backgrounds;
+  return new URL(list[((app.run?.stage ?? 1) - 1) % list.length], document.baseURI).href;
 }
 
 function player() {
@@ -520,10 +527,14 @@ const actions = {
     render();
     say("reroll");
   },
-  toggleLock() {
-    const locked = toggleLock(app.run);
+  /** ヒーロー（マテリアル）を1枠ずつ取り置き。GUMが足りなくてもでき、更新・次のステージでも残る */
+  toggleOfferLock(index) {
+    const locked = toggleOfferLock(app.run, index);
+    if (locked === null) return;
+    audio.se("buy", 0.3);
     save();
     render();
+    pop(root.querySelector(`.offer[data-offer="${index}"] .offer-lock`), "pop");
     say(locked ? "lockOn" : "lockOff");
   },
   chooseTreasure(id, el) {
@@ -571,13 +582,25 @@ const actions = {
     wipe(
       () => {
         app.screen = "battle";
-        ambient.setBackground(background(0), { mood: "battle", accent: "#ff4f6d" });
+        const bg = battleBackground();
+        ambient.setBackground(bg, { mood: "battle", accent: "#ff4f6d" });
         clear(root);
-        app.battleView = new BattleView(app, prep);
+        app.battleView = new BattleView(app, prep, { background: bg });
         root.append(app.battleView.el);
       },
       { accent: "#ff4f6d", label: "BATTLE" },
     ).then(() => app.battleView?.start());
+  },
+  /** 結果画面での振り返り: ヒーローのスキルとそのバトルでの活躍 */
+  showFighter(sideIndex, slot) {
+    const battle = app.battleView?.battle;
+    if (!battle) return;
+    root.querySelector(".review-modal")?.remove();
+    speech.dismiss();
+    const close = () => el.remove();
+    const el = fighterModal(app, battle, sideIndex, slot, close);
+    el.addEventListener("click", (e) => e.target === el && close());
+    root.append(el);
   },
   battleSpeak(kind) {
     const anchor = root.querySelector(".side-head.player .side-leader");
@@ -635,6 +658,7 @@ async function boot() {
     ]);
     app.db = createDb({ heroes, enemies, extensions });
     app.backgrounds = manifest.backgrounds;
+    app.battleBackgrounds = manifest.battleBackgrounds ?? [];
   } catch (err) {
     clear(root).append(h("div", { class: "loading error" }, `データの読み込みに失敗しました: ${err.message}`));
     throw err;

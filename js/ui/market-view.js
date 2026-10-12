@@ -149,6 +149,16 @@ function boardSection(app) {
   );
 }
 
+// 南京錠（取り置き）。閉じている=取り置き中
+const LOCK_CLOSED =
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7.5a5 5 0 0 1 10 0V10" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><rect x="4" y="10" width="16" height="11" rx="2.5" fill="currentColor"/><circle cx="12" cy="15.5" r="1.8" fill="#10121a"/></svg>';
+const LOCK_OPEN =
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7.5a5 5 0 0 1 9.6-2" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><rect x="4" y="10" width="16" height="11" rx="2.5" fill="currentColor"/><circle cx="12" cy="15.5" r="1.8" fill="#10121a"/></svg>';
+
+export function lockIcon(locked) {
+  return h("span", { class: "lock-icon", html: locked ? LOCK_CLOSED : LOCK_OPEN });
+}
+
 function offerView(app, offer, index) {
   const run = app.run;
   const deal = app.ui.deal ? " deal" : "";
@@ -166,7 +176,7 @@ function offerView(app, offer, index) {
     {
       class: `offer${deal}${isSelected(app.ui.selected, "offer", index) ? " selected" : ""}${run.gum >= offer.cost ? "" : " expensive"}${
         offer.type === "material" ? " material-slot" : ""
-      }${merge ? " merge-ready" : ""}`,
+      }${merge ? " merge-ready" : ""}${offer.locked ? " locked" : ""}`,
       style,
       dataset: { offer: String(index) },
       draggable: "true",
@@ -179,6 +189,18 @@ function offerView(app, offer, index) {
     offer.type === "hero" ? unitCard(app.db.def(offer.defId), { level: 0 }) : materialCard(materialById(offer.id)),
     badge,
     h("div", { class: "price" }, gumAmount(offer.cost)),
+    h(
+      "button",
+      {
+        class: `offer-lock${offer.locked ? " on" : ""}`,
+        "aria-label": offer.locked ? "取り置きを解除" : "取り置き",
+        onClick: (e) => {
+          e.stopPropagation();
+          app.actions.toggleOfferLock(index);
+        },
+      },
+      lockIcon(offer.locked),
+    ),
   );
 }
 
@@ -186,7 +208,6 @@ function marketSection(app) {
   const run = app.run;
   const odds = marketOdds(effectiveRank(run));
   const cost = rerollCost(run);
-  const locked = run.market.locked;
   return h(
     "section",
     { class: "market" },
@@ -205,15 +226,10 @@ function marketSection(app) {
         h("span", { class: "spin" }, "↻"),
         cost === 0 ? h("span", { class: "free" }, `×${run.freeRerolls}`) : gumAmount(cost),
       ),
-      h(
-        "button",
-        { class: `btn small lock-btn${locked ? " active" : ""}`, onClick: () => app.actions.toggleLock(), "aria-label": "取り置き" },
-        locked ? "取置中" : "取置",
-      ),
     ),
     h(
       "div",
-      { class: `offers${locked ? " locked" : ""}` },
+      { class: "offers" },
       run.market.offers.map((o, i) => offerView(app, o, i)),
     ),
   );
@@ -244,11 +260,21 @@ function infoContent(app) {
   if (sel?.type === "offer" && run.market.offers[sel.index]) {
     const offer = run.market.offers[sel.index];
     const merge = offer.type === "hero" ? mergePreview(run, offer.defId) : null;
+    const short = run.gum < offer.cost;
     const buy = h(
       "button",
-      { class: `btn primary${merge ? " merge" : ""}`, onClick: () => app.actions.buy(sel.index) },
+      { class: `btn ${short ? "short" : "primary"}${merge ? " merge" : ""}`, onClick: () => app.actions.buy(sel.index) },
       merge ? `Lv${merge}↑` : "購入",
       gumAmount(offer.cost),
+    );
+    const lock = h(
+      "button",
+      {
+        class: `btn small lock-action${offer.locked ? " on" : ""}${short && !offer.locked ? " primary" : ""}`,
+        onClick: () => app.actions.toggleOfferLock(sel.index),
+      },
+      lockIcon(offer.locked),
+      offer.locked ? "解除" : "取置",
     );
     if (offer.type === "hero") {
       const def = app.db.def(offer.defId);
@@ -257,11 +283,19 @@ function infoContent(app) {
         key: `offer-${sel.index}-${offer.defId}`,
         body: compactUnit(def, {
           progress: lv1 ? h("span", { class: "progress-chip" }, pips(Math.min(3, lv1 + 1), 3, "preview"), "→Lv2") : null,
-          actions: [buy, h("button", { class: "btn small info-btn", onClick: () => app.actions.showUnit(offer.defId) }, "詳細")],
+          actions: [
+            buy,
+            h(
+              "div",
+              { class: "action-row" },
+              lock,
+              h("button", { class: "btn small info-btn", onClick: () => app.actions.showUnit(offer.defId) }, "詳細"),
+            ),
+          ],
         }),
       };
     }
-    return { key: `offer-${sel.index}-${offer.id}`, body: compactMaterial(materialById(offer.id), [buy]) };
+    return { key: `offer-${sel.index}-${offer.id}`, body: compactMaterial(materialById(offer.id), [buy, lock]) };
   }
   if (sel?.type === "unit" && run[sel.zone][sel.index]) {
     const unit = run[sel.zone][sel.index];

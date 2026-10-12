@@ -45,7 +45,7 @@ export function buildCpuOpponent(db, run, stage) {
     itemUses: 0,
     heroPool: run.enemyPool,
     nextUid: 1,
-    market: { offers: [], locked: false },
+    market: { offers: [] },
     extensions: [],
     ...emptyRoster(),
   };

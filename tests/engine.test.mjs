@@ -2,9 +2,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { loadDb } from "./load-db.mjs";
 import { createBattle, stepBattle, runBattle } from "../js/engine/battle.js";
-import { newRun, buy, sell, finishBattle, advance, prepareBattle, chooseExtension, chooseTreasure, usesKnownUnits } from "../js/engine/run.js";
+import { newRun, buy, sell, finishBattle, advance, prepareBattle, chooseExtension, chooseTreasure, usesKnownUnits, startStage } from "../js/engine/run.js";
 import { acquireUnit, allUnits, emptyRoster } from "../js/engine/roster.js";
-import { rollMarket } from "../js/engine/market.js";
+import { rollMarket, reroll, toggleOfferLock } from "../js/engine/market.js";
 import { createRng } from "../js/engine/rng.js";
 import { buildCpuOpponent } from "../js/engine/cpu.js";
 import { sellValue, lifeLoss } from "../js/engine/balance.js";
@@ -244,4 +244,36 @@ test("版権コラボのユニットはデータに含めず、それを参照�
   const run = newRun(db, { playerId: "chris", seed: 7 });
   assert.ok(usesKnownUnits(run, db));
   assert.ok(!usesKnownUnits({ ...run, heroPool: [...run.heroPool, "h2035"] }, db));
+});
+
+test("取り置きは1枠ずつ。GUMが足りなくてもでき、更新と次のステージで残る", () => {
+  const run = newRun(db, { playerId: "chris", seed: 11 });
+  const rng = createRng(3);
+  run.gum = 0;
+  const held = run.market.offers[1];
+  assert.equal(toggleOfferLock(run, 1), true);
+  run.gum = 10;
+  run.freeRerolls = 0;
+  assert.ok(reroll(run, db, rng).ok);
+  assert.equal(run.market.offers[1], held);
+  assert.equal(run.gum, 7);
+  startStage(run, db);
+  assert.equal(run.market.offers[1], held);
+  assert.equal(run.market.offers[1].locked, true);
+  // 解除すると次の更新で入れ替わる対象になる
+  assert.equal(toggleOfferLock(run, 1), false);
+  // 全枠取り置き中は更新できない
+  for (let i = 0; i < run.market.offers.length; i++) toggleOfferLock(run, i);
+  const gum = run.gum;
+  assert.equal(reroll(run, db, rng).ok, false);
+  assert.equal(run.gum, gum);
+});
+
+test("旧仕様（ラインナップ全体の取り置き）の保存データは全枠を持ち越す", () => {
+  const run = newRun(db, { playerId: "chris", seed: 12 });
+  const before = run.market.offers.map((o) => o?.defId ?? o?.id);
+  run.market.locked = true;
+  startStage(run, db);
+  assert.deepEqual(run.market.offers.map((o) => o?.defId ?? o?.id), before);
+  assert.equal(run.market.locked, undefined);
 });

@@ -30,6 +30,11 @@ export const ROLES = {
 
 export const roleColor = (kind) => ROLES[kind]?.color ?? "#ffffff";
 
+/** そのヒーローの主な役割（チャージで発動する最初の効果） */
+export function mainKind(f) {
+  return (f.effects.find((e) => e.trigger === "charge") ?? f.effects[0])?.kind ?? "damage";
+}
+
 const MAX_NODES = 90;
 
 function place(layer, el, p) {

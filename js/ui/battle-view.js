@@ -12,6 +12,7 @@ import {
   castAura,
   iconPop,
   impact,
+  mainKind,
   poisonBubbles,
   poisonCloud,
   projectile,
@@ -23,6 +24,7 @@ import { TICK, SUDDEN_DEATH_AT, PARTY_SIZE, PARTY_COLS } from "../engine/balance
 import { COLUMN_NAMES, KIND_ICONS } from "../engine/content.js";
 import { bobDelay, effectShort, toast } from "./components.js";
 import { pop, shake } from "./fx.js";
+import { battleBackdrop } from "./battle-backdrop.js";
 import { ambient } from "./ambient.js";
 
 const SPEEDS = [1, 2, 4];
@@ -110,9 +112,10 @@ const KIND_SE = {
 };
 
 export class BattleView {
-  constructor(app, prep) {
+  constructor(app, prep, { background = null } = {}) {
     this.app = app;
     this.prep = prep;
+    this.background = background;
     this.battle = createBattle(prep.left, prep.right);
     this.speed = app.settings.speed || 1;
     this.cards = [new Map(), new Map()];
@@ -281,7 +284,15 @@ export class BattleView {
     this.field = h("div", { class: "battle-field" }, floor, this.laneTags(), this.zones[1], this.zones[0]);
     const top = h("div", { class: "battle-top" }, h("div", { class: "stage-label" }, `STAGE ${this.app.run.stage}`), this.timerEl, controls);
     this.inner = h("div", { class: "battle-inner" }, top, this.heads[1], this.field, this.heads[0]);
-    return h("div", { class: "screen battle-screen" }, this.inner, this.fx);
+    const backdrop = this.background
+      ? battleBackdrop({
+          background: this.background,
+          stage: this.app.run.stage,
+          enemy: this.battle.sides[1].name,
+          ally: this.battle.sides[0].name,
+        })
+      : null;
+    return h("div", { class: "screen battle-screen" }, backdrop, this.inner, this.fx);
   }
 
   setSpeed(s) {
@@ -760,11 +771,6 @@ export class BattleView {
   showResult(content) {
     this.el.append(content);
   }
-}
-
-/** そのヒーローの主な役割（チャージで発動する最初の効果） */
-function mainKind(f) {
-  return (f.effects.find((e) => e.trigger === "charge") ?? f.effects[0])?.kind ?? "damage";
 }
 
 function setStatus(el, value) {
