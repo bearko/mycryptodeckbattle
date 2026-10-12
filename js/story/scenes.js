@@ -13,9 +13,11 @@
 //   { machine: レベル, from?: レベル }       … タイムマシンを見せる（from があると改良の演出）
 //   { title: "近代・日本", sub: "MODERN JAPAN" } … エリア名のテロップ
 //
-// ノード（時代×地域）ごとの専用の台本は M5（docs/story.md）で増やす。いまは近代・日本を専用、ほかは共通の台本。
+// ノード（時代×地域）ごとの専用の台本は js/story/node-scripts.js（到着・看板ヒーローとの出会い・レイドボス・クリア、
+// 特別ステージ）。近代・日本（チュートリアル）はこのファイルに書いている。
 
-import { FIELDS, FOES, areaById, areaName, eraById, heroId, isFinalStage, machineByLevel } from "../engine/world.js";
+import { FIELDS, FOES, areaById, areaName, eraById, heroId, machineByLevel } from "../engine/world.js";
+import { HERO_LINES, JOIN_REPLIES, NODE_SCRIPTS, SPECIAL_SCRIPTS } from "./node-scripts.js";
 
 /** プロローグに出てくるエネミー（遭遇するだけ。戦わない） */
 const PROLOGUE_ENEMY = "assets/enemies/101.png";
@@ -104,15 +106,22 @@ const KINDAI_JP = {
   ],
 };
 
-/** 最終ステージ: レイドボスの登場（ステージの最後のウェーブで戦う）。ボスは右に出したまま、マインは声だけ */
-function bossReveal(boss) {
+/**
+ * ボスのステージ: レイドボスの登場（ステージの最後のウェーブで戦う）。ボスは右に出したまま、マインは声だけ。
+ * line: ボスの第一声（ノード・特別ステージの台本から）
+ */
+function bossReveal(boss, line = null, { special = false } = {}) {
   return [
     { fx: "shake" },
     { enter: "boss", image: boss.image, name: boss.name, fx: "drop" },
     { fx: "flash" },
-    { say: "boss", text: "…………ゴ……ゴゴゴゴ……！" },
+    { say: "boss", text: line ?? "…………ゴ……ゴゴゴゴ……！" },
     { say: "chris", face: "sad", text: "で、でかい……！ なんだあれは!?" },
-    { say: "mine", offscreen: true, text: `レイドボス「${boss.name}」！ この時代を書き換えている、エネミーの親玉です！` },
+    {
+      say: "mine",
+      offscreen: true,
+      text: special ? `特異点のボス「${boss.name}」！ いままでのレイドボスより、ずっと強い反応です！` : `レイドボス「${boss.name}」！ この時代を書き換えている、エネミーの親玉です！`,
+    },
     { say: "mine", offscreen: true, text: "最後のウェーブで戦います。大技の予告が出たら要注意。それまでにたくさんダメージを与えましょう！" },
     { say: "chris", face: "guts", text: "よし……みんな、いくぞ！" },
   ];
@@ -127,7 +136,9 @@ export function stageIntro(area, index, { first, boss = null, stage = null }) {
   const steps = [];
   if (index === 0 && first) steps.push(...arrival(area));
   else steps.push({ bg: area.bg });
-  const final = isFinalStage(area, index) && boss;
+  const final = Boolean(boss);
+  if (area.special) return specialIntro(area, index, { first, boss, steps });
+  const script = NODE_SCRIPTS[area.id];
   if (area.id === "kindai-jp") {
     steps.push(...(first ? KINDAI_JP[index] : [{ say: "mine", face: "smile", text: "もう一度、腕だめしですね！" }]));
     if (first && final) steps.push(...bossReveal(boss));
@@ -144,12 +155,9 @@ export function stageIntro(area, index, { first, boss = null, stage = null }) {
   if (!first) {
     steps.push({ say: "mine", face: "smile", text: final ? `${boss.name}に、もう一度挑みましょう！` : "もう一度、腕だめしですね！" });
   } else if (meet) {
-    steps.push(
-      { say: "mine", face: "pointer", text: index === 0 ? `到着！ ここは${areaName(area)}ですね` : final ? "この先から、ものすごく強い反応が……！" : "エネミーの反応が強くなってきました" },
-      { say: `hero:${meet}`, text: final ? "おぬしたちも、あの巨大な怪物を追ってきたのか。" : "見慣れぬ者たちだな。……もしや、この地を騒がせる怪物を追っているのか？" },
-      { say: "chris", face: "guts", text: "はい！ 一緒に戦ってくれませんか？" },
-      { say: `hero:${meet}`, text: "よかろう。この時代を守るためなら、力を貸そう！" },
-    );
+    if (index === 0 && script?.arrive) steps.push(...script.arrive);
+    else steps.push({ say: "mine", face: "pointer", text: index === 0 ? `到着！ ここは${areaName(area)}ですね` : final ? "この先から、ものすごく強い反応が……！" : "エネミーの反応が強くなってきました" });
+    steps.push(...meetSteps(meet, final));
   } else {
     steps.push(
       { say: "mine", face: "pointer", text: "この先にエネミーが集まっています。拠点をひとつずつ片付けましょう！" },
@@ -160,14 +168,37 @@ export function stageIntro(area, index, { first, boss = null, stage = null }) {
   if (st.kind === "elite") steps.push({ say: "mine", face: "arms", text: "強い反応……強敵の部隊です！ そのかわり、倒せば宝箱が手に入りますよ" });
   if (st.field) steps.push({ say: "mine", face: "pointer", text: `このあたりは「${FIELDS[st.field].name}」。${FIELDS[st.field].text}です` });
   if (st.foe && st.foe !== "mixed") steps.push({ say: "mine", face: "smile", text: `エネミーは「${FOES[st.foe].name}」。${FOES[st.foe].text}みたいです` });
-  if (final) steps.push(...bossReveal(boss));
+  if (final) steps.push(...bossReveal(boss, script?.boss));
+  return { bg: area.bg, steps };
+}
+
+/** ヒーローとの出会い。看板ヒーローは専用の会話、ほかは自己紹介の一言 */
+function meetSteps(meet, final) {
+  for (const script of Object.values(NODE_SCRIPTS)) if (script.meet?.[meet]) return script.meet[meet];
+  const line = HERO_LINES[meet] ?? (final ? "おぬしたちも、あの巨大な怪物を追ってきたのか。" : "見慣れぬ者たちだな。……もしや、この地を騒がせる怪物を追っているのか？");
+  return [
+    { say: `hero:${meet}`, text: line },
+    { say: "chris", face: "guts", text: "はい！ 一緒に戦ってくれませんか？" },
+    { say: `hero:${meet}`, text: JOIN_REPLIES[meet % JOIN_REPLIES.length] },
+  ];
+}
+
+/** 特別ステージ（特異点）の出撃前の会話。2回目以降は短く */
+function specialIntro(area, index, { first, boss, steps }) {
+  const script = SPECIAL_SCRIPTS[area.id];
+  if (first) steps.push(...(script.stages[index] ?? []));
+  else steps.push({ say: "mine", face: "arms", text: boss ? `${boss.name}に、もう一度挑みましょう！` : "特異点に、もう一度挑みましょう！" });
+  const st = area.stages[index];
+  if (st.field) steps.push({ say: "mine", face: "pointer", text: `このあたりは「${FIELDS[st.field].name}」。${FIELDS[st.field].text}です` });
+  if (boss) steps.push(...bossReveal(boss, first ? script.boss[boss.id] : null, { special: true }));
   return { bg: area.bg, steps };
 }
 
 /** ステージクリアのあとのシーン（タイムマシンの改良） */
 export function upgradeScene(fromLevel, toLevel, unlockedAreas) {
   const m = machineByLevel(toLevel);
-  const places = unlockedAreas.map((id) => areaName(areaById(id)));
+  // 特別ステージはノードクリアの会話で話す
+  const places = unlockedAreas.filter((id) => !areaById(id).special).map((id) => areaName(areaById(id)));
   const steps = [
     { say: "mine", face: "sparkle", text: "パーツがそろいました！ タイムマシンを改良しますね" },
     { machine: toLevel, from: fromLevel },
@@ -196,16 +227,24 @@ export const TUTORIAL_DONE = {
   ],
 };
 
-/** ノードを最後までクリアしたとき（チュートリアル以外の共通）。opened: 新しく行けるようになったノード */
+/**
+ * ノードを最後までクリアしたとき（チュートリアル以外）。opened: 新しく行けるようになったノード（特別ステージを含む）。
+ * ノードの台本の clear、特別ステージは SPECIAL_SCRIPTS の clear。新しく特異点が開いたら、その会話も続ける
+ */
 export function areaClearScene(area, opened = []) {
-  const steps = [
-    { say: "mine", face: "cheer", text: `${areaName(area)}のエネミーを追い払いました！` },
-    { say: "chris", face: "smile", text: "この時代の人たちも、きっともう大丈夫だな" },
-  ];
-  if (opened.length) {
-    const places = opened.map((id) => areaName(areaById(id)));
+  const script = area.special ? SPECIAL_SCRIPTS[area.id] : NODE_SCRIPTS[area.id];
+  const steps = script?.clear
+    ? [...script.clear]
+    : [
+        { say: "mine", face: "cheer", text: `${areaName(area)}のエネミーを追い払いました！` },
+        { say: "chris", face: "smile", text: "この時代の人たちも、きっともう大丈夫だな" },
+      ];
+  const main = opened.filter((id) => !areaById(id).special);
+  if (main.length) {
+    const places = main.map((id) => areaName(areaById(id)));
     steps.push({ say: "mine", face: "pointer", text: `タイムマシンを調整しました。これで「${places.join("」「")}」にも行けます！` });
   }
+  for (const id of opened.filter((x) => areaById(x).special)) steps.push(...SPECIAL_SCRIPTS[id].appear);
   return { bg: area.bg, steps };
 }
 

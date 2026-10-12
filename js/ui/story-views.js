@@ -117,7 +117,8 @@ export function worldMapScreen(app) {
   const story = app.story;
   const eraId = app.ui.storyEra ?? "kindai";
   const eras = ERAS.filter((e) => e.id !== "hazama" || eraUnlocked(story, "hazama"));
-  const areas = AREAS.filter((a) => a.era === eraId);
+  // 特別ステージ（特異点）は、開くまで地図に出さない（開いたときの驚き）
+  const areas = AREAS.filter((a) => a.era === eraId && (!a.special || areaUnlocked(story, a)));
   return h(
     "div",
     { class: "screen story-screen map-screen" },
@@ -165,7 +166,21 @@ function mapPin(app, area) {
   const open = areaUnlocked(story, area);
   const cleared = areaCleared(story, area);
   const { done, total } = areaProgress(story, area);
-  const cls = cleared ? "cleared" : open ? "open" : "locked";
+  const cls = `${cleared ? "cleared" : open ? "open" : "locked"}${area.special ? " special" : ""}`;
+  if (area.special) {
+    const boss = app.db.def(area.boss);
+    return h(
+      "button",
+      {
+        class: `map-pin ${cls}`,
+        style: { left: `${area.map.x}%`, top: `${area.map.y}%`, "--area": area.color },
+        onClick: () => app.actions.openArea(area.id),
+        "aria-label": `特異点 ${area.region}`,
+      },
+      h("span", { class: "pin-rift" }, h("i"), h("i"), img(boss.image, "pixel", boss.name)),
+      h("span", { class: "pin-label" }, h("b", null, area.region), h("small", { class: "num" }, cleared ? "CLEAR" : `${done}/${total}`)),
+    );
+  }
   return h(
     "button",
     {
@@ -198,8 +213,10 @@ function lockedReason(story, area) {
 
 /** 道の上の位置（地図の横・縦に対する%）。下の行ほど下、レーンは左・真ん中・右 */
 function routePos(rows, row, lane) {
-  const top = 7;
-  const bottom = 93;
+  // 行が少ないノード（チュートリアル・特別ステージ）は、間が空きすぎないよう真ん中に寄せる
+  const pad = Math.max(0, (6 - rows) * 5);
+  const top = 7 + pad;
+  const bottom = 93 - pad;
   const y = bottom - (row * (bottom - top)) / Math.max(1, rows - 1);
   const x = lane === null || lane === undefined ? 50 : [20, 50, 80][lane];
   return { x, y };
@@ -214,7 +231,7 @@ function stageEnemy(db, area, stage) {
 
 /** ステージのタイルに出す絵（出会うヒーロー・エネミー・補給・レイドボス） */
 function stageArt(app, area, stage) {
-  if (stage.kind === "boss") return { image: app.db.def(area.boss).image, cls: "", def: app.db.def(area.boss) };
+  if (stage.boss) return { image: app.db.def(stage.boss).image, cls: "", def: app.db.def(stage.boss) };
   if (stage.kind === "supply") return { image: "assets/icons/gold_dust.webp", cls: "supply-art" };
   if (stage.meet) {
     const def = app.db.def(heroId(stage.meet));
@@ -325,7 +342,7 @@ function stageCard(app, area, stage) {
   const cleared = isCleared(story, key);
   const sortie = canSortie(story, area, index, stage.lane);
   const known = stageUnlocked(story, area, index, stage.lane) || sortie;
-  const boss = stage.kind === "boss" ? app.db.def(area.boss) : null;
+  const boss = stage.boss ? app.db.def(stage.boss) : null;
   const meet = stage.meet ? app.db.def(heroId(stage.meet)) : null;
   const joins = new Set([...(stage.meetAtStart ? [stage.meet] : []), ...stage.join]);
   const art = stageArt(app, area, stage);

@@ -323,8 +323,10 @@ def build_enemies(src: Path):
 # レイドボス（ストーリーの各ノードの最終ステージ）
 # ---------------------------------------------------------------------------
 
-# 特別ステージのボス用に取っておくため、ストーリーのレイドボスには使わない
+# 特別ステージ（特異点）のボス。content/bosses.json では special: true にする（ノードのレイドボスには使わない）
 RESERVED_BOSS_IDS = {373, 1188, 1189, 1190}  # 覚醒魔王ファオ・ファオ・ファントム・yamap・闇魚王
+# 大きな絵のボスはこの大きさ（px）まで縮める
+BOSS_IMAGE_SIZE = 256
 # 実在の感染症の名前のため使わない
 EXCLUDED_BOSS_IDS = {671, 682}  # COVID-19
 
@@ -338,14 +340,23 @@ def build_bosses(src: Path):
     out = []
     for d in defs:
         mid = d["mch_id"]
-        if mid in RESERVED_BOSS_IDS or mid in EXCLUDED_BOSS_IDS:
-            sys.exit(f"レイドボスに使わないエネミーです: {mid}")
+        if mid in EXCLUDED_BOSS_IDS or (mid in RESERVED_BOSS_IDS) != bool(d.get("special")):
+            sys.exit(f"レイドボスに使わないエネミーです（特別ステージのボスは special: true）: {mid}")
         e = master[mid]
         actives = e["active_skills"]
         if len(actives) != len(d["skills"]):
             sys.exit(f"スキルの数が MCH と合いません: {mid}")
         image_name = Path(e["image_file_path"]).name
-        shutil.copyfile(src / e["image_file_path"], out_dir / image_name)
+        try:
+            from PIL import Image  # type: ignore
+        except ImportError:
+            Image = None
+        image = Image.open(src / e["image_file_path"]) if Image else None
+        if image and image.width > BOSS_IMAGE_SIZE:
+            # 描き込みの細かい大きな絵（yamap・闇魚王）は、ほかのボス（128pxのドット絵）に近い大きさへ縮める
+            image.convert("RGBA").resize((BOSS_IMAGE_SIZE, BOSS_IMAGE_SIZE), Image.LANCZOS).save(out_dir / image_name, optimize=True)
+        else:
+            shutil.copyfile(src / e["image_file_path"], out_dir / image_name)
         passive = e.get("passive_skill")
         out.append(
             {
@@ -358,6 +369,7 @@ def build_bosses(src: Path):
                 "rarity": 5,
                 "faction": 0,
                 "power": d.get("power", 1),
+                "special": bool(d.get("special")),
                 "skills": [
                     {
                         "name": a["name"]["ja"],
@@ -462,6 +474,7 @@ COPY_FILES = {
     "Audio/BGM/pve.mp3": "assets/audio/bgm_battle.mp3",
     "Audio/BGM/land.mp3": "assets/audio/bgm_market.mp3",
     "Audio/BGM/pvp.mp3": "assets/audio/bgm_title.mp3",
+    "Audio/BGM/raid.mp3": "assets/audio/bgm_raid.mp3",
     "Audio/SE/Battle/1_single_damage.mp3": "assets/audio/se_damage.mp3",
     "Audio/SE/Battle/2_area_damage.mp3": "assets/audio/se_area_damage.mp3",
     "Audio/SE/Battle/3_heal_resurrection.mp3": "assets/audio/se_heal.mp3",

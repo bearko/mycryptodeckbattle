@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { loadDb } from "./load-db.mjs";
 import {
   AREAS,
+  MAIN_AREAS,
   STARTER_HEROES,
   DECK_SIZE,
   MACHINES,
@@ -92,7 +93,8 @@ test("最初は近代・日本だけ。ノードをクリアすると同じ時�
   const last = eu[eu.length - 1];
   assert.equal(last.upgradedTo, 2);
   assert.equal(machineInfo(story).level, 2);
-  assert.deepEqual(last.unlockedAreas, ["kinsei-jp"]);
+  // 近世・日本と、特別ステージ「コルシカの特異点」が開く
+  assert.deepEqual(last.unlockedAreas.sort(), ["ex-corsica", "kinsei-jp"]);
   assert.ok(!areaUnlocked(story, areaById("kinsei-eu")));
   assert.deepEqual(clearArea(story, "kinsei-jp").at(-1).unlockedAreas.sort(), ["kinsei-eu", "kinsei-sea"]);
 
@@ -105,7 +107,7 @@ test("最初は近代・日本だけ。ノードをクリアすると同じ時�
 
 test("12ノードのパーツでちょうど Legendary。時空のはざまは全ノードのクリアで開く", () => {
   const story = newStory();
-  const order = AREAS.filter((a) => !a.requiresAll);
+  const order = MAIN_AREAS.filter((a) => !a.requiresAll);
   for (const a of order) {
     assert.ok(areaUnlocked(story, a), `${a.id} が開いていない`);
     clearArea(story, a.id);
@@ -119,12 +121,44 @@ test("12ノードのパーツでちょうど Legendary。時空のはざまは�
 });
 
 test("近代・日本は3ステージ、ほかのノードは10ステージ。どのノードにもレイドボスがいる", () => {
-  for (const a of AREAS) {
+  for (const a of MAIN_AREAS) {
     assert.equal(a.stages.length, a.id === "kindai-jp" ? 3 : 10, a.id);
     assert.ok(db.has(a.boss), `${a.id} のボス ${a.boss}`);
   }
-  const bosses = AREAS.map((a) => db.def(a.boss).mch_id);
+  const bosses = MAIN_AREAS.map((a) => db.def(a.boss).mch_id);
   for (const reserved of [373, 1188, 1189, 1190]) assert.ok(!bosses.includes(reserved), `特別ステージ用のボス ${reserved}`);
+});
+
+test("特別ステージ（特異点）: ノードのクリアで開き、3ステージの1本道。パーツは出ない。魔王の特異点はボスが2体", () => {
+  const specials = AREAS.filter((a) => a.special);
+  assert.deepEqual(specials.map((a) => db.def(a.boss).mch_id).sort((x, y) => x - y), [373, 1189, 1190]);
+  for (const a of specials) {
+    assert.equal(nodeMap(a).rows.length, 3);
+    assert.ok(nodeMap(a).rows.every((row) => row.length === 1), `${a.id} は枝分かれしない`);
+    assert.ok(db.def(a.boss).special);
+  }
+  const maou = areaById("ex-maou");
+  assert.deepEqual(nodeMap(maou).rows.map((row) => row[0].boss), [null, "b1188", "b373"]);
+  assert.deepEqual(nodeMap(maou).rows.map((row) => row[0].kind), ["battle", "boss", "boss"]);
+
+  const story = newStory();
+  clearArea(story, "kindai-jp");
+  assert.ok(!areaUnlocked(story, areaById("ex-corsica")));
+  clearArea(story, "kindai-eu");
+  assert.ok(areaUnlocked(story, areaById("ex-corsica")));
+  const before = { machine: story.machine, parts: story.parts };
+  const res = clearArea(story, "ex-corsica");
+  assert.ok(res.at(-1).areaCleared);
+  assert.ok(res.every((r) => !r.part && !r.heroes.length));
+  assert.deepEqual({ machine: story.machine, parts: story.parts }, before);
+
+  // ステージのウェーブ数・ボス・地形がステージの情報に入る
+  setDeck(story, ["h10001", "h10002", "h10003"], db);
+  const run = newStageRun(db, story, stageKey("ex-maou", 1), 3);
+  assert.equal(run.story.boss, "b1188");
+  assert.equal(run.story.waves, 5);
+  assert.equal(run.story.field, "tactics");
+  assert.ok(run.story.special);
 });
 
 test("古い保存データ（パーツがステージごと）を、ノードごとのパーツに直す", () => {
@@ -429,4 +463,38 @@ test("地形は両陣営のスキルに効く", async () => {
   const after = playerTeam(run, db).fighters[0].effects.find((e) => e.kind === "poison").value;
   assert.ok(after > before, `${before} → ${after}`);
   assert.ok(FIELDS.faction1.mods.factionMult[1] > 0);
+});
+
+test("台本: 出会うヒーローには全員セリフがあり、台本のヒーロー・ボスは実在する", async () => {
+  const { NODE_SCRIPTS, HERO_LINES, SPECIAL_SCRIPTS } = await import("../js/story/node-scripts.js");
+  const { stageIntro, areaClearScene } = await import("../js/story/scenes.js");
+  const featured = new Set(Object.values(NODE_SCRIPTS).flatMap((s) => Object.keys(s.meet ?? {}).map(Number)));
+  for (const a of MAIN_AREAS) {
+    if (a.id === "kindai-jp") continue;
+    assert.ok(NODE_SCRIPTS[a.id], `${a.id} の台本`);
+    for (const st of nodeMap(a).rows.flat()) {
+      if (st.meet) assert.ok(featured.has(st.meet) || HERO_LINES[st.meet], `${a.id} の ${st.meet} のセリフ`);
+    }
+  }
+  const speakers = [];
+  const collect = (steps) => steps.forEach((s) => s.say?.startsWith("hero:") && speakers.push(Number(s.say.slice(5))));
+  for (const s of Object.values(NODE_SCRIPTS)) {
+    Object.values(s.meet).forEach(collect);
+    collect(s.arrive);
+    collect(s.clear);
+  }
+  for (const s of Object.values(SPECIAL_SCRIPTS)) {
+    s.stages.forEach(collect);
+    collect(s.clear);
+    for (const id of Object.keys(s.boss)) assert.ok(db.has(id), `ボス ${id}`);
+  }
+  for (const id of [...speakers, ...Object.keys(HERO_LINES).map(Number)]) assert.ok(db.has(heroId(id)), `ヒーロー ${id}`);
+  // すべてのステージの出撃前の会話・クリアの会話が作れる
+  for (const a of AREAS) {
+    for (const st of nodeMap(a).rows.flat()) {
+      const boss = st.boss ? db.def(st.boss) : null;
+      for (const first of [true, false]) assert.ok(stageIntro(a, st.row, { first, boss, stage: st }).steps.length > 0);
+    }
+    assert.ok(areaClearScene(a, AREAS.filter((x) => x.after === a.id).map((x) => x.id)).steps.length > 0);
+  }
 });

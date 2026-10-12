@@ -9,6 +9,7 @@
   "rarity": 5,
   "faction": 0,
   "power": 0.9,
+  "special": false,
   "skills": [
    {
     "name": "マス・アウテージ Phase 1",
@@ -59,6 +60,7 @@
   "rarity": 5,
   "faction": 0,
   "power": 1.1,
+  "special": false,
   "skills": [
    {
     "name": "マス・アウテージ Phase 1",
@@ -116,6 +118,7 @@
   "rarity": 5,
   "faction": 0,
   "power": 0.9,
+  "special": false,
   "skills": [
    {
     "name": "Hey !",
@@ -166,6 +169,7 @@
   "rarity": 5,
   "faction": 0,
   "power": 1.1,
+  "special": false,
   "skills": [
    {
     "name": "マス・アウテージ Phase 1",
@@ -223,6 +227,7 @@
   "rarity": 5,
   "faction": 0,
   "power": 1,
+  "special": false,
   "skills": [
    {
     "name": "マス・アウテージ",
@@ -280,6 +285,7 @@
   "rarity": 5,
   "faction": 0,
   "power": 1,
+  "special": false,
   "skills": [
    {
     "name": "Trick!",
@@ -341,6 +347,7 @@
   "rarity": 5,
   "faction": 0,
   "power": 1,
+  "special": false,
   "skills": [
    {
     "name": "マス・アウテージ Phase 1",
@@ -398,6 +405,7 @@
   "rarity": 5,
   "faction": 0,
   "power": 0.8,
+  "special": false,
   "skills": [
    {
     "name": "マス・アウテージ type:INT",
@@ -455,6 +463,7 @@
   "rarity": 5,
   "faction": 0,
   "power": 1.15,
+  "special": false,
   "skills": [
    {
     "name": "オプティマイゼーション:PHY",
@@ -520,6 +529,7 @@
   "rarity": 5,
   "faction": 0,
   "power": 1.1,
+  "special": false,
   "skills": [
    {
     "name": "マス・アウテージ type:AGI 2.0",
@@ -589,6 +599,7 @@
   "rarity": 5,
   "faction": 0,
   "power": 1.05,
+  "special": false,
   "skills": [
    {
     "name": "ファイアウォール",
@@ -650,6 +661,7 @@
   "rarity": 5,
   "faction": 0,
   "power": 1,
+  "special": false,
   "skills": [
    {
     "name": "コンパイル type:INT",
@@ -711,6 +723,7 @@
   "rarity": 5,
   "faction": 0,
   "power": 1,
+  "special": false,
   "skills": [
    {
     "name": "アップデート",
@@ -760,6 +773,266 @@
   "passive": {
    "name": "コルシカの悪魔[raid]",
    "text": "自分がActiveSkillでダメージを受けた後、30%の確率で発動 : 最もMAXHPが高い敵のHPに、対象のPHY/INT/AGI増加分合計の40%-80%分ダメージ / 最もMAXHPが高い敵のHPに、自分のPHY/INT/AGI増加分合計の20%-40%分ダメージ / 自分のCHARGEを、固定値の1500%分アップ / 自分のCHARGEを、このACTIONで自分が与えたダメージの500%分ダウン"
+  }
+ },
+ {
+  "id": "b1189",
+  "mch_id": 1189,
+  "side": "boss",
+  "name": "yamap",
+  "name_en": "yamap",
+  "image": "assets/bosses/1189.png",
+  "rarity": 5,
+  "faction": 0,
+  "power": 0.95,
+  "special": true,
+  "skills": [
+   {
+    "name": "アップデート",
+    "text": "自分のINTを、自分のINT低下分の130%分アップ / 自分のAGIを、自分のAGI低下分の90%分アップ / 自分のINTを、自分のINTの10%分アップ / 自分のAGIを、固定値の20%-40%分アップ / 最もAGIの高い敵を魅了にすることがある",
+    "cd": 3.0,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 0.3
+     },
+     {
+      "kind": "slow",
+      "weight": 0.6
+     }
+    ],
+    "final": false
+   },
+   {
+    "name": "マス・アウテージ type:INT",
+    "text": "敵全員のHPに、対象のHP減少分の15%-25%分ダメージ / 敵全員のHPに、自分のINTの20%-40%分ダメージ / 自分のCHARGEを、固定値の1500%分アップ / 自分のCHARGEを、このACTIONで自分が与えたダメージの500%分ダウン",
+    "cd": 2.5,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 1.8
+     }
+    ],
+    "final": true
+   },
+   {
+    "name": "マス・アウテージ type:FEAR",
+    "text": "自分を恐怖にすることがある / 自分のCHARGEを、固定値の2000%分アップ",
+    "cd": 1.5,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 0.4
+     },
+     {
+      "kind": "weaken",
+      "weight": 0.4
+     }
+    ],
+    "final": false
+   }
+  ],
+  "passive": {
+   "name": "コルシカの悪魔[raid]",
+   "text": "自分がActiveSkillでダメージを受けた後、30%の確率で発動 : 最もMAXHPが高い敵のHPに、対象のPHY/INT/AGI増加分合計の40%-80%分ダメージ / 最もMAXHPが高い敵のHPに、自分のPHY/INT/AGI増加分合計の20%-40%分ダメージ / 自分のCHARGEを、固定値の1500%分アップ / 自分のCHARGEを、このACTIONで自分が与えたダメージの500%分ダウン"
+  }
+ },
+ {
+  "id": "b1190",
+  "mch_id": 1190,
+  "side": "boss",
+  "name": "闇魚王",
+  "name_en": "Dark Fish King",
+  "image": "assets/bosses/1190.png",
+  "rarity": 5,
+  "faction": 0,
+  "power": 0.85,
+  "special": true,
+  "skills": [
+   {
+    "name": "テムプティング・アドバタイズ",
+    "text": "敵全員のPHYを、固定値の5%分アップ インバース:15 / 最もMAXHPが低い敵を魅了にすることがある / 最もMAXHPが低い敵の全異常を100%の確率で解除する インバース:-15 / 自分のCHARGEを、固定値の300%-600%分アップ / 自分のCHARGEを、自分のPHY低下分の100%分アップ",
+    "cd": 3.0,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 0.3
+     },
+     {
+      "kind": "slow",
+      "weight": 0.5
+     }
+    ],
+    "final": false
+   },
+   {
+    "name": "テムプティング・アドバタイズ",
+    "text": "敵全員のPHYを、固定値の5%分アップ インバース:15 / 最もMAXHPが低い敵を魅了にすることがある / 最もMAXHPが低い敵の全異常を100%の確率で解除する インバース:-15 / 自分のCHARGEを、固定値の300%-600%分アップ / 自分のCHARGEを、自分のPHY低下分の100%分アップ",
+    "cd": 3.0,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 0.5
+     },
+     {
+      "kind": "poison",
+      "weight": 0.5
+     }
+    ],
+    "final": false
+   },
+   {
+    "name": "インタラプト 3.0",
+    "text": "自分のINTを、敵全体のPHY増加分合計の15%分アップ / 敵全員のHPに、自分のINTの65%-80%分ダメージ / 自分のPHYを、このACTIONで自分が与えたダメージの30%分ダウン、対象が恐怖時60%分ダウン / 敵全員を毒にすることがある",
+    "cd": 2.5,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 1.6
+     },
+     {
+      "kind": "poison",
+      "weight": 0.6
+     }
+    ],
+    "final": true
+   }
+  ],
+  "passive": {
+   "name": "リアクト",
+   "text": "先頭の敵がActiveSkillを使用した後、55%の確率で発動 : 最もMAXHPが高い敵のシールドに自分のINT増加分の250%-300%分付与、対象が毒時10%-60%分付与 / 最もMAXHPが高い敵のHPに、自分のPHY/INT/AGI低下分合計の60%分ダメージ インバース:50 / 敵全員のPHY/INTの高い方を、このACTIONで自分が与えたダメージの10%分ダウン"
+  }
+ },
+ {
+  "id": "b1188",
+  "mch_id": 1188,
+  "side": "boss",
+  "name": "ファオ・ファントム",
+  "name_en": "Fao Phantom",
+  "image": "assets/bosses/373.png",
+  "rarity": 5,
+  "faction": 0,
+  "power": 1.4,
+  "special": true,
+  "skills": [
+   {
+    "name": "テムプティング・アドバタイズ",
+    "text": "敵全員のPHYを、固定値の5%分アップ インバース:15 / 最もMAXHPが低い敵を魅了にすることがある / 最もMAXHPが低い敵の全異常を100%の確率で解除する インバース:-15 / 自分のCHARGEを、固定値の300%-600%分アップ / 自分のCHARGEを、自分のPHY低下分の100%分アップ",
+    "cd": 2.5,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 0.4
+     },
+     {
+      "kind": "slow",
+      "weight": 0.5
+     }
+    ],
+    "final": false
+   },
+   {
+    "name": "テムプティング・アドバタイズ",
+    "text": "敵全員のPHYを、固定値の5%分アップ インバース:15 / 最もMAXHPが低い敵を魅了にすることがある / 最もMAXHPが低い敵の全異常を100%の確率で解除する インバース:-15 / 自分のCHARGEを、固定値の300%-600%分アップ / 自分のCHARGEを、自分のPHY低下分の100%分アップ",
+    "cd": 2.5,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 0.6
+     },
+     {
+      "kind": "weaken",
+      "weight": 0.4
+     }
+    ],
+    "final": false
+   },
+   {
+    "name": "インタラプト 3.0",
+    "text": "自分のINTを、敵全体のPHY増加分合計の15%分アップ / 敵全員のHPに、自分のINTの65%-80%分ダメージ / 自分のPHYを、このACTIONで自分が与えたダメージの30%分ダウン、対象が恐怖時60%分ダウン / 敵全員を毒にすることがある",
+    "cd": 2.0,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 1.8
+     },
+     {
+      "kind": "poison",
+      "weight": 0.4
+     }
+    ],
+    "final": true
+   }
+  ],
+  "passive": {
+   "name": "リアクト",
+   "text": "先頭の敵がActiveSkillを使用した後、55%の確率で発動 : 最もMAXHPが高い敵のシールドに自分のINT増加分の250%-300%分付与、対象が毒時10%-60%分付与 / 最もMAXHPが高い敵のHPに、自分のPHY/INT/AGI低下分合計の60%分ダメージ インバース:50 / 敵全員のPHY/INTの高い方を、このACTIONで自分が与えたダメージの10%分ダウン"
+  }
+ },
+ {
+  "id": "b373",
+  "mch_id": 373,
+  "side": "boss",
+  "name": "覚醒魔王ファオ",
+  "name_en": "Dark Lord Fao",
+  "image": "assets/bosses/373.png",
+  "rarity": 5,
+  "faction": 0,
+  "power": 1.7,
+  "special": true,
+  "skills": [
+   {
+    "name": "魔王の祝福",
+    "text": "敵全員に睡眠、恐怖、混乱、バリアのいずれかを与える",
+    "cd": 3.0,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 0.2
+     },
+     {
+      "kind": "slow",
+      "weight": 0.5
+     },
+     {
+      "kind": "weaken",
+      "weight": 0.4
+     }
+    ],
+    "final": false
+   },
+   {
+    "name": "魔王の鼓動",
+    "text": "敵全員のバフの合計値の100%、自分のAGIをアップ",
+    "cd": 2.5,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 0.6
+     },
+     {
+      "kind": "shield",
+      "weight": 0.5
+     }
+    ],
+    "final": false
+   },
+   {
+    "name": "魔王の晩餐",
+    "text": "敵全員のバフの合計値の100%、敵全体にダメージを与える",
+    "cd": 2.0,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 2.2
+     }
+    ],
+    "final": true
+   }
+  ],
+  "passive": {
+   "name": "そら、餌をやろう！",
+   "text": "アクティブ時50%の発動で、敵全体のPHY/INT/AGIをそれぞれ1〜10%アップ"
   }
  }
 ]

@@ -3,6 +3,7 @@
 
 import {
   AREAS,
+  MAIN_AREAS,
   DECK_SIZE,
   MACHINES,
   MAX_MACHINE_LEVEL,
@@ -63,7 +64,7 @@ export function migrateStory(story) {
     next.cleared = story.cleared.filter((key) => parseStageKey(key));
     next.machine = 1;
     next.parts = 0;
-    for (const area of AREAS) if (areaCleared(next, area)) addPart(next);
+    for (const area of MAIN_AREAS) if (areaCleared(next, area)) addPart(next);
   }
   // v3: 繰り越しのチームはないので、途中までクリアしたノードは X-1 からチームを作って進む
   next.nodeRuns = story.nodeRuns ?? {};
@@ -101,7 +102,7 @@ export function tutorialDone(story) {
  */
 export function areaUnlocked(story, area) {
   if (area.id === TUTORIAL_AREA) return true;
-  if (area.requiresAll && !AREAS.filter((a) => !a.requiresAll).every((a) => areaCleared(story, a))) return false;
+  if (area.requiresAll && !MAIN_AREAS.filter((a) => !a.requiresAll).every((a) => areaCleared(story, a))) return false;
   if (area.after && !areaCleared(story, areaById(area.after))) return false;
   return story.machine >= area.machine;
 }
@@ -229,7 +230,7 @@ export function machineInfo(story) {
 }
 
 /** タイムマシンがそのレベルになると開くノード（時代の最初のノード） */
-const areasOpenedAt = (level) => AREAS.filter((a) => a.machine === level && !a.after).map((a) => a.id);
+const areasOpenedAt = (level) => MAIN_AREAS.filter((a) => a.machine === level && !a.after).map((a) => a.id);
 
 /** 次の改良までの進み具合（0〜1）と、あと何ノードクリアで改良できるか */
 export function machineProgress(story) {
@@ -319,7 +320,8 @@ export function clearStage(story, key) {
     if (addHero(story, id)) result.heroes.push(id);
   }
   result.areaCleared = !wasCleared && areaCleared(story, parsed.area);
-  if (result.areaCleared && story.machine < MAX_MACHINE_LEVEL) {
+  // パーツは本編のノードだけ（特別ステージはなし）
+  if (result.areaCleared && !parsed.area.special && story.machine < MAX_MACHINE_LEVEL) {
     result.part = true;
     result.upgradedTo = addPart(story);
   }
@@ -447,7 +449,8 @@ function stageInfo(area, index, lane, key) {
     foe: stage.foe,
     difficulty: stageDifficulty(area, index),
     rankCap: areaRankCap(area),
-    boss: isFinalStage(area, index) ? area.boss : null,
+    boss: stage.boss,
+    special: Boolean(area.special),
     tutorial: area.id === TUTORIAL_AREA && index === 0,
     // デッキを組めるようになってから（チュートリアルのノード以外）: デッキにいないレアリティの枠は空になる
     strictRarity: area.id !== TUTORIAL_AREA,

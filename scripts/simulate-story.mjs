@@ -16,7 +16,7 @@ import { botShop, unitValue } from "../js/engine/bot.js";
 import { sellUnit } from "../js/engine/market.js";
 import { createRng } from "../js/engine/rng.js";
 import { allUnits, findEmptySlot } from "../js/engine/roster.js";
-import { AREAS, DECK_SIZE, heroId, nodeMap, stageKey, stageLabel } from "../js/engine/world.js";
+import { AREAS, DECK_SIZE, MAIN_AREAS, heroId, nodeMap, stageKey, stageLabel } from "../js/engine/world.js";
 import {
   newStory,
   newStageRun,
@@ -174,13 +174,16 @@ function skipArea(story, area) {
   nodeMap(area).rows.forEach((row, r) => clearStage(story, stageKey(area.id, r, row.length > 1 ? 1 : null)));
 }
 
+// 特別ステージ（特異点）は、開くノードをクリアした直後に挑む
+const ORDER = MAIN_AREAS.flatMap((a) => [a, ...AREAS.filter((sp) => sp.special && sp.after === a.id)]);
+
 const kindStats = {};
 for (let i = 0; i < runs; i++) {
   const story = newStory();
   let attempts = 0;
   let last = "";
   const rng = createRng(i * 31 + 7);
-  outer: for (const area of AREAS) {
+  outer: for (const area of ORDER) {
     if (!areaUnlocked(story, area)) continue;
     if (only.size && !only.has(area.id) && area.id !== "kindai-jp") {
       skipArea(story, area);
@@ -208,6 +211,8 @@ for (let i = 0; i < runs; i++) {
         if (res.cleared) cleared = res.run;
       }
       if (!cleared) {
+        // 特別ステージは寄り道なので、クリアできなくても本編へ戻る
+        if (area.special && (rebuilt || index === 0)) break;
         // 一度だけ X-1 からチームを作り直す
         if (rebuilt || index === 0) break outer;
         rebuilt = true;

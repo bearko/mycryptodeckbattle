@@ -4,7 +4,7 @@
   "skills は MCH のアクティブスキル順。発動するたびに次のスキルへ進み、最後まで行くと最初に戻る（ローテーション）。weight は形だけ（1周の平均がボスの強さになるよう js/engine/boss.js でそろえる）。",
   "cd: そのスキルまでのチャージ秒 / effects: このゲームの効果の種類と配分（ボスの強さ×秒数×weight が効果量）/ final: 大技（予告を出す）/ power: ボスごとの強さの補正（同じステージで勝率がそろうように自動プレイで決めた。省略は1）",
   "MCHのパッシブはローテーションのどこかの効果に含めている（note に元の意味）。",
-  "覚醒魔王ファオ・ファントム(373/1188)・yamap(1189)・闇魚王(1190) は特別ステージのボス用に取っておくため使わない。COVID-19(671/682) も使わない。"
+  "覚醒魔王ファオ(373)・ファオ・ファントム(1188)・yamap(1189)・闇魚王(1190) は特別ステージ（特異点）のボス（special: true）。ノードのレイドボスには使わない。COVID-19(671/682) は使わない。"
  ],
  "bosses": [
   {
@@ -128,6 +128,50 @@
     { "cd": 3.0, "effects": [{ "kind": "damage", "weight": 0.3 }, { "kind": "slow", "weight": 0.6 }] },
     { "cd": 2.5, "effects": [{ "kind": "damage", "weight": 1.6 }], "final": true },
     { "cd": 1.5, "effects": [{ "kind": "damage", "weight": 0.4 }, { "kind": "bleed", "weight": 0.4 }] }
+   ]
+  },
+  {
+   "mch_id": 1189,
+   "special": true,
+   "power": 0.95,
+   "note": "コルシカの特異点。アップデートの魅了 → チャージ遅延、マス・アウテージ type:INT を大技に、type:FEAR（恐怖）→ 弱体化",
+   "skills": [
+    { "cd": 3.0, "effects": [{ "kind": "damage", "weight": 0.3 }, { "kind": "slow", "weight": 0.6 }] },
+    { "cd": 2.5, "effects": [{ "kind": "damage", "weight": 1.8 }], "final": true },
+    { "cd": 1.5, "effects": [{ "kind": "damage", "weight": 0.4 }, { "kind": "weaken", "weight": 0.4 }] }
+   ]
+  },
+  {
+   "mch_id": 1190,
+   "special": true,
+   "power": 0.85,
+   "note": "深海の特異点。テムプティング・アドバタイズの魅了 → チャージ遅延・毒、インタラプト 3.0（全体ダメージ＋毒）を大技に",
+   "skills": [
+    { "cd": 3.0, "effects": [{ "kind": "damage", "weight": 0.3 }, { "kind": "slow", "weight": 0.5 }] },
+    { "cd": 3.0, "effects": [{ "kind": "damage", "weight": 0.5 }, { "kind": "poison", "weight": 0.5 }] },
+    { "cd": 2.5, "effects": [{ "kind": "damage", "weight": 1.6 }, { "kind": "poison", "weight": 0.6 }], "final": true }
+   ]
+  },
+  {
+   "mch_id": 1188,
+   "special": true,
+   "power": 1.4,
+   "note": "魔王の特異点の前座。闇魚王と同じスキル。リアクトのPHY/INTダウン → 弱体化",
+   "skills": [
+    { "cd": 2.5, "effects": [{ "kind": "damage", "weight": 0.4 }, { "kind": "slow", "weight": 0.5 }] },
+    { "cd": 2.5, "effects": [{ "kind": "damage", "weight": 0.6 }, { "kind": "weaken", "weight": 0.4 }] },
+    { "cd": 2.0, "effects": [{ "kind": "damage", "weight": 1.8 }, { "kind": "poison", "weight": 0.4 }], "final": true }
+   ]
+  },
+  {
+   "mch_id": 373,
+   "special": true,
+   "power": 1.7,
+   "note": "最後の特異点。魔王の祝福（睡眠・恐怖・混乱）→ チャージ遅延・弱体化、魔王の鼓動（AGIアップ）→ シールド＋ダメージ、魔王の晩餐を大技に",
+   "skills": [
+    { "cd": 3.0, "effects": [{ "kind": "damage", "weight": 0.2 }, { "kind": "slow", "weight": 0.5 }, { "kind": "weaken", "weight": 0.4 }] },
+    { "cd": 2.5, "effects": [{ "kind": "damage", "weight": 0.6 }, { "kind": "shield", "weight": 0.5 }] },
+    { "cd": 2.0, "effects": [{ "kind": "damage", "weight": 2.2 }], "final": true }
    ]
   }
  ]

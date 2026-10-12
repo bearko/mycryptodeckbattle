@@ -12,7 +12,7 @@ import { isBossWave } from "./engine/boss.js";
 import { audio } from "./ui/audio.js";
 import { clearRun, loadRun, loadSettings, loadStory, saveRun, saveSettings, saveStory } from "./ui/storage.js";
 import * as Story from "./engine/story.js";
-import { AREAS, DECK_SIZE, ERAS, TUTORIAL_AREA, areaById, areaName, machineByLevel, parseStageKey, stageLabel } from "./engine/world.js";
+import { AREAS, DECK_SIZE, ERAS, TUTORIAL_AREA, areaById, areaMusic, areaName, machineByLevel, parseStageKey, stageLabel } from "./engine/world.js";
 import { MAP_INTRO, PROLOGUE, TUTORIAL_DONE, areaClearScene, stageIntro, upgradeScene } from "./story/scenes.js";
 import { ScenePlayer } from "./ui/scene.js";
 import { Coach } from "./ui/coach.js";
@@ -244,13 +244,23 @@ function slotElAt(zone, index) {
   return root.querySelector(`.slot[data-zone="${zone}"][data-index="${index}"]`);
 }
 
+/**
+ * いまのウェーブのBGM（scene: "market" | "battle"）。ストーリーはノードの曲と時代の音色、レイドボスのウェーブはレイドの曲
+ */
+function playStageBgm(scene) {
+  const st = app.run?.story;
+  if (!st) return audio.playBgm(scene === "battle" ? "bgm_battle" : "bgm_market");
+  const music = areaMusic(areaById(st.areaId), scene, { boss: isBossWave(app.run) });
+  audio.playBgm(music.name, { tone: music.tone });
+}
+
 /** ステージ開始: マーケットに入り、テロップのあとセリフ */
 async function enterStage() {
   app.ui.selected = null;
   app.ui.deal = true;
   app.ui.lastGum = app.run.gum;
   app.ui.telopActive = true;
-  audio.playBgm("bgm_market");
+  playStageBgm("market");
   await go("market", { bg: background(3), mood: "market", accent: player().color });
   const info = {
     income: stageIncome(app.run.stage) + (app.run.story ? storyPlayerBonus(app.run.story).income : 0),
@@ -462,9 +472,9 @@ function stageLabelOf(st) {
 }
 
 /** シーン（会話劇）を再生して、終わるまで待つ */
-async function playScene(scene, { bgm = "bgm_market" } = {}) {
+async function playScene(scene, { bgm = "bgm_market", tone = null } = {}) {
   speech.dismiss();
-  if (bgm) audio.playBgm(bgm);
+  if (bgm) audio.playBgm(bgm, { tone });
   const player = new ScenePlayer(scene, { db: app.db });
   await wipe(
     () => {
@@ -682,7 +692,9 @@ const actions = {
     const story = app.story;
     const first = !story.flags[`met:${key}`] && !Story.isCleared(story, key);
     Story.joinAtStart(story, key);
-    await playScene(stageIntro(parsed.area, parsed.index, { first, boss: app.db.def(parsed.area.boss), stage: parsed.stage }));
+    const boss = parsed.stage.boss ? app.db.def(parsed.stage.boss) : null;
+    const music = areaMusic(parsed.area, "market", { boss: Boolean(boss) });
+    await playScene(stageIntro(parsed.area, parsed.index, { first, boss, stage: parsed.stage }), { bgm: music.name, tone: music.tone });
     story.flags[`met:${key}`] = true;
     saveStoryNow();
     app.run = Story.newStageRun(app.db, story, key, randomSeed());
@@ -707,7 +719,8 @@ const actions = {
     if (res?.upgradedTo) await playScene(upgradeScene(res.upgradedTo - 1, res.upgradedTo, res.unlockedAreas), { bgm: "bgm_title" });
     if (res?.areaCleared) {
       // 改良の会話で行ける場所を話していなければ、ここで（同じ時代のほかの国が開いたとき）
-      const opened = res.upgradedTo ? [] : res.unlockedAreas;
+      // 特別ステージ（特異点）が開いたときは、改良があってもここで話す
+      const opened = res.upgradedTo ? res.unlockedAreas.filter((id) => areaById(id).special) : res.unlockedAreas;
       await playScene(area.id === TUTORIAL_AREA ? TUTORIAL_DONE : areaClearScene(area, opened));
       return actions.openMap();
     }
@@ -816,7 +829,7 @@ const actions = {
     audio.unlock();
     audio.toggle();
     // 今の画面のBGMを鳴らし直す（ミュート解除や、最初のタップ前にボタンを押したとき）
-    if (!audio.muted && audio.bgmName) audio.playBgm(audio.bgmName, true);
+    if (!audio.muted && audio.bgmName) audio.playBgm(audio.bgmName, { force: true, tone: audio.bgmTone });
     render();
   },
 
@@ -983,8 +996,9 @@ const actions = {
     const prep = Run.prepareBattle(app.run, app.db);
     if (!prep.ok) return sayError(prep.error);
     app.ui.battleWave = app.run.wins + 1;
-    // 結果を反映する前に（ウェーブ数が変わる前に）チュートリアルを進める
+    // 結果を反映する前に（ウェーブ数が変わる前に）チュートリアルを進め、BGMを決める
     tutorialEvent("battle");
+    playStageBgm("battle");
     // バトルは決定的なので、先に結果を確定・保存してから演出を再生する（再読み込みでのやり直しを防ぐ）
     const summary = battleSummary(runBattle(prep.left, prep.right));
     app.pendingResult = Run.finishBattle(app.run, app.db, summary);
@@ -992,7 +1006,6 @@ const actions = {
     app.ui.selected = null;
     speech.dismiss();
     coach.hide();
-    audio.playBgm("bgm_battle");
     wipe(
       () => {
         app.screen = "battle";

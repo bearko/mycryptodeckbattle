@@ -12,12 +12,24 @@ import { createRng } from "./rng.js";
  * 古い時代ほど高いレアリティが並ぶようにする
  */
 export const ERAS = [
-  { id: "kindai", name: "近代", en: "MODERN", years: "19〜20世紀", rankCap: 8 },
-  { id: "kinsei", name: "近世", en: "EARLY MODERN", years: "15〜18世紀", rankCap: 10 },
-  { id: "chusei", name: "中世", en: "MEDIEVAL", years: "5〜15世紀", rankCap: 12 },
-  { id: "kodai", name: "古代", en: "ANCIENT", years: "紀元前〜3世紀", rankCap: 14 },
-  { id: "hazama", name: "時空のはざま", en: "RIFT", years: "????", rankCap: 14 },
+  { id: "kindai", name: "近代", en: "MODERN", years: "19〜20世紀", rankCap: 8, tone: null },
+  { id: "kinsei", name: "近世", en: "EARLY MODERN", years: "15〜18世紀", rankCap: 10, tone: { rate: 0.96 } },
+  { id: "chusei", name: "中世", en: "MEDIEVAL", years: "5〜15世紀", rankCap: 12, tone: { rate: 0.93, lowpass: 7000 } },
+  { id: "kodai", name: "古代", en: "ANCIENT", years: "紀元前〜3世紀", rankCap: 14, tone: { rate: 0.9, lowpass: 5200 } },
+  { id: "hazama", name: "時空のはざま", en: "RIFT", years: "????", rankCap: 14, tone: { rate: 1.06 } },
 ];
+
+/**
+ * ストーリーのBGM。MCH の BGM は4曲なので、曲（マーケット・バトル）と時代の音色（ERAS[].tone）の組み合わせで
+ * ノードごとに変える。area.music でノードごとに曲を差し替え、レイドボスのウェーブと特別ステージのバトルはレイドの曲。
+ * 戻り値: { name: audio.js の曲名, tone }
+ */
+export function areaMusic(area, scene, { boss = false } = {}) {
+  const tone = eraById(area.era).tone;
+  if (boss) return { name: "bgm_raid", tone: null };
+  const base = scene === "battle" ? "bgm_battle" : "bgm_market";
+  return { name: area.music?.[scene] ?? base, tone };
+}
 
 /**
  * タイムマシン（エクステンション「合体ロボ」シリーズ）。next は次のレベルまでに必要なパーツ数。
@@ -48,6 +60,7 @@ export const TUTORIAL_WAVES = [3, 4, 5];
  * 最終ステージは最後のウェーブがレイドボス。
  */
 export function stageWaves(area, index) {
+  if (area.waves) return area.waves[index];
   if (area.id === TUTORIAL_AREA) return TUTORIAL_WAVES[index];
   return index < 3 ? 3 : index < 7 ? 4 : 5;
 }
@@ -66,6 +79,7 @@ export const isFinalStage = (area, index) => index === area.stages.length - 1;
  * ノード（時代×地域）。
  * machine: 行くのに必要なタイムマシンのレベル / after: 先にクリアが必要なノード（国 → 時代の順に開く）
  * map: ワールドマップ上の位置（地図の横・縦に対する%）/ boss: 最終ステージのレイドボス
+ * music: BGMの差し替え（{ market, battle }。同じ時代のノードで曲を変える。areaMusic）
  * stages[i].meet: そのステージで出会うヒーロー（いないステージもある）/ join: クリアで仲間になるヒーロー（meet を含む）
  * difficulty: エネミーの強さの上乗せの基本値。これにステージ番号を足した値で、後半のステージほど強くなる
  *   （story.js の stageDifficulty）。時代の差はマーケットランクの上限（ERAS の rankCap）で付けるので、いまはどれも0
@@ -116,6 +130,7 @@ export const AREAS = [
   },
   {
     id: "kindai-us",
+    music: { battle: "bgm_title" },
     no: 3,
     era: "kindai",
     region: "アメリカ",
@@ -190,6 +205,7 @@ export const AREAS = [
   },
   {
     id: "kinsei-sea",
+    music: { battle: "bgm_title" },
     no: 6,
     era: "kinsei",
     region: "新大陸と海",
@@ -264,6 +280,7 @@ export const AREAS = [
   },
   {
     id: "chusei-asia",
+    music: { market: "bgm_title" },
     no: 9,
     era: "chusei",
     region: "アジア",
@@ -313,6 +330,7 @@ export const AREAS = [
   },
   {
     id: "kodai-east",
+    music: { battle: "bgm_title" },
     no: 11,
     era: "kodai",
     region: "東アジア",
@@ -363,6 +381,7 @@ export const AREAS = [
   },
   {
     id: "hazama",
+    music: { market: "bgm_title" },
     no: 13,
     era: "hazama",
     region: "時空のはざま",
@@ -386,7 +405,84 @@ export const AREAS = [
       { meet: 4034, join: [4034] }, // 10 サトシ・ナカモト OMEGA CC
     ],
   },
+  // -------------------------------------------------------------------------
+  // 特別ステージ（特異点）。ノードと同じ形で、special: true。3ステージの1本道（枝分かれなし）で、仲間もパーツもない。
+  // そのノードの時代の地図に出て、after のノードをクリアすると開く。waves: ステージごとのウェーブ数。
+  // stages[i].boss: そのステージの最後のウェーブのボス（最終ステージは area.boss）
+  // -------------------------------------------------------------------------
+  {
+    id: "ex-corsica",
+    music: { battle: "bgm_raid" },
+    no: "EX1",
+    era: "kindai",
+    region: "コルシカの特異点",
+    special: true,
+    machine: 1,
+    after: "kindai-eu",
+    map: { x: 44, y: 46 },
+    bg: "2905",
+    color: "#ff4f6d",
+    rankCap: 10,
+    difficulty: 1,
+    boss: "b1189",
+    waves: [4, 5, 5],
+    // ナポレオンの時代らしく、決戦の地で猛攻部隊と戦う
+    stages: [
+      { join: [], foe: "assault" },
+      { join: [], field: "duel", foe: "assault" },
+      { join: [], field: "front" },
+    ],
+  },
+  {
+    id: "ex-abyss",
+    music: { battle: "bgm_raid" },
+    no: "EX2",
+    era: "kinsei",
+    region: "深海の特異点",
+    special: true,
+    machine: 2,
+    after: "kinsei-sea",
+    map: { x: 30, y: 78 },
+    bg: "2805",
+    color: "#3fa0ff",
+    rankCap: 12,
+    difficulty: 1,
+    boss: "b1190",
+    waves: [4, 5, 5],
+    // 深海は毒の沼・毒使いの群れ
+    stages: [
+      { join: [], foe: "venom" },
+      { join: [], field: "poison", foe: "venom" },
+      { join: [], field: "spring" },
+    ],
+  },
+  {
+    id: "ex-maou",
+    music: { battle: "bgm_raid" },
+    no: "EX3",
+    era: "hazama",
+    region: "魔王の特異点",
+    special: true,
+    machine: 5,
+    after: "hazama",
+    map: { x: 50, y: 40 },
+    bg: "2205",
+    color: "#ff5ad2",
+    rankCap: 14,
+    difficulty: 2,
+    boss: "b373",
+    waves: [5, 5, 6],
+    // 2つ目のステージの最後にファオ・ファントム、最後のステージに覚醒魔王ファオ
+    stages: [
+      { join: [], foe: "blade" },
+      { join: [], field: "tactics", boss: "b1188" },
+      { join: [], foe: "wall" },
+    ],
+  },
 ];
+
+/** ストーリーの本編のノード（特別ステージを除く。パーツ・時空のはざまの条件はこれで数える） */
+export const MAIN_AREAS = AREAS.filter((a) => !a.special);
 
 export const TUTORIAL_AREA = "kindai-jp";
 
@@ -469,8 +565,9 @@ export function buildNodeMap(area) {
   for (let r = 0; r < count; r++) {
     const src = area.stages[r];
     if (!branching || r < BRANCH_FIRST || r > BRANCH_LAST) {
-      const kind = r === count - 1 ? "boss" : "battle";
-      rows.push([{ row: r, lane: null, kind, meet: src.meet ?? null, join: [...src.join], meetAtStart: Boolean(src.meetAtStart), field: null, foe: null }]);
+      const boss = src.boss ?? (r === count - 1 ? area.boss : null);
+      const kind = boss ? "boss" : "battle";
+      rows.push([{ row: r, lane: null, kind, boss, meet: src.meet ?? null, join: [...src.join], meetAtStart: Boolean(src.meetAtStart), field: src.field ?? null, foe: src.foe ?? null }]);
       continue;
     }
     const kinds = ["battle", "battle", "battle"];
@@ -482,7 +579,7 @@ export function buildNodeMap(area) {
     const heroes = [[], [], []];
     src.join.forEach((id, i) => heroes[order[i % order.length]].push(id));
     rows.push(
-      kinds.map((kind, lane) => ({ row: r, lane, kind, meet: heroes[lane][0] ?? null, join: heroes[lane], meetAtStart: false, field: null, foe: null })),
+      kinds.map((kind, lane) => ({ row: r, lane, kind, boss: null, meet: heroes[lane][0] ?? null, join: heroes[lane], meetAtStart: false, field: null, foe: null })),
     );
   }
   // 地形とエネミーの傾向（枝分かれした戦闘・強敵だけ。同じ行で地形が重ならないように）
@@ -567,4 +664,4 @@ export function parseStageKey(key) {
 
 /** 画面に出すステージ番号（1-1、2-6B など） */
 export const stageLabel = (area, index, lane = null) => `${area.no}-${index + 1}${lane === null || lane === undefined ? "" : LANE_LETTERS[lane]}`;
-export const areaName = (area) => (area.era === "hazama" ? area.region : `${eraById(area.era).name}・${area.region}`);
+export const areaName = (area) => (area.era === "hazama" || area.special ? area.region : `${eraById(area.era).name}・${area.region}`);

@@ -116,8 +116,8 @@
 
 /* レイドボス（128pxのドット絵。元から左向き） */
 .actor.boss {
-  /* スマホの幅では、左のクリスに重ならない大きさまで */
-  height: min(52%, 300px, 60vw);
+  /* スマホの幅では、左のクリスに重ならない大きさまで（yamap・闇魚王のように絵が枠いっぱいのボスもいる） */
+  height: min(52%, 300px, 48vw);
   bottom: 4%;
 }
 
@@ -795,6 +795,87 @@
 .map-pin.locked .pin-label {
   opacity: 0.6;
   box-shadow: none;
+}
+
+/* 特別ステージ（特異点）: 時空の裂け目。2つの輪が逆向きに回り、中にボスの影。色ずれで「ありえない場所」を出す */
+.map-pin.special {
+  z-index: 3;
+  animation: rift-in 0.9s var(--spring) both;
+}
+
+@keyframes rift-in {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.2) rotate(-90deg);
+    filter: brightness(4);
+  }
+}
+
+.pin-rift {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+}
+
+.pin-rift i {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px dashed var(--area);
+  box-shadow: 0 0 10px var(--area), inset 0 0 10px var(--area);
+  animation: rift-spin 6s linear infinite;
+}
+
+.pin-rift i + i {
+  inset: 6px;
+  border-style: dotted;
+  border-color: #fff;
+  animation-direction: reverse;
+  animation-duration: 3.5s;
+}
+
+@keyframes rift-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+.pin-rift img {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  border-radius: 50%;
+  background: radial-gradient(circle, #000 40%, color-mix(in srgb, var(--area) 60%, #000));
+  filter: drop-shadow(1px 0 0 #ff2a6d) drop-shadow(-1px 0 0 #2af5ff);
+  animation: rift-glitch 2.4s steps(1) infinite;
+}
+
+/* ときどき横にずれる（グリッチ） */
+@keyframes rift-glitch {
+  0%,
+  86%,
+  100% {
+    translate: 0 0;
+  }
+  88% {
+    translate: 3px 0;
+  }
+  92% {
+    translate: -2px 1px;
+  }
+}
+
+.map-pin.special .pin-label {
+  box-shadow: inset 0 -2px 0 var(--area), 0 0 8px color-mix(in srgb, var(--area) 50%, transparent);
+}
+
+.map-pin.special.cleared .pin-rift i {
+  border-color: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+  animation-duration: 14s;
 }
 
 /* タイムマシン（合体ロボ）とパーツ */
