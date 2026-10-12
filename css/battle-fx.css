@@ -9,14 +9,14 @@
   --role: #ffffff;
 }
 
-/* 役割アイコン（MCHのバトルアイコン）をカードの左下に常時表示 */
+/* 役割アイコン（MCHのバトルアイコン）を足元の左に常時表示 */
 .role-badge {
   position: absolute;
-  left: 3px;
-  bottom: 11px;
+  left: 0;
+  bottom: 4%;
   z-index: 1;
-  width: 17px;
-  height: 17px;
+  width: calc(17px * var(--s, 1));
+  height: calc(17px * var(--s, 1));
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.7));
 }
 
@@ -25,49 +25,46 @@
   background: linear-gradient(90deg, color-mix(in srgb, var(--role) 55%, #ffffff), var(--role));
 }
 
-/* 発動したヒーロー: 敵の方へ踏み込み、役割の色で内側から光る */
-.fighter::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0;
-  background: radial-gradient(ellipse 80% 55% at 50% 100%, color-mix(in srgb, var(--role) 55%, transparent), transparent 75%);
-  box-shadow: inset 0 0 0 2px var(--role), inset 0 0 14px color-mix(in srgb, var(--role) 60%, transparent);
-}
-
+/* 発動したヒーロー: 敵の方へ踏み込み、足元の円が役割の色で光る */
 .fighter.cast {
   animation: act-ally 0.42s cubic-bezier(0.2, 0.9, 0.3, 1);
 }
 
-.battle-side.enemy .fighter.cast {
+.field-zone.enemy .fighter.cast {
   animation: act-enemy 0.42s cubic-bezier(0.2, 0.9, 0.3, 1);
 }
 
-.fighter.cast::after {
-  animation: act-glow 0.5s ease-out;
+.fighter.cast .ground {
+  animation: ground-flare 0.5s ease-out;
+}
+
+.fighter.cast .fighter-art {
+  animation: act-bright 0.42s ease-out;
 }
 
 @keyframes act-ally {
   30% {
-    transform: translateY(-12px) scale(1.08);
-    filter: brightness(1.2);
+    transform: translateY(-12px) scale(1.1);
   }
 }
 
 @keyframes act-enemy {
   30% {
-    transform: translateY(12px) scale(1.08);
-    filter: brightness(1.2);
+    transform: translateY(12px) scale(1.1);
   }
 }
 
-@keyframes act-glow {
-  0% {
-    opacity: 0;
+@keyframes act-bright {
+  30% {
+    filter: brightness(1.35) drop-shadow(0 0 6px var(--role));
   }
+}
+
+@keyframes ground-flare {
   25% {
-    opacity: 1;
+    transform: scale(1.4);
+    background: radial-gradient(ellipse, #fff, var(--role) 45%, transparent 72%);
+    box-shadow: 0 0 0 3px var(--role), 0 0 16px var(--role);
   }
 }
 
@@ -280,15 +277,11 @@
 
 /* ------------------------------------------------------------- 状態異常を受けている間 */
 
-/* パーティ全体にかかるもや（毒）と赤いにじみ（出血）。濃さはスタック数で変わる（--poison / --bleed） */
-.battle-grid {
-  position: relative;
-}
-
+/* 陣地全体にかかるもや（毒）と赤いにじみ（出血）。濃さはスタック数で変わる（--poison / --bleed） */
 .status-veil {
   position: absolute;
-  inset: -2px;
-  z-index: 2;
+  inset: 0;
+  z-index: 25;
   pointer-events: none;
   overflow: hidden;
 }
@@ -301,11 +294,11 @@
   transition: opacity 0.4s;
 }
 
-.battle-side.poisoned .veil-poison {
+.side.poisoned .veil-poison {
   opacity: var(--poison, 0);
 }
 
-.battle-side.bleeding .veil-bleed {
+.side.bleeding .veil-bleed {
   opacity: var(--bleed, 0);
 }
 
@@ -351,25 +344,33 @@
   }
 }
 
-/* 縁だけ赤くにじませ、心拍のように脈打たせる */
-.veil-bleed {
-  box-shadow: inset 0 0 16px 1px rgba(200, 0, 40, 0.6);
-  animation: heartbeat 1s ease-in-out infinite;
+/* 出血: 陣地の地面が赤く染まり、心拍のように脈打つ。毒: 地面が紫に濁る */
+.floor-area.poisoned {
+  fill: rgba(140, 60, 230, 0.3);
+  stroke: #b46cff;
+  stroke-width: 2;
 }
 
-@keyframes heartbeat {
+.floor-area.bleeding {
+  stroke: #ff2a50;
+  stroke-width: 2;
+  animation: floor-heartbeat 1s ease-in-out infinite;
+}
+
+.floor-area.bleeding:not(.poisoned) {
+  fill: rgba(220, 0, 40, 0.18);
+}
+
+@keyframes floor-heartbeat {
   0%,
+  30%,
   100% {
-    box-shadow: inset 0 0 14px 1px rgba(200, 0, 40, 0.5);
+    stroke-opacity: 0.55;
   }
-  15% {
-    box-shadow: inset 0 0 24px 4px rgba(230, 0, 50, 0.85);
-  }
-  30% {
-    box-shadow: inset 0 0 16px 2px rgba(200, 0, 40, 0.55);
-  }
+  15%,
   45% {
-    box-shadow: inset 0 0 22px 3px rgba(220, 0, 45, 0.75);
+    stroke-opacity: 1;
+    stroke-width: 3.5;
   }
 }
 
@@ -401,7 +402,7 @@
 }
 
 /* 状態異常ダメージを受けた瞬間、パーティのヒーローが色づく（揺れている画像ではなく枠側に掛ける） */
-.battle-side.poison-tick .fighter:not(.empty) .fighter-art {
+.side.poison-tick .fighter:not(.empty) .fighter-art {
   animation: poison-sick 0.6s ease-out;
 }
 
@@ -415,22 +416,17 @@
   }
 }
 
-.battle-side.bleed-tick .fighter:not(.empty)::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background: radial-gradient(ellipse at 50% 50%, transparent 35%, rgba(220, 0, 40, 0.55));
-  animation: bleed-flash 0.4s ease-out forwards;
+.side.bleed-tick .fighter:not(.empty) .fighter-art {
+  animation: bleed-hurt 0.4s ease-out;
 }
 
-@keyframes bleed-flash {
-  from {
-    opacity: 1;
+@keyframes bleed-hurt {
+  25% {
+    filter: drop-shadow(0 0 5px #ff2a50) sepia(0.8) hue-rotate(-40deg) saturate(3) brightness(0.95);
+    transform: translateX(-2px);
   }
-  to {
-    opacity: 0;
+  55% {
+    transform: translateX(2px);
   }
 }
 
@@ -451,7 +447,7 @@
   animation: poison-flow 0.9s linear infinite;
 }
 
-.battle-side.poisoned .hpbar-poison {
+.side.poisoned .hpbar-poison {
   opacity: 0.75;
 }
 
@@ -466,7 +462,7 @@
   animation: blink 1s ease-in-out infinite;
 }
 
-.battle-side.bleeding .hpbar-bleed {
+.side.bleeding .hpbar-bleed {
   opacity: 1;
 }
 

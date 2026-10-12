@@ -19,8 +19,8 @@ import {
   slash,
 } from "./battle-fx.js";
 import { createBattle, stepBattle } from "../engine/battle.js";
-import { TICK, SUDDEN_DEATH_AT, PARTY_SIZE } from "../engine/balance.js";
-import { KIND_ICONS } from "../engine/content.js";
+import { TICK, SUDDEN_DEATH_AT, PARTY_SIZE, PARTY_COLS } from "../engine/balance.js";
+import { COLUMN_NAMES, KIND_ICONS } from "../engine/content.js";
 import { bobDelay, effectShort, toast } from "./components.js";
 import { pop, shake } from "./fx.js";
 import { ambient } from "./ambient.js";
@@ -31,6 +31,72 @@ const FLIGHT_MS = 300;
 const HOLD_MAX_MS = 700;
 const BEAM_MS = 420;
 const BEAM_REACH = 0.4;
+
+// 盤面: 参考作のように手前（自分）と奥（敵）が向かい合い、全体を少し斜めにする。
+// 地面の座標 X=左右(-1..1)、Z=奥(-1)〜手前(+1) を回転・遠近をつけて画面の % に写す。
+// パーティの列（前衛・中衛・後衛）を奥行きの段に、2段を左右に置く（前衛ほど中央線に近い）。
+const FIELD = {
+  yaw: (7 * Math.PI) / 180, // 地面の回転（斜めに向かい合う）
+  laneZ: [0.3, 0.62, 0.94], // 前衛・中衛・後衛の、中央線からの距離
+  laneX: [0.27, 0.66, 0.3], // 列ごとの左右の広がり（列ごとにずらして重なりを減らす）
+  center: 54, // 中央線の高さ（%）
+  depth: 43, // 奥行き方向の広がり（%）
+  width: 36, // 左右方向の広がり（%）
+  persp: 0.2, // 奥ほど小さくする割合
+};
+
+/** 地面の座標を画面の % と大きさに写す */
+function project(X, Z) {
+  const c = Math.cos(FIELD.yaw);
+  const sn = Math.sin(FIELD.yaw);
+  const x = X * c - Z * sn;
+  const z = X * sn + Z * c;
+  const s = 1 + FIELD.persp * z;
+  return { x: 50 + x * FIELD.width * s, y: FIELD.center + z * FIELD.depth, s, z };
+}
+
+/** 陣営と枠番号から地面の座標（敵は左右も反転して向かい合わせる） */
+function slotGround(sideIndex, slot) {
+  const lane = slot % PARTY_COLS;
+  const row = Math.floor(slot / PARTY_COLS);
+  const sign = sideIndex === 0 ? 1 : -1;
+  return { X: (row === 0 ? -1 : 1) * FIELD.laneX[lane] * sign, Z: FIELD.laneZ[lane] * sign };
+}
+
+function polyline(points) {
+  return points.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
+}
+
+/** 陣地（中央線から奥/手前の端まで）の輪郭 */
+function sideArea(index) {
+  const line = (Z) => Array.from({ length: 9 }, (_, i) => project(-1.15 + (2.3 * i) / 8, Z));
+  const [z0, z1] = index === 0 ? [0, 1.12] : [-1.12, 0];
+  return [...line(z0), ...line(z1).reverse()];
+}
+
+/** 地面（陣地の色分け・列の線・中央線）を SVG で描く */
+function fieldFloor() {
+  const NS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("class", "field-floor");
+  svg.setAttribute("viewBox", "0 0 100 100");
+  svg.setAttribute("preserveAspectRatio", "none");
+  const line = (Z, X0 = -1.15, X1 = 1.15) => Array.from({ length: 9 }, (_, i) => project(X0 + ((X1 - X0) * i) / 8, Z));
+  const add = (tag, attrs) => {
+    const el = document.createElementNS(NS, tag);
+    for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+    svg.append(el);
+  };
+  add("polygon", { points: polyline(sideArea(1)), class: "floor-area enemy" });
+  add("polygon", { points: polyline(sideArea(0)), class: "floor-area ally" });
+  for (const sign of [-1, 1]) {
+    FIELD.laneZ.forEach((z, lane) => {
+      add("polyline", { points: polyline(line(z * sign, -1.05, 1.05)), class: `lane-line lane${lane} ${sign > 0 ? "ally" : "enemy"}` });
+    });
+  }
+  add("polyline", { points: polyline(line(0)), class: "center-line" });
+  return svg;
+}
 const KIND_SE = {
   damage: "damage",
   shield: "buff",
@@ -64,13 +130,14 @@ export class BattleView {
   // DOM
   // -------------------------------------------------------------------------
 
-  sideView(index) {
+  /** 陣営の情報（リーダー・名前・HP・状態異常） */
+  sideHead(index) {
     const side = this.battle.sides[index];
     const isPlayer = index === 0;
     const leader = side.leader;
-    const head = h(
+    return h(
       "div",
-      { class: "side-head" },
+      { class: `side side-head ${isPlayer ? "player" : "enemy"}` },
       h("div", { class: `side-leader${isPlayer ? "" : " enemy"}` }, img(leader.image, leader.pixelated ? "pixel" : "", leader.name)),
       h(
         "div",
@@ -95,12 +162,27 @@ export class BattleView {
         ),
       ),
     );
-    const grid = h(
+  }
+
+  /** 盤面の片側（中央線より奥=敵、手前=自分）。ヒーローは盤面の座標から位置を決める */
+  sideZone(index) {
+    const side = this.battle.sides[index];
+    const isPlayer = index === 0;
+    const top = isPlayer ? FIELD.center : 0;
+    const height = isPlayer ? 100 - FIELD.center : FIELD.center;
+    const zone = h(
       "div",
-      { class: "battle-grid" },
+      { class: `side field-zone ${isPlayer ? "player" : "enemy"}`, style: { top: `${top}%`, height: `${height}%` } },
       h(
         "div",
-        { class: "status-veil" },
+        {
+          class: "status-veil",
+          style: {
+            clipPath: `polygon(${sideArea(index)
+              .map((q) => `${q.x.toFixed(2)}% ${(((q.y - top) / height) * 100).toFixed(2)}%`)
+              .join(", ")})`,
+          },
+        },
         h(
           "div",
           { class: "veil-poison" },
@@ -118,30 +200,66 @@ export class BattleView {
       ),
     );
     for (let slot = 0; slot < PARTY_SIZE; slot++) {
+      const g = slotGround(index, slot);
+      const p = project(g.X, g.Z);
       const f = side.fighters.find((x) => x.slot === slot);
+      const pos = h("div", {
+        class: "unit-pos",
+        style: {
+          left: `${p.x}%`,
+          top: `${((p.y - top) / height) * 100}%`,
+          zIndex: String(Math.round(10 + p.z * 10)),
+          "--s": p.s.toFixed(3),
+        },
+      });
+      zone.append(pos);
       if (!f) {
-        grid.append(h("div", { class: "fighter empty" }));
+        pos.append(h("div", { class: "fighter empty" }, h("div", { class: "ground" })));
         continue;
       }
       const role = mainKind(f);
       const card = h(
         "div",
         { class: `fighter r${f.rarity}`, style: { "--bd": bobDelay(slot + index * 3, 2.2), "--role": ROLES[role]?.color } },
-        h("div", { class: "fighter-art" }, img(f.image, "pixel", f.name), h("span", { class: `lv lv${f.level}` }, `Lv${f.level}`)),
+        h("div", { class: "ground" }),
+        h("div", { class: "fighter-art" }, img(f.image, "pixel", f.name)),
+        h("span", { class: `lv lv${f.level}` }, `Lv${f.level}`),
         img(KIND_ICONS[role], "role-badge", ROLES[role]?.label),
         h("div", { class: "charge" }, h("div", { class: "charge-fill" })),
         h("span", { class: "mult" }),
         f.multicast > 1 ? h("span", { class: "multicast" }, `×${f.multicast}`) : null,
       );
-      const summary = `${f.name} Lv${f.level}　${f.effects
+      const summary = `${f.name} Lv${f.level}（${COLUMN_NAMES[slot % PARTY_COLS]}）　${f.effects
         .map((e) => `[${e.trigger === "start" ? "開始" : `${f.cd}s`}] ${effectShort(e.kind, e.value)}`)
         .join("　")}`;
       card.title = summary;
       card.addEventListener("click", () => toast(summary));
       this.cards[index].set(slot, card);
-      grid.append(card);
+      pos.append(card);
     }
-    return h("div", { class: `battle-side ${isPlayer ? "player" : "enemy"}` }, isPlayer ? [grid, head] : [head, grid]);
+    return zone;
+  }
+
+  /** 列の名前（前衛・中衛・後衛）を各列の端に置く。自分は左端、敵は右端 */
+  laneTags() {
+    const tags = [];
+    for (const index of [0, 1]) {
+      const sign = index === 0 ? 1 : -1;
+      FIELD.laneZ.forEach((z, lane) => {
+        const p = project(-1.02 * sign, z * sign);
+        tags.push(
+          h(
+            "div",
+            {
+              class: `lane-tag ${index === 0 ? "player" : "enemy"} lane${lane}`,
+              style: { left: `${Math.min(95, Math.max(5, p.x))}%`, top: `${p.y}%` },
+            },
+            COLUMN_NAMES[lane],
+          ),
+        );
+      });
+    }
+    return tags;
   }
 
   build() {
@@ -156,10 +274,13 @@ export class BattleView {
       this.speedBtns,
       h("button", { class: "btn small", onClick: () => this.skip() }, "SKIP"),
     );
-    this.enemyView = this.sideView(1);
-    this.playerView = this.sideView(0);
-    this.centerEl = h("div", { class: "battle-center" }, h("div", { class: "stage-label" }, `STAGE ${this.app.run.stage}`), this.timerEl, controls);
-    this.inner = h("div", { class: "battle-inner" }, this.enemyView, this.centerEl, this.playerView);
+    this.heads = [this.sideHead(0), this.sideHead(1)];
+    this.zones = [this.sideZone(0), this.sideZone(1)];
+    const floor = fieldFloor();
+    this.floors = [floor.querySelector(".floor-area.ally"), floor.querySelector(".floor-area.enemy")];
+    this.field = h("div", { class: "battle-field" }, floor, this.laneTags(), this.zones[1], this.zones[0]);
+    const top = h("div", { class: "battle-top" }, h("div", { class: "stage-label" }, `STAGE ${this.app.run.stage}`), this.timerEl, controls);
+    this.inner = h("div", { class: "battle-inner" }, top, this.heads[1], this.field, this.heads[0]);
     return h("div", { class: "screen battle-screen" }, this.inner, this.fx);
   }
 
@@ -292,9 +413,10 @@ export class BattleView {
     const b = this.battle;
     this.timerEl.textContent = b.time.toFixed(1);
     this.timerEl.classList.toggle("sudden", b.time >= SUDDEN_DEATH_AT);
-    [this.playerView, this.enemyView].forEach((view, i) => {
+    this.heads.forEach((view, i) => {
       const side = b.sides[i];
       const shown = this.shown(i);
+      const zone = this.zones[i];
       const hpRatio = Math.max(0, shown.hp / side.maxHp);
       const width = `${hpRatio * 100}%`;
       const fill = view.querySelector(".hpbar-fill");
@@ -307,10 +429,13 @@ export class BattleView {
       setStatus(view.querySelector(".bleed-st"), shown.bleed);
       setStatus(view.querySelector(".poison-st"), shown.poison);
       // 毒・出血をくらっている間のもやとにじみ（スタックが多いほど濃い）
-      view.classList.toggle("poisoned", shown.poison > 0);
-      view.classList.toggle("bleeding", shown.bleed > 0);
-      view.style.setProperty("--poison", Math.min(1, 0.45 + shown.poison / 30).toFixed(2));
-      view.style.setProperty("--bleed", Math.min(1, 0.4 + shown.bleed / 25).toFixed(2));
+      for (const el of [view, zone, this.floors[i]]) {
+        el.classList.toggle("poisoned", shown.poison > 0);
+        el.classList.toggle("bleeding", shown.bleed > 0);
+        if (el === this.floors[i]) continue;
+        el.style.setProperty("--poison", Math.min(1, 0.45 + shown.poison / 30).toFixed(2));
+        el.style.setProperty("--bleed", Math.min(1, 0.4 + shown.bleed / 25).toFixed(2));
+      }
       for (const f of side.fighters) {
         const card = this.cards[i].get(f.slot);
         if (!card) continue;
@@ -326,7 +451,7 @@ export class BattleView {
   }
 
   sideEl(index) {
-    return index === 0 ? this.playerView : this.enemyView;
+    return this.heads[index];
   }
 
   hpPoint(index) {
@@ -342,7 +467,7 @@ export class BattleView {
   }
 
   gridPoint(index) {
-    return centerOf(this.sideEl(index).querySelector(".battle-grid"), this.el);
+    return centerOf(this.zones[index], this.el);
   }
 
   cardPoint(index, slot) {
@@ -382,7 +507,7 @@ export class BattleView {
   }
 
   flashSide(index, cls) {
-    const view = this.sideEl(index);
+    const view = this.zones[index];
     view.classList.remove(cls);
     void view.offsetWidth;
     view.classList.add(cls);
@@ -401,7 +526,7 @@ export class BattleView {
   hit(sideIndex, value) {
     const side = this.battle.sides[sideIndex];
     const ratio = value / side.maxHp;
-    const head = this.sideEl(sideIndex).querySelector(".side-head");
+    const head = this.heads[sideIndex];
     head.classList.remove("hit");
     void head.offsetWidth;
     head.classList.add("hit");

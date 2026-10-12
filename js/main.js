@@ -580,7 +580,7 @@ const actions = {
     ).then(() => app.battleView?.start());
   },
   battleSpeak(kind) {
-    const anchor = root.querySelector(".battle-side.player .side-leader");
+    const anchor = root.querySelector(".side-head.player .side-leader");
     say(kind, {}, { anchor });
   },
   battleFinished() {
