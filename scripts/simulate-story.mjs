@@ -1,5 +1,6 @@
 // バランス確認用: ストーリーを最初から自動プレイ（botShop）で進め、ステージごとのクリア率を集計する。
-// 進め方は実際の遊び方と同じ（クリアするとヒーローが仲間になる）。
+// 進め方は実際の遊び方と同じ（クリアするとヒーローが仲間になり、ノードの中はチームを繰り越す）。
+// 負けたらそのステージの開始時のチームでやり直し、TRIES 回負けたら1回だけ X-1 からチームを作り直す。
 // 使い方: node scripts/simulate-story.mjs [周回数] [デッキの組み方] [ノードID...]
 //   デッキの組み方 best:   おまかせ編成（Common・Uncommon を3種類、残りはレアリティの高い順。story.js の autoDeck）
 //                  auto:   空きがあれば自動で入るだけ（デッキを組み直さない）
@@ -9,11 +10,23 @@ import { prepareBattle, finishBattle, advance, chooseExtension, applyTarget } fr
 import { runBattle, battleSummary } from "../js/engine/battle.js";
 import { BOSS_TUNING, isBossWave } from "../js/engine/boss.js";
 import { STORY_BALANCE } from "../js/engine/balance.js";
-import { botShop } from "../js/engine/bot.js";
+import { botShop, unitValue } from "../js/engine/bot.js";
+import { sellUnit } from "../js/engine/market.js";
 import { createRng } from "../js/engine/rng.js";
-import { allUnits } from "../js/engine/roster.js";
+import { allUnits, findEmptySlot } from "../js/engine/roster.js";
 import { AREAS, DECK_SIZE, stageKey, stageLabel } from "../js/engine/world.js";
-import { newStory, newStageRun, clearStage, joinAtStart, stageUnlocked, areaUnlocked, setDeck, autoDeck } from "../js/engine/story.js";
+import {
+  newStory,
+  newStageRun,
+  clearStage,
+  joinAtStart,
+  areaUnlocked,
+  setDeck,
+  autoDeck,
+  carryOver,
+  resetNodeRun,
+  isCleared,
+} from "../js/engine/story.js";
 
 // --tune '{"cpuIncome":1}' で balance.js の STORY_BALANCE を、--boss '{"hp":2}' で BOSS_TUNING を試しに変えられる
 const args = process.argv.slice(2);
@@ -64,14 +77,37 @@ function resolvePending(run, rng) {
   }
 }
 
-/** 1ステージを自動プレイ。戻り値: { cleared, waves: [{ wave, won, boss }] } */
+// 合成したときのエクステンション（人は3択から選ぶので、CPUと同じく戦闘に効くものから選ぶ）
+const COMBAT_EXT = db.extensions.filter((x) => !["income", "freeReroll", "winGum", "sellBonus", "factionMult"].includes(x.effect));
+
+/**
+ * 枠が埋まってGUMが余っているとき、人がするように弱いヒーローを売って、高いレアリティのヒーローへ入れ替える
+ * （botShop は Lv1 のヒーローしか売らないため、繰り越しでGUMが余り続けてしまう）
+ */
+function upgradeRoster(run) {
+  if (findEmptySlot(run)) return;
+  const offers = run.market.offers.filter((o) => o?.type === "hero" && o.cost <= run.gum);
+  if (!offers.length) return;
+  const best = offers.reduce((a, c) => (db.def(c.defId).rarity > db.def(a.defId).rarity ? c : a));
+  const rarity = db.def(best.defId).rarity;
+  const weakest = allUnits(run)
+    .filter(({ unit }) => db.def(unit.defId).rarity < rarity && unit.defId !== best.defId)
+    .sort((a, b) => unitValue(db, a.unit) - unitValue(db, b.unit))[0];
+  if (weakest && run.gum >= best.cost * 2) sellUnit(run, db, weakest.zone, weakest.index);
+}
+
+/** 1ステージを自動プレイ。戻り値: { cleared, run, waves: [{ wave, won, boss }] } */
 function playStage(story, key, seed) {
   const run = newStageRun(db, story, key, seed);
   const rng = createRng(seed ^ 0x5eed);
   const waves = [];
   for (let guard = 0; guard < 40; guard++) {
     resolvePending(run, rng);
-    botShop(run, db, rng, { maxRerolls: 2, onMerge: () => {} });
+    const onMerge = () => run.extensions.push(rng.pick(COMBAT_EXT).id);
+    for (let k = 0; k < 3; k++) {
+      upgradeRoster(run);
+      botShop(run, db, rng, { maxRerolls: 2, onMerge });
+    }
     resolvePending(run, rng);
     const boss = isBossWave(run);
     const prep = prepareBattle(run, db);
@@ -82,11 +118,27 @@ function playStage(story, key, seed) {
     if (run.phase !== "result") break;
     advance(run, db);
   }
-  return { cleared: run.phase === "clear", waves };
+  return { cleared: run.phase === "clear", run, waves };
 }
 
 const stats = {};
 const reached = [];
+const record = (label, res, t) => {
+  const st = (stats[label] ??= { tries: 0, clears: 0, firstTry: 0, waveGames: {}, waveWins: {}, bossGames: 0, bossWins: 0 });
+  st.tries++;
+  for (const w of res.waves) {
+    st.waveGames[w.wave] = (st.waveGames[w.wave] || 0) + 1;
+    if (w.won) st.waveWins[w.wave] = (st.waveWins[w.wave] || 0) + 1;
+    if (w.boss) {
+      st.bossGames++;
+      if (w.won) st.bossWins++;
+    }
+  }
+  if (res.cleared) {
+    st.clears++;
+    if (t === 0) st.firstTry++;
+  }
+};
 for (let i = 0; i < runs; i++) {
   const story = newStory();
   let attempts = 0;
@@ -98,34 +150,30 @@ for (let i = 0; i < runs; i++) {
       area.stages.forEach((_, s) => clearStage(story, stageKey(area.id, s)));
       continue;
     }
+    let rebuilt = false;
     for (let s = 0; s < area.stages.length; s++) {
       const key = stageKey(area.id, s);
-      if (!stageUnlocked(story, area, s)) break;
       joinAtStart(story, key);
       chooseDeck(story);
       const label = stageLabel(area, s);
-      const st = (stats[label] ??= { tries: 0, clears: 0, firstTry: 0, waveGames: {}, waveWins: {}, bossGames: 0, bossWins: 0 });
-      let cleared = false;
+      const replay = isCleared(story, key);
+      let cleared = null;
       for (let t = 0; t < TRIES && !cleared; t++) {
         const res = playStage(story, key, (i * 7919 + attempts++ * 104729) >>> 0);
-        st.tries++;
-        for (const w of res.waves) {
-          st.waveGames[w.wave] = (st.waveGames[w.wave] || 0) + 1;
-          if (w.won) st.waveWins[w.wave] = (st.waveWins[w.wave] || 0) + 1;
-          if (w.boss) {
-            st.bossGames++;
-            if (w.won) st.bossWins++;
-          }
-        }
-        if (res.cleared) {
-          cleared = true;
-          st.clears++;
-          if (t === 0) st.firstTry++;
-        }
+        if (!replay) record(label, res, t);
+        if (res.cleared) cleared = res.run;
       }
-      if (!cleared) break outer;
+      if (!cleared) {
+        // 一度だけ X-1 からチームを作り直す
+        if (rebuilt || s === 0) break outer;
+        rebuilt = true;
+        resetNodeRun(story, area.id);
+        s = -1;
+        continue;
+      }
       clearStage(story, key);
-      last = label;
+      carryOver(story, cleared);
+      if (!replay) last = label;
     }
   }
   reached.push(last);

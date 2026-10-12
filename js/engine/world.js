@@ -3,13 +3,17 @@
 // ヒーローは MCH の ID（data/heroes.json の mch_id）、レイドボスは data/bosses.json の ID で書く。
 // コード上はノードを area と呼ぶ（AREAS / areaId など）。
 
-/** 時代（古いほど後で開く） */
+/**
+ * 時代（古いほど後で開く）。rankCap: その時代のマーケットランクの上限（プレイヤーもエネミーも）。
+ * ノードの中ではチームを繰り越してウェーブを重ねるので、ランクはすぐ上がる。時代ごとに上限を決めて、
+ * 古い時代ほど高いレアリティが並ぶようにする
+ */
 export const ERAS = [
-  { id: "kindai", name: "近代", en: "MODERN", years: "19〜20世紀" },
-  { id: "kinsei", name: "近世", en: "EARLY MODERN", years: "15〜18世紀" },
-  { id: "chusei", name: "中世", en: "MEDIEVAL", years: "5〜15世紀" },
-  { id: "kodai", name: "古代", en: "ANCIENT", years: "紀元前〜3世紀" },
-  { id: "hazama", name: "時空のはざま", en: "RIFT", years: "????" },
+  { id: "kindai", name: "近代", en: "MODERN", years: "19〜20世紀", rankCap: 8 },
+  { id: "kinsei", name: "近世", en: "EARLY MODERN", years: "15〜18世紀", rankCap: 10 },
+  { id: "chusei", name: "中世", en: "MEDIEVAL", years: "5〜15世紀", rankCap: 12 },
+  { id: "kodai", name: "古代", en: "ANCIENT", years: "紀元前〜3世紀", rankCap: 14 },
+  { id: "hazama", name: "時空のはざま", en: "RIFT", years: "????", rankCap: 14 },
 ];
 
 /**
@@ -45,6 +49,13 @@ export function stageWaves(area, index) {
   return index < 3 ? 3 : index < 7 ? 4 : 5;
 }
 
+/** そのステージより前のウェーブ数の合計（ノードの中でチームを繰り越すので、ランクや敵の強さの目安になる） */
+export function wavesBefore(area, index) {
+  let n = 0;
+  for (let i = 0; i < index; i++) n += stageWaves(area, i);
+  return n;
+}
+
 /** ノードの最終ステージか（レイドボスが待つ・クリアでパーツ） */
 export const isFinalStage = (area, index) => index === area.stages.length - 1;
 
@@ -53,8 +64,8 @@ export const isFinalStage = (area, index) => index === area.stages.length - 1;
  * machine: 行くのに必要なタイムマシンのレベル / after: 先にクリアが必要なノード（国 → 時代の順に開く）
  * map: ワールドマップ上の位置（地図の横・縦に対する%）/ boss: 最終ステージのレイドボス
  * stages[i].meet: そのステージで出会うヒーロー（いないステージもある）/ join: クリアで仲間になるヒーロー（meet を含む）
- * difficulty: エネミーの強さとマーケットランクの上乗せ（ステージが進むと増える。stageDifficulty）。
- *   同じ時代の後から行くノードは、最初のノードで強いヒーローが仲間になる分だけ高くしている
+ * difficulty: エネミーの強さの上乗せの基本値。これにステージ番号を足した値で、後半のステージほど強くなる
+ *   （story.js の stageDifficulty）。時代の差はマーケットランクの上限（ERAS の rankCap）で付けるので、いまはどれも0
  */
 export const AREAS = [
   {
@@ -66,6 +77,7 @@ export const AREAS = [
     map: { x: 88, y: 34 },
     bg: "1023",
     color: "#ff5a6a",
+    rankCap: 6, // チュートリアルは低めに
     difficulty: 0,
     boss: "b171",
     stages: [
@@ -84,7 +96,7 @@ export const AREAS = [
     map: { x: 50, y: 20 },
     bg: "1004",
     color: "#5fa8ff",
-    difficulty: 1,
+    difficulty: 0,
     boss: "b172",
     stages: [
       { meet: 1001, join: [1001] }, // 1 コナン・ドイル
@@ -109,7 +121,7 @@ export const AREAS = [
     map: { x: 20, y: 30 },
     bg: "1046",
     color: "#ffb347",
-    difficulty: 1,
+    difficulty: 0,
     boss: "b370",
     stages: [
       { meet: 1008, join: [1008] }, // 1 ジョン・L・サリバン
@@ -133,7 +145,7 @@ export const AREAS = [
     map: { x: 88, y: 34 },
     bg: "1002",
     color: "#ff5a6a",
-    difficulty: 3,
+    difficulty: 0,
     boss: "b371",
     stages: [
       { meet: 10008, join: [10008] }, // 1 雷電為右衛門
@@ -158,7 +170,7 @@ export const AREAS = [
     map: { x: 50, y: 20 },
     bg: "1052",
     color: "#5fa8ff",
-    difficulty: 4,
+    difficulty: 0,
     boss: "b372",
     stages: [
       { meet: 10006, join: [10006] }, // 1 パスカル
@@ -183,7 +195,7 @@ export const AREAS = [
     map: { x: 31, y: 46 },
     bg: "1030",
     color: "#36d6c3",
-    difficulty: 4,
+    difficulty: 0,
     boss: "b374",
     stages: [
       { meet: 2042, join: [2042] }, // 1 ヴァスコ・ダ・ガマ
@@ -207,7 +219,7 @@ export const AREAS = [
     map: { x: 88, y: 34 },
     bg: "1003",
     color: "#ff5a6a",
-    difficulty: 5,
+    difficulty: 0,
     boss: "b420",
     stages: [
       { meet: 2019, join: [2019] }, // 1 金太郎
@@ -232,7 +244,7 @@ export const AREAS = [
     map: { x: 50, y: 20 },
     bg: "1056",
     color: "#5fa8ff",
-    difficulty: 6,
+    difficulty: 0,
     boss: "b1007",
     stages: [
       { meet: 3026, join: [3026] }, // 1 ロビンフッド
@@ -257,7 +269,7 @@ export const AREAS = [
     map: { x: 72, y: 34 },
     bg: "1010",
     color: "#ffd23f",
-    difficulty: 6,
+    difficulty: 0,
     boss: "b1182",
     stages: [
       { meet: 1007, join: [1007] }, // 1 大長今
@@ -281,7 +293,7 @@ export const AREAS = [
     map: { x: 76, y: 41 },
     bg: "1037",
     color: "#ffd23f",
-    difficulty: 7,
+    difficulty: 0,
     boss: "b1183",
     stages: [
       { meet: 10005, join: [10005] }, // 1 孫尚香
@@ -306,7 +318,7 @@ export const AREAS = [
     map: { x: 82, y: 28 },
     bg: "1053",
     color: "#ff8ad8",
-    difficulty: 9,
+    difficulty: 0,
     boss: "b1184",
     stages: [
       { meet: 2011, join: [2011] }, // 1 孫子
@@ -331,7 +343,7 @@ export const AREAS = [
     map: { x: 53, y: 33 },
     bg: "1041",
     color: "#e8c46a",
-    difficulty: 9,
+    difficulty: 0,
     boss: "b1186",
     stages: [
       { meet: 10007, join: [10007] }, // 1 ダビデ
@@ -356,7 +368,7 @@ export const AREAS = [
     map: { x: 50, y: 88 },
     bg: "2605",
     color: "#b46cff",
-    difficulty: 11,
+    difficulty: 0,
     boss: "b1187",
     stages: [
       { meet: 2007, join: [2007] }, // 1 サンタクロース
@@ -378,6 +390,8 @@ export const TUTORIAL_AREA = "kindai-jp";
 export const heroId = (mchId) => `h${mchId}`;
 export const areaById = (id) => AREAS.find((a) => a.id === id);
 export const eraById = (id) => ERAS.find((e) => e.id === id);
+/** ノードのマーケットランクの上限 */
+export const areaRankCap = (area) => area.rankCap ?? eraById(area.era).rankCap;
 export const machineByLevel = (level) => MACHINES[Math.max(1, Math.min(MAX_MACHINE_LEVEL, level)) - 1];
 
 /** "kindai-jp:2" のようなステージID */

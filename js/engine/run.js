@@ -77,11 +77,36 @@ export function newRun(db, { playerId, seed, heroPool = null, enemyPool = null, 
     run.lives = STAGE_LIVES;
     run.revived = true; // ストーリーでは復活なし
     run.rankBonus += storyPlayerBonus(story).rank;
+    run.rankCap = story.rankCap;
   }
   withRng(run, (rng) => {
     run.heroPool = heroPool ? [...heroPool] : pickPool(db, db.heroes, rng);
     run.enemyPool = enemyPool ? [...enemyPool] : pickPool(db, db.enemies, rng);
   });
+  startStage(run, db);
+  return run;
+}
+
+/**
+ * ストーリーで、前のステージをクリアしたチーム（carry: そのときの run）のまま次のステージを始める。
+ * ヒーロー・Lv・エクステンション・残りのGUM・取り置き・ステージ数（マーケットランクと敵の強さ）を引き継ぎ、
+ * ライフ・勝利数はステージごとに戻す。seed は出撃ごとに変える（やり直しで同じ相手にならないように）
+ */
+export function continueRun(db, carry, { seed, heroPool, story }) {
+  const run = JSON.parse(JSON.stringify(carry));
+  run.seed = seed >>> 0;
+  run.rngState = seed >>> 0;
+  run.lives = STAGE_LIVES;
+  run.wins = 0;
+  run.losses = 0;
+  run.revived = true;
+  run.pending = [];
+  run.history = [];
+  run.lastResult = null;
+  run.heroPool = [...heroPool];
+  run.rankBonus += storyPlayerBonus(story).rank - storyPlayerBonus(run.story).rank;
+  run.story = { ...story };
+  run.rankCap = story.rankCap;
   startStage(run, db);
   return run;
 }

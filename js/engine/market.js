@@ -12,8 +12,10 @@ import {
 import { MATERIALS, materialById } from "./content.js";
 import { acquireUnit, allUnits, canAcquire, mergePreview, removeUnit } from "./roster.js";
 
+/** マーケットランク。ストーリーでは時代ごとの上限（rankCap）がある */
 export function effectiveRank(owner) {
-  return Math.max(1, Math.min(MAX_MARKET_RANK, owner.stage + (owner.rankBonus || 0)));
+  const cap = Math.min(MAX_MARKET_RANK, owner.rankCap ?? MAX_MARKET_RANK);
+  return Math.max(1, Math.min(cap, owner.stage + (owner.rankBonus || 0)));
 }
 
 /** そのランクで出現しうる最高レアリティ */

@@ -9,6 +9,7 @@
 // - 出血・毒ダメージはシールドに対して15%軽減
 // - 30秒でサドンデス開始。0.5秒ごとに両陣営へ増加していくダメージ
 // - rotation を持つユニット（レイドボス）は、発動のたびに次のスキルへ進む。チャージ時間もスキルごと
+// - resist（0〜1）を持つユニットは、弱体化・チャージ遅延をその割合だけ軽減する（レイドボス）
 
 import {
   TICK,
@@ -156,7 +157,7 @@ function applyEffect(b, side, f, effect, events) {
       const candidates = foe.fighters.filter((x) => x.cd !== null);
       if (candidates.length) {
         const t = candidates.reduce((a, c) => (c.charge / c.cd > a.charge / a.cd ? c : a));
-        t.charge = Math.max(0, t.charge - value);
+        t.charge = Math.max(0, t.charge - value * (1 - (t.resist || 0)));
         ev.targets.push(t.slot);
         f.contribution += value;
       }
@@ -165,7 +166,7 @@ function applyEffect(b, side, f, effect, events) {
     case "weaken": {
       if (foe.fighters.length) {
         const t = foe.fighters.reduce((a, c) => (fighterPower(c) > fighterPower(a) ? c : a));
-        t.mult = Math.max(MIN_RUNTIME_MULT, t.mult - value / 100);
+        t.mult = Math.max(MIN_RUNTIME_MULT, t.mult - (value / 100) * (1 - (t.resist || 0)));
         ev.targets.push(t.slot);
         f.contribution += value;
       }

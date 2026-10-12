@@ -264,3 +264,65 @@ test("新しく仲間になったヒーローは NEW（デッキ画面を閉じ�
   clearStage(story, stageKey("kindai-jp", 0));
   assert.deepEqual(story.fresh, ["h2036", "h2021"]);
 });
+
+test("ノードの中はチームを繰り越す（負けたら、そのステージを始めたときのチームでやり直し）", async () => {
+  const { carryOver, canSortie, nodeRun, resetNodeRun, defaultStage } = await import("../js/engine/story.js");
+  const story = newStory();
+  clearArea(story, "kindai-jp");
+  const area = areaById("kindai-eu");
+  assert.ok(canSortie(story, area, 0));
+  assert.ok(!canSortie(story, area, 1));
+  // 2-1 をクリアしたチーム
+  const run = newStageRun(db, story, stageKey(area.id, 0), 11);
+  run.party[0] = { uid: 500, defId: "h10001", level: 3, permMult: 0, cdReduce: 0 };
+  run.extensions.push(db.extensions[0].id);
+  for (let i = 0; i < runGoal(run); i++) {
+    finishBattle(run, db, win);
+    if (run.phase === "result") advance(run, db);
+  }
+  assert.equal(run.phase, "clear");
+  const gumLeft = run.gum;
+  const stageCount = run.stage;
+  clearStage(story, stageKey(area.id, 0));
+  carryOver(story, run);
+  assert.equal(nodeRun(story, area.id).next, 1);
+  assert.equal(defaultStage(story, area), 1);
+  assert.ok(canSortie(story, area, 1));
+  assert.ok(!canSortie(story, area, 0));
+  // 2-2 は同じチームで始まる（ユニット・エクステンション・GUM・ステージ数を引き継ぎ、ライフは戻る）
+  const next = newStageRun(db, story, stageKey(area.id, 1), 12);
+  assert.equal(next.party[0].uid, 500);
+  assert.equal(next.party[0].level, 3);
+  assert.deepEqual(next.extensions, run.extensions);
+  assert.equal(next.stage, stageCount + 1);
+  assert.ok(next.gum > gumLeft);
+  assert.equal(next.lives, 3);
+  assert.equal(next.wins, 0);
+  assert.equal(next.story.index, 1);
+  // 負けても繰り越しは変わらない → やり直しは同じチームから
+  for (let i = 0; i < 3; i++) {
+    finishBattle(next, db, lose);
+    if (next.phase === "result") advance(next, db);
+  }
+  assert.equal(next.phase, "gameover");
+  assert.equal(newStageRun(db, story, stageKey(area.id, 1), 13).party[0].uid, 500);
+  // 作り直すと 2-1 から新しいチーム（クリア済みのまま）
+  resetNodeRun(story, area.id);
+  assert.ok(canSortie(story, area, 0));
+  assert.ok(story.cleared.includes(stageKey(area.id, 0)));
+  assert.equal(newStageRun(db, story, stageKey(area.id, 0), 14).party.filter(Boolean).length, 0);
+});
+
+test("最終ステージをクリアするとノードの繰り越しは終わる。古い保存データ（v2）には繰り越しを足す", async () => {
+  const { carryOver, nodeRun } = await import("../js/engine/story.js");
+  const story = newStory();
+  const area = areaById("kindai-jp");
+  story.nodeRuns[area.id] = { next: 2, team: { story: { areaId: area.id, index: 1 } } };
+  carryOver(story, { story: { areaId: area.id, index: 2 } });
+  assert.deepEqual(nodeRun(story, area.id), { next: 0, team: null });
+  const v2 = { ...newStory(), version: 2 };
+  delete v2.nodeRuns;
+  const m = migrateStory(v2);
+  assert.deepEqual(m.nodeRuns, {});
+  assert.equal(m.version, newStory().version);
+});

@@ -5,7 +5,7 @@
 // 仮想プレイヤーにステージ1から同じルールで買い物をさせ、その日の盤面を作る。
 
 import { createRng } from "./rng.js";
-import { stageIncome, storyCpuBonus } from "./balance.js";
+import { RARITY, stageIncome, storyCpuBonus } from "./balance.js";
 import { rollMarket } from "./market.js";
 import { emptyRoster } from "./roster.js";
 import { botShop, unitValue } from "./bot.js";
@@ -47,11 +47,12 @@ export function storyCpuTuning(story) {
 export function buildCpuOpponent(db, run, stage) {
   const rng = createRng(opponentSeed(run, stage));
   const story = run.story;
-  const tune = story ? storyCpuTuning(story) : { rank: 0, income: 0 };
+  const tune = story ? storyCpuTuning(story) : { rank: 0, income: 0, power: 0, hp: 0 };
   const extraIncome = tune.income;
   const ghost = {
     stage: 0,
     rankBonus: tune.rank,
+    rankCap: story?.rankCap,
     gum: 0,
     freeRerolls: 0,
     itemUses: 0,
@@ -65,7 +66,9 @@ export function buildCpuOpponent(db, run, stage) {
 
   for (let s = 1; s <= stage; s++) {
     ghost.stage = s;
-    ghost.gum += Math.max(0, stageIncome(s) + cpuBonusIncome(s) + extraIncome);
+    // 追加GUM（宝箱などの代わり）はフリーバトルだけ。ストーリーは宝箱がなく、難しさの補正で決める
+    // 最低でも Common を1体買える分は入る（補正がマイナスでも部隊が空にならないように）
+    ghost.gum += Math.max(RARITY[1].cost, stageIncome(s) + (story ? 0 : cpuBonusIncome(s)) + extraIncome);
     rollMarket(ghost, db, rng);
     botShop(ghost, db, rng, {
       maxRerolls: 2,
@@ -74,9 +77,12 @@ export function buildCpuOpponent(db, run, stage) {
   }
 
   const units = ghost.party.map((unit, slot) => unit && { unit, slot }).filter(Boolean);
+  if (!units.length) units.push({ unit: { uid: ghost.nextUid++, defId: run.enemyPool[0], level: 1, permMult: 0, cdReduce: 0 }, slot: 0 });
   const leaderUnit = units.reduce((a, c) => (unitValue(db, c.unit) > unitValue(db, a.unit) ? c : a), units[0]).unit;
   const leaderDef = db.def(leaderUnit.defId);
   const mods = collectMods(ghost.extensions, db);
+  // ストーリー: 後半のステージほどエネミーの効果量とパーティHPを上げる（盤面が埋まったあとも強くなるように）
+  if (tune.power) for (const { unit } of units) unit.permMult += tune.power;
   const team = buildTeam({
     name: `${leaderDef.name}の部隊`,
     units,
@@ -85,5 +91,6 @@ export function buildCpuOpponent(db, run, stage) {
     db,
     leader: { name: leaderDef.name, image: leaderDef.image, pixelated: true },
   });
+  if (tune.hp) team.maxHp = Math.round(team.maxHp * (1 + tune.hp / 100));
   return { team, units, extensions: ghost.extensions };
 }

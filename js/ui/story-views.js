@@ -28,7 +28,9 @@ import {
   isCleared,
   machineInfo,
   machineProgress,
-  nextStage,
+  canSortie,
+  defaultStage,
+  nodeRun,
   stageRarityOdds,
   stageUnlocked,
 } from "../engine/story.js";
@@ -218,7 +220,7 @@ export function areaScreen(app) {
   const story = app.story;
   const area = areaById(app.ui.storyArea);
   const era = eraById(area.era);
-  const selected = app.ui.storyStage ?? nextStage(story, area) ?? area.stages.length - 1;
+  const selected = app.ui.storyStage ?? defaultStage(story, area);
   const path = nodePositions(area)
     .map((p) => `${p.x},${p.y}`)
     .join(" ");
@@ -263,10 +265,11 @@ function stageNode(app, area, index, selected) {
   const def = boss ? app.db.def(area.boss) : meet ? app.db.def(heroId(meet)) : stageEnemy(app.db, area, index);
   const pos = nodePositions(area)[index];
   const hidden = !(open || cleared);
+  const next = canSortie(story, area, index);
   return h(
     "button",
     {
-      class: `stage-node${cleared ? " cleared" : open ? " open" : " locked"}${selected ? " selected" : ""}${boss ? " boss" : ""}${
+      class: `stage-node${cleared ? " cleared" : open ? " open" : " locked"}${next ? " next" : ""}${selected ? " selected" : ""}${boss ? " boss" : ""}${
         !boss && !meet ? " enemy" : ""
       }`,
       style: { left: `${pos.x}%`, top: `${pos.y}%`, "--d": `${0.1 + index * 0.05}s` },
@@ -275,6 +278,7 @@ function stageNode(app, area, index, selected) {
     },
     h("span", { class: "node-meet" }, img(def.image, `pixel${hidden && !boss ? " silhouette" : ""}${!boss && !meet ? " flip" : ""}`, def.name)),
     boss ? h("span", { class: "boss-tag" }, "BOSS") : null,
+    next ? h("span", { class: "next-tag" }, "NEXT") : null,
     h(
       "span",
       { class: "node-tile" },
@@ -295,6 +299,7 @@ function stageCard(app, area, index) {
   const shown = open || cleared;
   const joins = new Set([...(stage.meetAtStart ? [stage.meet] : []), ...stage.join]);
   const art = boss ?? meet ?? stageEnemy(app.db, area, index);
+  const sortie = canSortie(story, area, index);
   return h(
     "section",
     { class: `stage-card panel${boss ? " boss" : ""}` },
@@ -338,16 +343,48 @@ function stageCard(app, area, index) {
         ),
       ),
     ),
+    teamRow(app, area, index),
     h(
       "div",
       { class: "stage-actions" },
       h("button", { class: "btn deck-mini", onClick: () => app.actions.openDeck("area") }, `デッキ ${story.deck.length}/${DECK_SIZE}`),
       h(
         "button",
-        { class: `btn primary big sortie-btn${open ? "" : " disabled"}`, onClick: () => app.actions.sortie(key), disabled: open ? null : "true" },
-        open ? "出撃" : "未開放",
+        { class: `btn primary big sortie-btn${sortie ? "" : " disabled"}`, onClick: () => app.actions.sortie(key), disabled: sortie ? null : "true" },
+        sortie ? "出撃" : cleared ? "クリア済み" : "未開放",
       ),
     ),
+  );
+}
+
+/**
+ * 繰り越すチーム。次に出撃するステージなら、前のステージをクリアしたときのパーティとGUM。
+ * それ以外は、出撃できるのが次のステージだけであることを短く出す
+ */
+function teamRow(app, area, index) {
+  const story = app.story;
+  const carry = nodeRun(story, area.id);
+  const rebuild = carry.next > 0 ? h("button", { class: "btn small rebuild-btn", onClick: () => app.actions.rebuildNode(area.id) }, "作り直す") : null;
+  if (index !== carry.next) {
+    if (!areaUnlocked(story, area) || (index > carry.next && !isCleared(story, stageKey(area.id, index)))) return null;
+    return h("div", { class: "team-row note" }, h("small", null, `チームを繰り越して進みます。次は ${stageLabel(area, carry.next)}`), rebuild);
+  }
+  if (!carry.team) return h("div", { class: "team-row note" }, h("small", null, index === 0 ? "新しいチームで出撃" : "チームなし"));
+  const units = carry.team.party.filter(Boolean);
+  return h(
+    "div",
+    { class: "team-row" },
+    h("small", { class: "team-label" }, "チーム"),
+    h(
+      "div",
+      { class: "team-units" },
+      units.map((u) => {
+        const def = app.db.def(u.defId);
+        return h("span", { class: `team-unit r${def.rarity}` }, img(def.image, "pixel", def.name), h("i", { class: `lv lv${u.level}` }, `${u.level}`));
+      }),
+    ),
+    h("span", { class: "team-gum num" }, `${carry.team.gum}G`),
+    rebuild,
   );
 }
 
@@ -489,7 +526,15 @@ export function stageResultScreen(app, info) {
           )
         : null,
       res.part ? h("div", { class: "part-chip" }, img("assets/story/machine-1.png", "pixel", ""), h("span", null, "タイムマシンのパーツ"), h("b", { class: "num" }, "+1")) : null,
-      h("button", { class: "btn primary big", onClick: () => app.actions.afterStageResult() }, "つぎへ"),
+      // 最終ステージ以外は、繰り越したチームのまま次のステージへ
+      info.index < area.stages.length - 1
+        ? h(
+            "div",
+            { class: "stage-result-actions" },
+            h("button", { class: "btn primary big", onClick: () => app.actions.sortieNext() }, `次のステージへ（${stageLabel(area, info.index + 1)}）`),
+            h("button", { class: "btn", onClick: () => app.actions.afterStageResult() }, "ステージ選択へ"),
+          )
+        : h("button", { class: "btn primary big", onClick: () => app.actions.afterStageResult() }, "つぎへ"),
     ),
   );
 }

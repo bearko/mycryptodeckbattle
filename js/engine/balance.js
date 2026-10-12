@@ -165,18 +165,23 @@ export function sellValue(def, level, bonus = 0) {
 }
 
 /**
- * ストーリーの難しさ d による補正（独自）。d はノードの時代とステージ番号で決まる（story.js の stageDifficulty）。
- * playerRank / playerIncome: プレイヤーのマーケットランクと毎ウェーブの収入への上乗せ（d × 係数 ＋ playerIncomeBase）
- * cpuRank / cpuIncome: エネミー部隊のマーケットランクと収入への上乗せ（d × 係数 ＋ 定数）
+ * ストーリーの難しさ d による補正（独自）。d = ノードの時代の基本値 ＋ ステージ番号（story.js の stageDifficulty）。
+ * ノードの中はチームを繰り越すので、ステージ数（ウェーブの合計）が進むほどプレイヤーもエネミーも育つ。
+ * 盤面が埋まると収入だけでは強くならないので、後半のステージほどエネミーの効果量とHPを上げる。
+ * playerRank / playerIncome(Base): プレイヤーのマーケットランクと毎ウェーブの収入への上乗せ（d × 係数 ＋ 定数）
+ * cpuRank / cpuIncome(Base): エネミー部隊のマーケットランクと収入への上乗せ（d × 係数 ＋ 定数）
+ * cpuPower / cpuHp: エネミー部隊の効果量とパーティHPの上乗せ（d × 係数 %）
  * チュートリアルのノードは handicap でエネミーの収入をさらに減らす
  */
 export const STORY_BALANCE = {
-  playerRank: 2,
-  playerIncome: 2,
-  playerIncomeBase: 6,
-  cpuRank: 1,
-  cpuIncome: 2,
+  playerRank: 0.5,
+  playerIncome: 0,
+  playerIncomeBase: 2,
+  cpuRank: 0.5,
+  cpuIncome: 1,
   cpuIncomeBase: -2,
+  cpuPower: 6,
+  cpuHp: 6,
 };
 
 export function storyPlayerBonus(story) {
@@ -192,5 +197,7 @@ export function storyCpuBonus(story) {
   return {
     rank: Math.floor(d * STORY_BALANCE.cpuRank),
     income: Math.floor(d * STORY_BALANCE.cpuIncome) + STORY_BALANCE.cpuIncomeBase - (story.handicap ?? 0),
+    power: Math.round(d * STORY_BALANCE.cpuPower),
+    hp: Math.round(d * STORY_BALANCE.cpuHp),
   };
 }

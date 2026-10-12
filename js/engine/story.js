@@ -9,19 +9,22 @@ import {
   STARTER_HEROES,
   TUTORIAL_AREA,
   areaById,
+  areaRankCap,
   heroId,
   isFinalStage,
   machineByLevel,
   parseStageKey,
   stageKey,
   stageWaves,
+  wavesBefore,
 } from "./world.js";
 import { createRng } from "./rng.js";
-import { newRun } from "./run.js";
+import { continueRun, newRun } from "./run.js";
 import { RARITY, marketOdds, stageIncome, storyPlayerBonus } from "./balance.js";
 
 // 2: パーツがステージごと → ノード（時代×地域）のクリアごとに。ノードのステージ数が 3 → 10 に
-export const STORY_VERSION = 2;
+// 3: ノードの中でチームを繰り越す（nodeRuns）
+export const STORY_VERSION = 3;
 export const STORY_PLAYER = "chris";
 
 export function newStory() {
@@ -36,6 +39,8 @@ export function newStory() {
     parts: 0,
     // 新しく仲間になったヒーロー（デッキ画面で NEW と出す。デッキ画面を閉じると空にする）
     fresh: [],
+    // ノードごとの繰り越し: { [ノードID]: { next: 次に出撃するステージ, team: 前のステージをクリアしたときの run } }
+    nodeRuns: {},
     flags: {},
   };
 }
@@ -46,9 +51,15 @@ export function newStory() {
  */
 export function migrateStory(story) {
   if (!story || story.version === STORY_VERSION) return story;
-  const cleared = story.cleared.filter((key) => parseStageKey(key));
-  const next = { ...newStory(), ...story, version: STORY_VERSION, cleared, machine: 1, parts: 0 };
-  for (const area of AREAS) if (areaCleared(next, area)) addPart(next);
+  let next = { ...newStory(), ...story, version: STORY_VERSION };
+  if ((story.version ?? 1) < 2) {
+    next.cleared = story.cleared.filter((key) => parseStageKey(key));
+    next.machine = 1;
+    next.parts = 0;
+    for (const area of AREAS) if (areaCleared(next, area)) addPart(next);
+  }
+  // v3: 繰り越しのチームはないので、途中までクリアしたノードは X-1 からチームを作って進む
+  next.nodeRuns = story.nodeRuns ?? {};
   return next;
 }
 
@@ -75,6 +86,36 @@ export function areaUnlocked(story, area) {
   if (area.requiresAll && !AREAS.filter((a) => !a.requiresAll).every((a) => areaCleared(story, a))) return false;
   if (area.after && !areaCleared(story, areaById(area.after))) return false;
   return story.machine >= area.machine;
+}
+
+/** ノードの繰り越し（次に出撃するステージと、そのときのチーム） */
+export function nodeRun(story, areaId) {
+  return story.nodeRuns?.[areaId] ?? { next: 0, team: null };
+}
+
+/**
+ * 出撃できるステージ。ノードの中はチームを繰り越して順に進むので、出撃できるのは次のステージだけ
+ * （チームを作り直すと X-1 から。クリア済みのステージは報酬なしで進む）
+ */
+export function canSortie(story, area, index) {
+  return areaUnlocked(story, area) && index === nodeRun(story, area.id).next;
+}
+
+/** ステージ選択で最初に選んでおくステージ（次に出撃するステージ） */
+export const defaultStage = (story, area) => nodeRun(story, area.id).next;
+
+/** ステージをクリアしたチームを、次のステージへ繰り越す（最終ステージならノードの繰り越しは終わり） */
+export function carryOver(story, run) {
+  const { areaId, index } = run.story;
+  const area = areaById(areaId);
+  story.nodeRuns ??= {};
+  if (isFinalStage(area, index)) delete story.nodeRuns[areaId];
+  else story.nodeRuns[areaId] = { next: index + 1, team: JSON.parse(JSON.stringify(run)) };
+}
+
+/** チームを作り直す（X-1 から） */
+export function resetNodeRun(story, areaId) {
+  if (story.nodeRuns) delete story.nodeRuns[areaId];
 }
 
 export function stageUnlocked(story, area, index) {
@@ -232,8 +273,11 @@ export function stageRarityOdds(key) {
   const { area, index } = parsed;
   const waves = stageWaves(area, index);
   const bonus = storyPlayerBonus({ difficulty: stageDifficulty(area, index) }).rank;
+  // チームを繰り越すので、ランクはノードの最初からのウェーブ数で上がる（負けなかった場合の目安）
+  const before = wavesBefore(area, index);
+  const cap = areaRankCap(area);
   const sum = [0, 0, 0, 0, 0];
-  for (let w = 1; w <= waves; w++) marketOdds(w + bonus).forEach((v, i) => (sum[i] += v / waves));
+  for (let w = 1; w <= waves; w++) marketOdds(Math.min(cap, before + w + bonus)).forEach((v, i) => (sum[i] += v / waves));
   return sum.map((v) => Math.round(v));
 }
 
@@ -249,9 +293,8 @@ export function deckEmptyShare(db, deck, key) {
 }
 
 /**
- * おまかせ編成: 仲間から8種類を選ぶ。最初のウェーブで買える Common・Uncommon を3種類（Uncommon を優先）、
- * 残りはレアリティの高い順。同じレアリティでは新しく仲間になった順。
- * （自動プレイでは、ステージの出現率に合わせて配分するより、この形の方がよく勝てた）
+ * おまかせ編成: 仲間から8種類を選ぶ。最初のウェーブで買える Common を2種類と Uncommon を1種類
+ * （Common は5GUMで、最初の10GUMで2体買える）、残りはレアリティの高い順。同じレアリティでは新しく仲間になった順
  */
 export function autoDeck(db, story) {
   const heroes = story.heroes
@@ -259,7 +302,9 @@ export function autoDeck(db, story) {
     .filter(({ id }) => db.has(id))
     .map((x) => ({ ...x, rarity: db.def(x.id).rarity }))
     .sort((a, b) => b.rarity - a.rarity || b.order - a.order);
-  const cheap = heroes.filter((x) => isStarterCost(db.def(x.id))).slice(0, 3);
+  const commons = heroes.filter((x) => x.rarity === 1).slice(0, 2);
+  const uncommons = heroes.filter((x) => x.rarity === 2).slice(0, 3 - commons.length);
+  const cheap = [...commons, ...uncommons];
   const rest = heroes.filter((x) => !cheap.includes(x)).slice(0, DECK_SIZE - cheap.length);
   return [...rest, ...cheap].map((x) => x.id);
 }
@@ -274,35 +319,41 @@ export function areaEnemyPool(db, area) {
   return ids;
 }
 
-/** ステージの難しさ（ノードの時代 ＋ ステージ番号。10ステージのノードは2ステージごとに +1） */
+/** ステージの難しさ（ノードの時代 ＋ ステージ番号）。後半のステージほどエネミーの収入が増えて強くなる */
 export function stageDifficulty(area, index) {
-  return area.difficulty + (area.id === TUTORIAL_AREA ? index : Math.floor(index / 2));
+  return area.difficulty + index;
 }
 
-/** ステージを始める（ウェーブ制のラン）。デッキのヒーローだけがマーケットに並ぶ。最終ステージは最後のウェーブがレイドボス */
+/** ステージの情報（run.story） */
+function stageInfo(area, index, key) {
+  return {
+    key,
+    areaId: area.id,
+    index,
+    waves: stageWaves(area, index),
+    difficulty: stageDifficulty(area, index),
+    rankCap: areaRankCap(area),
+    boss: isFinalStage(area, index) ? area.boss : null,
+    tutorial: area.id === TUTORIAL_AREA && index === 0,
+    // デッキを組めるようになってから（チュートリアルのノード以外）: デッキにいないレアリティの枠は空になる
+    strictRarity: area.id !== TUTORIAL_AREA,
+    // チュートリアルのノードはエネミーを弱めにする（1-1 は特に）
+    handicap: area.id === TUTORIAL_AREA ? (index === 0 ? 2 : 1) : 0,
+  };
+}
+
+/**
+ * ステージを始める（ウェーブ制のラン）。デッキのヒーローだけがマーケットに並ぶ。最終ステージは最後のウェーブがレイドボス。
+ * 前のステージをクリアしたチームがあれば、それを繰り越して始める（ノードの最初のステージは新しいチーム）
+ */
 export function newStageRun(db, story, key, seed) {
   const parsed = parseStageKey(key);
   if (!parsed) throw new Error(`unknown stage: ${key}`);
   const { area, index } = parsed;
   const deck = story.deck.filter((id) => db.has(id));
   if (!deck.length) throw new Error("デッキが空です");
-  return newRun(db, {
-    playerId: STORY_PLAYER,
-    seed,
-    heroPool: deck,
-    enemyPool: areaEnemyPool(db, area),
-    story: {
-      key,
-      areaId: area.id,
-      index,
-      waves: stageWaves(area, index),
-      difficulty: stageDifficulty(area, index),
-      boss: isFinalStage(area, index) ? area.boss : null,
-      tutorial: area.id === TUTORIAL_AREA && index === 0,
-      // デッキを組めるようになってから（チュートリアルのノード以外）: デッキにいないレアリティの枠は空になる
-      strictRarity: area.id !== TUTORIAL_AREA,
-      // チュートリアルのエリアはエネミーを弱めにする（1-1 は特に）
-      handicap: area.id === TUTORIAL_AREA ? (index === 0 ? 2 : 1) : 0,
-    },
-  });
+  const info = stageInfo(area, index, key);
+  const carry = nodeRun(story, area.id);
+  if (index > 0 && carry.next === index && carry.team) return continueRun(db, carry.team, { seed, heroPool: deck, story: info });
+  return newRun(db, { playerId: STORY_PLAYER, seed, heroPool: deck, enemyPool: areaEnemyPool(db, area), story: info });
 }

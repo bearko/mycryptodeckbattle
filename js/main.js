@@ -12,7 +12,7 @@ import { isBossWave } from "./engine/boss.js";
 import { audio } from "./ui/audio.js";
 import { clearRun, loadRun, loadSettings, loadStory, saveRun, saveSettings, saveStory } from "./ui/storage.js";
 import * as Story from "./engine/story.js";
-import { AREAS, DECK_SIZE, ERAS, TUTORIAL_AREA, areaById, areaName, machineByLevel, parseStageKey, stageKey } from "./engine/world.js";
+import { AREAS, DECK_SIZE, ERAS, TUTORIAL_AREA, areaById, areaName, machineByLevel, parseStageKey, stageKey, stageLabel } from "./engine/world.js";
 import { MAP_INTRO, PROLOGUE, TUTORIAL_DONE, areaClearScene, stageIntro, upgradeScene } from "./story/scenes.js";
 import { ScenePlayer } from "./ui/scene.js";
 import { Coach } from "./ui/coach.js";
@@ -482,12 +482,12 @@ function deckTargetStage(from) {
   const story = app.story;
   if (from === "area" && app.ui.storyArea) {
     const area = areaById(app.ui.storyArea);
-    const index = app.ui.storyStage ?? Story.nextStage(story, area) ?? area.stages.length - 1;
+    const index = app.ui.storyStage ?? Story.defaultStage(story, area);
     return stageKey(area.id, index);
   }
   const open = AREAS.filter((a) => Story.areaUnlocked(story, a) && Story.nextStage(story, a) !== null);
   const area = open[open.length - 1];
-  return area ? stageKey(area.id, Story.nextStage(story, area)) : null;
+  return area ? stageKey(area.id, Story.defaultStage(story, area)) : null;
 }
 
 /** いちばん新しく開いた時代 */
@@ -528,6 +528,8 @@ function storyStageEnd() {
   const st = run.story;
   const cleared = run.phase === "clear";
   const result = cleared ? Story.clearStage(app.story, st.key) : null;
+  // ノードの中はチームを繰り越す（負けたときは、そのステージを始めたときのチームのまま）
+  if (cleared) Story.carryOver(app.story, run);
   saveStoryNow();
   clearRun();
   app.run = null;
@@ -586,10 +588,39 @@ const actions = {
     audio.playBgm("bgm_title");
     go("area", { bg: storyBackground(area.bg), mood: "area", accent: area.color });
   },
+  /** ステージのタイル: 選ぶ。選んでいるステージをもう一度タップすると出撃 */
   selectStage(index) {
+    const area = areaById(app.ui.storyArea);
+    const current = app.ui.storyStage ?? Story.defaultStage(app.story, area);
+    if (index === current) {
+      if (Story.canSortie(app.story, area, index)) return actions.sortie(stageKey(area.id, index));
+      const next = Story.defaultStage(app.story, area);
+      if (Story.isCleared(app.story, stageKey(area.id, index))) {
+        return toast(`チームを繰り越して進むので、出撃できるのは ${stageLabel(area, next)} です`);
+      }
+      return toast("まだ出撃できません");
+    }
     app.ui.storyStage = index;
     audio.se("buy", 0.3);
     render();
+  },
+  /** チームを作り直す（ノードの最初のステージから） */
+  rebuildNode(areaId) {
+    const area = areaById(areaId);
+    app.ui.modal = () =>
+      confirmModal(app, `チームを作り直して ${stageLabel(area, 0)} から始めますか？（いまのチームは消えます。クリア済みのステージは報酬なしで進みます）`, () => {
+        Story.resetNodeRun(app.story, areaId);
+        saveStoryNow();
+        app.ui.modal = null;
+        app.ui.storyStage = 0;
+        render();
+      });
+    render();
+  },
+  /** ステージクリア画面の「次のステージへ」: 繰り越したチームで続けて出撃 */
+  sortieNext() {
+    const info = app.ui.stageResult;
+    actions.sortie(stageKey(info.areaId, info.index + 1));
   },
   openDeck(from) {
     app.ui.deckFrom = from;
@@ -629,7 +660,7 @@ const actions = {
   /** 出撃: 出会いのシーン → ステージ開始。マーケットの枠が多く空くデッキなら先に確認する */
   async sortie(key, { force = false } = {}) {
     const parsed = parseStageKey(key);
-    if (!parsed || !Story.stageUnlocked(app.story, parsed.area, parsed.index)) return;
+    if (!parsed || !Story.canSortie(app.story, parsed.area, parsed.index)) return;
     const empty = Story.deckEmptyShare(app.db, app.story.deck, key);
     if (!force && empty >= 30) {
       app.ui.modal = () =>
