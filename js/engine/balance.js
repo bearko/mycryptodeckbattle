@@ -163,3 +163,34 @@ export function unitHp(def, level) {
 export function sellValue(def, level, bonus = 0) {
   return Math.ceil((RARITY[def.rarity].cost * COPY_MULT[level]) / 2) + bonus;
 }
+
+/**
+ * ストーリーの難しさ d による補正（独自）。d はノードの時代とステージ番号で決まる（story.js の stageDifficulty）。
+ * playerRank / playerIncome: プレイヤーのマーケットランクと毎ウェーブの収入への上乗せ（d × 係数 ＋ playerIncomeBase）
+ * cpuRank / cpuIncome: エネミー部隊のマーケットランクと収入への上乗せ（d × 係数 ＋ 定数）
+ * チュートリアルのノードは handicap でエネミーの収入をさらに減らす
+ */
+export const STORY_BALANCE = {
+  playerRank: 2,
+  playerIncome: 2,
+  playerIncomeBase: 6,
+  cpuRank: 1,
+  cpuIncome: 2,
+  cpuIncomeBase: -2,
+};
+
+export function storyPlayerBonus(story) {
+  const d = story?.difficulty ?? 0;
+  return {
+    rank: Math.floor(d * STORY_BALANCE.playerRank),
+    income: Math.floor(d * STORY_BALANCE.playerIncome + STORY_BALANCE.playerIncomeBase),
+  };
+}
+
+export function storyCpuBonus(story) {
+  const d = story.difficulty;
+  return {
+    rank: Math.floor(d * STORY_BALANCE.cpuRank),
+    income: Math.floor(d * STORY_BALANCE.cpuIncome) + STORY_BALANCE.cpuIncomeBase - (story.handicap ?? 0),
+  };
+}

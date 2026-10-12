@@ -299,3 +299,17 @@ test("買えるヒーローの枠: GUMと置き場所があるもの。合成で
   run.market.offers = [{ type: "hero", defId: id, cost: 5 }];
   assert.equal(bestAffordableOffer(run), -1);
 });
+
+test("rotation を持つユニット（レイドボス）は、発動のたびに次のスキルへ進む", async () => {
+  const { createBattle, stepBattle, nextSkill } = await import("../js/engine/battle.js");
+  const skill = (name, cd, value) => ({ name, cd, final: name === "C", effects: [{ kind: "damage", trigger: "charge", value }] });
+  const rotation = [skill("A", 1, 1), skill("B", 2, 2), skill("C", 1, 3)];
+  const boss = { slot: 1, uid: 1, defId: "b171", name: "boss", rarity: 5, level: 1, cd: 1, effects: rotation[0].effects, rotation, multicast: 1 };
+  const dummy = { slot: 0, uid: 2, defId: "h10001", name: "x", rarity: 1, level: 1, cd: null, effects: [], multicast: 1 };
+  const team = (fighters) => ({ name: "t", leader: {}, maxHp: 10000, fighters, start: { shield: 0, bleed: 0, poison: 0, charge: 0 } });
+  const b = createBattle(team([dummy]), team([boss]));
+  const casts = [];
+  for (let i = 0; i < 80; i++) for (const ev of stepBattle(b)) if (ev.type === "cast" && ev.side === 1) casts.push([ev.skill, Number(b.time.toFixed(1))]);
+  assert.deepEqual(casts.slice(0, 4), [["A", 1], ["B", 3], ["C", 4], ["A", 5]]);
+  assert.equal(nextSkill(b.sides[1].fighters[0]).name, rotation[b.sides[1].fighters[0].casts % 3].name);
+});

@@ -1,0 +1,134 @@
+{
+ "_comment": [
+  "レイドボス（各ノードの最終ステージの最後のウェーブ）。MCHのレイドボス（エネミー）から作る。",
+  "skills は MCH のアクティブスキル順。発動するたびに次のスキルへ進み、最後まで行くと最初に戻る（ローテーション）。weight は形だけ（1周の平均がボスの強さになるよう js/engine/boss.js でそろえる）。",
+  "cd: そのスキルまでのチャージ秒 / effects: このゲームの効果の種類と配分（ボスの強さ×秒数×weight が効果量）/ final: 大技（予告を出す）/ power: ボスごとの強さの補正（同じステージで勝率がそろうように自動プレイで決めた。省略は1）",
+  "MCHのパッシブはローテーションのどこかの効果に含めている（note に元の意味）。",
+  "覚醒魔王ファオ・ファントム(373/1188)・yamap(1189)・闇魚王(1190) は特別ステージのボス用に取っておくため使わない。COVID-19(671/682) も使わない。"
+ ],
+ "bosses": [
+  {
+   "mch_id": 171,
+   "power": 0.9,
+   "skills": [
+    { "cd": 4.0, "effects": [{ "kind": "damage", "weight": 0.5 }] },
+    { "cd": 3.0, "effects": [{ "kind": "damage", "weight": 0.8 }] },
+    { "cd": 2.0, "effects": [{ "kind": "damage", "weight": 1.6 }], "final": true }
+   ]
+  },
+  {
+   "mch_id": 172,
+   "power": 1.1,
+   "note": "I Love You！（PHY/INTダウン）→ 弱体化",
+   "skills": [
+    { "cd": 4.0, "effects": [{ "kind": "damage", "weight": 0.5 }] },
+    { "cd": 3.0, "effects": [{ "kind": "damage", "weight": 0.4 }, { "kind": "weaken", "weight": 0.4 }] },
+    { "cd": 2.0, "effects": [{ "kind": "damage", "weight": 1.6 }], "final": true }
+   ]
+  },
+  {
+   "mch_id": 370,
+   "power": 0.9,
+   "skills": [
+    { "cd": 3.5, "effects": [{ "kind": "damage", "weight": 0.5 }] },
+    { "cd": 2.5, "effects": [{ "kind": "damage", "weight": 0.8 }] },
+    { "cd": 2.0, "effects": [{ "kind": "damage", "weight": 1.6 }], "final": true }
+   ]
+  },
+  {
+   "mch_id": 371,
+   "power": 1.1,
+   "note": "シンギュラリティ地方は梅雨入りしました。（AGIダウン）→ チャージ遅延",
+   "skills": [
+    { "cd": 4.0, "effects": [{ "kind": "damage", "weight": 0.2 }, { "kind": "slow", "weight": 0.4 }] },
+    { "cd": 3.0, "effects": [{ "kind": "damage", "weight": 0.8 }] },
+    { "cd": 2.0, "effects": [{ "kind": "damage", "weight": 1.7 }], "final": true }
+   ]
+  },
+  {
+   "mch_id": 372,
+   "note": "いいね！（相手全体のAGIダウン）→ チャージ遅延",
+   "skills": [
+    { "cd": 3.5, "effects": [{ "kind": "damage", "weight": 0.5 }] },
+    { "cd": 3.0, "effects": [{ "kind": "damage", "weight": 0.8 }, { "kind": "slow", "weight": 0.4 }] },
+    { "cd": 2.5, "effects": [{ "kind": "damage", "weight": 1.4 }], "final": true }
+   ]
+  },
+  {
+   "mch_id": 374,
+   "note": "Happy Halloween!（相手全体のAGIダウン）→ チャージ遅延。Trick! は毒",
+   "skills": [
+    { "cd": 3.5, "effects": [{ "kind": "damage", "weight": 0.2 }, { "kind": "poison", "weight": 0.4 }] },
+    { "cd": 3.0, "effects": [{ "kind": "damage", "weight": 1.0 }] },
+    { "cd": 2.5, "effects": [{ "kind": "damage", "weight": 1.0 }, { "kind": "slow", "weight": 0.4 }], "final": true }
+   ]
+  },
+  {
+   "mch_id": 420,
+   "note": "I Love You！（PHY/INTダウン）→ 弱体化",
+   "skills": [
+    { "cd": 3.5, "effects": [{ "kind": "damage", "weight": 0.5 }] },
+    { "cd": 2.5, "effects": [{ "kind": "damage", "weight": 0.5 }, { "kind": "weaken", "weight": 0.5 }] },
+    { "cd": 2.0, "effects": [{ "kind": "damage", "weight": 1.7 }], "final": true }
+   ]
+  },
+  {
+   "mch_id": 1007,
+   "power": 0.8,
+   "note": "デリュージング（出血）→ type:PHY に出血",
+   "skills": [
+    { "cd": 3.0, "effects": [{ "kind": "damage", "weight": 1.0 }] },
+    { "cd": 3.0, "effects": [{ "kind": "damage", "weight": 1.0 }, { "kind": "bleed", "weight": 0.4 }], "final": true },
+    { "cd": 2.5, "effects": [{ "kind": "damage", "weight": 0.4 }] }
+   ]
+  },
+  {
+   "mch_id": 1182,
+   "power": 1.15,
+   "note": "マス・アウテージ type:AGI（AGI低下分のダメージ）→ オプティマイゼーション:AGI を大技に",
+   "skills": [
+    { "cd": 3.0, "effects": [{ "kind": "damage", "weight": 0.6 }, { "kind": "weaken", "weight": 0.4 }] },
+    { "cd": 3.0, "effects": [{ "kind": "damage", "weight": 0.6 }, { "kind": "weaken", "weight": 0.4 }] },
+    { "cd": 2.5, "effects": [{ "kind": "damage", "weight": 1.2 }, { "kind": "slow", "weight": 0.4 }], "final": true }
+   ]
+  },
+  {
+   "mch_id": 1183,
+   "power": 1.1,
+   "note": "インタラプト（シールド）→ type:AGI 2.0 にシールド",
+   "skills": [
+    { "cd": 3.0, "effects": [{ "kind": "damage", "weight": 0.8 }, { "kind": "shield", "weight": 0.5 }, { "kind": "slow", "weight": 0.3 }] },
+    { "cd": 2.5, "effects": [{ "kind": "damage", "weight": 1.2 }, { "kind": "weaken", "weight": 0.3 }] },
+    { "cd": 2.5, "effects": [{ "kind": "damage", "weight": 1.2 }, { "kind": "weaken", "weight": 0.3 }] }
+   ]
+  },
+  {
+   "mch_id": 1184,
+   "power": 1.05,
+   "note": "インタラプト 2.0",
+   "skills": [
+    { "cd": 3.0, "effects": [{ "kind": "shield", "weight": 0.8 }, { "kind": "poison", "weight": 0.5 }] },
+    { "cd": 2.5, "effects": [{ "kind": "damage", "weight": 2.0 }], "final": true },
+    { "cd": 3.0, "effects": [{ "kind": "damage", "weight": 0.5 }, { "kind": "poison", "weight": 0.6 }] }
+   ]
+  },
+  {
+   "mch_id": 1186,
+   "note": "スパイラル",
+   "skills": [
+    { "cd": 3.0, "effects": [{ "kind": "damage", "weight": 0.8 }, { "kind": "shield", "weight": 0.6 }] },
+    { "cd": 3.0, "effects": [{ "kind": "damage", "weight": 0.8 }, { "kind": "weaken", "weight": 0.4 }] },
+    { "cd": 2.5, "effects": [{ "kind": "damage", "weight": 2.6 }], "final": true }
+   ]
+  },
+  {
+   "mch_id": 1187,
+   "note": "コルシカの悪魔[raid]。アップデートの魅了 → チャージ遅延",
+   "skills": [
+    { "cd": 3.0, "effects": [{ "kind": "damage", "weight": 0.3 }, { "kind": "slow", "weight": 0.6 }] },
+    { "cd": 2.5, "effects": [{ "kind": "damage", "weight": 1.6 }], "final": true },
+    { "cd": 1.5, "effects": [{ "kind": "damage", "weight": 0.4 }, { "kind": "bleed", "weight": 0.4 }] }
+   ]
+  }
+ ]
+}

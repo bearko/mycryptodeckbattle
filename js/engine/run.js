@@ -11,6 +11,7 @@ import {
   TREASURE_STAGES,
   MATERIAL_USES_PER_STAGE,
   stageIncome,
+  storyPlayerBonus,
   lifeLoss,
 } from "./balance.js";
 import { CRYPTO_ENERGY, TREASURES, materialById, playerById, treasureGum } from "./content.js";
@@ -18,6 +19,7 @@ import { effectiveRank, poolByRarity, restockMarket, topRarity, buyOffer, sellUn
 import { acquireUnit, allUnits, canAcquire, emptyRoster, levelUp } from "./roster.js";
 import { buildTeam, collectMods } from "./units.js";
 import { buildCpuOpponent } from "./cpu.js";
+import { buildBossOpponent, isBossWave } from "./boss.js";
 
 export const RUN_VERSION = 1;
 
@@ -74,7 +76,7 @@ export function newRun(db, { playerId, seed, heroPool = null, enemyPool = null, 
     run.story = { ...story };
     run.lives = STAGE_LIVES;
     run.revived = true; // ストーリーでは復活なし
-    run.rankBonus += story.difficulty;
+    run.rankBonus += storyPlayerBonus(story).rank;
   }
   withRng(run, (rng) => {
     run.heroPool = heroPool ? [...heroPool] : pickPool(db, db.heroes, rng);
@@ -99,7 +101,7 @@ export function startStage(run, db) {
   const player = playerById(run.playerId);
   const mods = runMods(run, db);
   run.stage += 1;
-  run.gum += stageIncome(run.stage) + mods.income + (run.story?.difficulty ?? 0);
+  run.gum += stageIncome(run.stage) + mods.income + (run.story ? storyPlayerBonus(run.story).income : 0);
   run.freeRerolls += (player.effect.freeRerolls || 0) + mods.freeReroll;
   run.itemUses = MATERIAL_USES_PER_STAGE;
   withRng(run, (rng) => {
@@ -313,7 +315,8 @@ export function canStartBattle(run) {
 export function prepareBattle(run, db) {
   const check = canStartBattle(run);
   if (!check.ok) return check;
-  const opponent = buildCpuOpponent(db, run, run.stage);
+  // ストーリーの最終ステージの最後のウェーブはレイドボス
+  const opponent = isBossWave(run) ? buildBossOpponent(db, run, run.stage) : buildCpuOpponent(db, run, run.stage);
   run.phase = "battle";
   return { ok: true, left: playerTeam(run, db), right: opponent.team, opponent };
 }

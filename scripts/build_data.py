@@ -10,6 +10,7 @@
     data/heroes.json      プレイヤー側ユニット（ヒーロー）定義
     data/enemies.json     CPU側ユニット（エネミー）定義
     data/extensions.json  エクステンション（トリンケット相当）定義
+    data/bosses.json      レイドボス（ストーリーの各ノードの最終ステージ）定義
     data/manifest.json    生成情報・クレジット
     assets/...            ゲームで使う画像・音声
 
@@ -319,6 +320,61 @@ def build_enemies(src: Path):
 
 
 # ---------------------------------------------------------------------------
+# レイドボス（ストーリーの各ノードの最終ステージ）
+# ---------------------------------------------------------------------------
+
+# 特別ステージのボス用に取っておくため、ストーリーのレイドボスには使わない
+RESERVED_BOSS_IDS = {373, 1188, 1189, 1190}  # 覚醒魔王ファオ・ファオ・ファントム・yamap・闇魚王
+# 実在の感染症の名前のため使わない
+EXCLUDED_BOSS_IDS = {671, 682}  # COVID-19
+
+
+def build_bosses(src: Path):
+    """content/bosses.json のローテーション（効果の種類と配分）に、MCH の名前・画像・スキル名を合わせる。"""
+    master = {e["id"]: e for e in json.loads((src / "Data/Enemies/enemies.json").read_text(encoding="utf-8"))}
+    defs = json.loads((ROOT / "content/bosses.json").read_text(encoding="utf-8"))["bosses"]
+    out_dir = ROOT / "assets/bosses"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out = []
+    for d in defs:
+        mid = d["mch_id"]
+        if mid in RESERVED_BOSS_IDS or mid in EXCLUDED_BOSS_IDS:
+            sys.exit(f"レイドボスに使わないエネミーです: {mid}")
+        e = master[mid]
+        actives = e["active_skills"]
+        if len(actives) != len(d["skills"]):
+            sys.exit(f"スキルの数が MCH と合いません: {mid}")
+        image_name = Path(e["image_file_path"]).name
+        shutil.copyfile(src / e["image_file_path"], out_dir / image_name)
+        passive = e.get("passive_skill")
+        out.append(
+            {
+                "id": f"b{mid}",
+                "mch_id": mid,
+                "side": "boss",
+                "name": e["name"]["ja"].strip().replace("\u3000", " "),
+                "name_en": e["name"]["en"],
+                "image": f"assets/bosses/{image_name}",
+                "rarity": 5,
+                "faction": 0,
+                "power": d.get("power", 1),
+                "skills": [
+                    {
+                        "name": a["name"]["ja"],
+                        "text": a["description"]["ja"]["text"],
+                        "cd": s["cd"],
+                        "effects": s["effects"],
+                        "final": bool(s.get("final")),
+                    }
+                    for a, s in zip(actives, d["skills"])
+                ],
+                "passive": {"name": passive["name"]["ja"], "text": passive["description"]["ja"]["text"]} if passive else None,
+            }
+        )
+    return out
+
+
+# ---------------------------------------------------------------------------
 # エクステンション（トリンケット相当）
 # ---------------------------------------------------------------------------
 
@@ -461,11 +517,12 @@ def main():
     if not (src / "Data/Heroes/heroes.json").exists():
         sys.exit(f"mycryptoheroes リポジトリが見つかりません: {src}")
 
-    for d in ["assets/heroes", "assets/enemies", "assets/extensions", "assets/backgrounds"]:
+    for d in ["assets/heroes", "assets/enemies", "assets/bosses", "assets/extensions", "assets/backgrounds"]:
         shutil.rmtree(ROOT / d, ignore_errors=True)
 
     heroes = build_heroes(src)
     enemies = build_enemies(src)
+    bosses = build_bosses(src)
     extensions = build_extensions(src)
     backgrounds, battle_backgrounds = copy_misc(src)
 
@@ -477,6 +534,7 @@ def main():
 
     dump("heroes.json", heroes)
     dump("enemies.json", enemies)
+    dump("bosses.json", bosses)
     dump("extensions.json", extensions)
     dump(
         "manifest.json",
@@ -485,7 +543,7 @@ def main():
             "factions": FACTIONS,
             "backgrounds": backgrounds,
             "battleBackgrounds": battle_backgrounds,
-            "counts": {"heroes": len(heroes), "enemies": len(enemies), "extensions": len(extensions)},
+            "counts": {"heroes": len(heroes), "enemies": len(enemies), "bosses": len(bosses), "extensions": len(extensions)},
             "credits": {
                 "chris": "ドット絵：こじもこ",
                 "navi_ain": "ドット絵：こじもこ",
@@ -503,6 +561,7 @@ def main():
     print(f"enemies: {len(enemies)} {dict(Counter(e['rarity'] for e in enemies))}")
     print(f"  kinds: {dict(Counter(e['kind'] for h in enemies for e in h['effects']))}")
     print(f"  main: {dict(Counter(h['effects'][0]['kind'] for h in enemies))}")
+    print(f"bosses: {len(bosses)} {[b['name'] for b in bosses]}")
     print(f"extensions: {len(extensions)}")
 
 

@@ -7,5 +7,10 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 export function loadDb() {
   const read = (name) => JSON.parse(readFileSync(join(root, "data", name), "utf8"));
-  return createDb({ heroes: read("heroes.json"), enemies: read("enemies.json"), extensions: read("extensions.json") });
+  return createDb({
+    heroes: read("heroes.json"),
+    enemies: read("enemies.json"),
+    extensions: read("extensions.json"),
+    bosses: read("bosses.json"),
+  });
 }

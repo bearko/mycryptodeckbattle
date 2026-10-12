@@ -11,14 +11,16 @@ import {
   unitHp,
 } from "./balance.js";
 
-export function createDb({ heroes, enemies, extensions }) {
+export function createDb({ heroes, enemies, extensions, bosses = [] }) {
   const defs = new Map();
   for (const d of heroes) defs.set(d.id, d);
   for (const d of enemies) defs.set(d.id, d);
+  for (const d of bosses) defs.set(d.id, d);
   const exts = new Map(extensions.map((e) => [e.id, e]));
   return {
     heroes,
     enemies,
+    bosses,
     extensions,
     has(id) {
       return defs.has(id);

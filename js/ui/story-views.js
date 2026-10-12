@@ -1,4 +1,4 @@
-// ストーリーの画面: ワールドマップ・ステージ選択・デッキ・ステージ結果。
+// ストーリーの画面: ワールドマップ・ステージ選択（ノードの中の道）・デッキ・ステージ結果・パーツ獲得。
 // 説明文は最小限にし、状態（開放・クリア・パーツ）はアイコンと色で見せる。
 
 import { h, img } from "./h.js";
@@ -8,16 +8,30 @@ import {
   AREAS,
   DECK_SIZE,
   ERAS,
-  STAGE_WAVES,
   areaById,
   areaName,
   eraById,
   heroId,
+  isFinalStage,
   machineByLevel,
   stageKey,
   stageLabel,
+  stageWaves,
 } from "../engine/world.js";
-import { areaCleared, areaUnlocked, eraUnlocked, isCleared, machineInfo, machineProgress, nextStage, stageUnlocked } from "../engine/story.js";
+import {
+  areaCleared,
+  areaEnemyPool,
+  areaUnlocked,
+  deckEmptyShare,
+  deckProblem,
+  eraUnlocked,
+  isCleared,
+  machineInfo,
+  machineProgress,
+  nextStage,
+  stageRarityOdds,
+  stageUnlocked,
+} from "../engine/story.js";
 import { machineCanvas } from "./machine-reveal.js";
 
 const bgUrl = (id) => `assets/backgrounds/${id}.webp`;
@@ -77,7 +91,7 @@ export function machinePanel(story) {
       h("small", null, `TIME MACHINE Lv${info.level}`),
       h("b", null, info.short),
       info.nextMachine
-        ? h("small", { class: "machine-next-note" }, `次の改良まで あと${info.need - info.parts}ステージ`)
+        ? h("small", { class: "machine-next-note" }, `次の改良まで あと${info.need - info.parts}ノード`)
         : h("small", { class: "machine-next-note" }, "これ以上は改良できません"),
     ),
     nextMachineProgress(story),
@@ -98,7 +112,7 @@ export function worldMapScreen(app) {
     { class: "screen story-screen map-screen" },
     header("ワールドマップ", "TIME MACHINE", {
       back: () => app.actions.toTitle(),
-      right: h("button", { class: "btn small deck-btn", onClick: () => app.actions.openDeck("map") }, "デッキ"),
+      right: deckButton(app, "map"),
     }),
     h(
       "nav",
@@ -154,33 +168,66 @@ function mapPin(app, area) {
       "span",
       { class: "pin-label" },
       h("b", null, area.region),
-      open ? h("small", { class: "num" }, `${done}/${area.stages.length}`) : h("small", null, `Lv${area.machine}`),
+      open ? h("small", { class: "num" }, `${done}/${area.stages.length}`) : h("small", null, lockedReason(story, area)),
     ),
   );
 }
 
+/** 開いていないノードの、開く条件（短く） */
+function lockedReason(story, area) {
+  if (story.machine < area.machine) return `Lv${area.machine}`;
+  if (area.requiresAll) return "全ノード";
+  if (area.after) return `${areaById(area.after).region}の次`;
+  return "";
+}
+
 // ---------------------------------------------------------------------------
-// ステージ選択（タイルが線でつながった道）
+// ステージ選択（タイルが線でつながった道。最後のタイルはレイドボス）
 // ---------------------------------------------------------------------------
 
-const NODE_POS = [
-  { x: 20, y: 74 },
-  { x: 52, y: 48 },
-  { x: 80, y: 22 },
-];
+const NODE_POS = {
+  3: [
+    { x: 20, y: 76 },
+    { x: 50, y: 52 },
+    { x: 78, y: 30 },
+  ],
+  10: [
+    { x: 11, y: 90 },
+    { x: 35, y: 86 },
+    { x: 59, y: 90 },
+    { x: 85, y: 80 },
+    { x: 68, y: 62 },
+    { x: 42, y: 58 },
+    { x: 16, y: 52 },
+    { x: 22, y: 30 },
+    { x: 47, y: 25 },
+    { x: 78, y: 30 },
+  ],
+};
+
+const nodePositions = (area) => NODE_POS[area.stages.length] ?? NODE_POS[10];
+
+/** ステージで出会うヒーローがいないときに、タイルに出すエネミー（ノードの顔ぶれから） */
+function stageEnemy(db, area, index) {
+  const pool = areaEnemyPool(db, area);
+  const tier = Math.min(4, Math.floor(index / 2));
+  return db.def(pool[tier * 6 + (index % 6)] ?? pool[0]);
+}
 
 export function areaScreen(app) {
   const story = app.story;
   const area = areaById(app.ui.storyArea);
   const era = eraById(area.era);
   const selected = app.ui.storyStage ?? nextStage(story, area) ?? area.stages.length - 1;
-  const path = NODE_POS.map((p) => `${p.x},${p.y}`).join(" ");
+  const path = nodePositions(area)
+    .map((p) => `${p.x},${p.y}`)
+    .join(" ");
   return h(
     "div",
-    { class: "screen story-screen area-screen", style: { "--area": area.color } },
+    { class: `screen story-screen area-screen stages-${area.stages.length}`, style: { "--area": area.color } },
     header(areaName(area), `${era.en} · ${era.years}`, {
       back: () => app.actions.openMap(),
-      right: h("button", { class: "btn small deck-btn", onClick: () => app.actions.openDeck("area") }, "デッキ"),
+      right: deckButton(app, "area"),
     }),
     h(
       "div",
@@ -195,22 +242,45 @@ export function areaScreen(app) {
   );
 }
 
+/** デッキのボタン。新しく仲間になったヒーローがデッキの外にいると数を出す */
+function deckButton(app, from) {
+  const fresh = (app.story.fresh ?? []).filter((id) => !app.story.deck.includes(id)).length;
+  return h(
+    "button",
+    { class: `btn small deck-btn${fresh ? " has-new" : ""}`, onClick: () => app.actions.openDeck(from) },
+    "デッキ",
+    fresh ? h("i", { class: "new-count num" }, String(fresh)) : null,
+  );
+}
+
 function stageNode(app, area, index, selected) {
   const story = app.story;
   const key = stageKey(area.id, index);
   const cleared = isCleared(story, key);
   const open = stageUnlocked(story, area, index);
-  const def = app.db.def(heroId(area.stages[index].meet));
-  const pos = NODE_POS[index];
+  const boss = isFinalStage(area, index);
+  const meet = area.stages[index].meet;
+  const def = boss ? app.db.def(area.boss) : meet ? app.db.def(heroId(meet)) : stageEnemy(app.db, area, index);
+  const pos = nodePositions(area)[index];
+  const hidden = !(open || cleared);
   return h(
     "button",
     {
-      class: `stage-node${cleared ? " cleared" : open ? " open" : " locked"}${selected ? " selected" : ""}`,
-      style: { left: `${pos.x}%`, top: `${pos.y}%`, "--d": `${0.1 + index * 0.08}s` },
+      class: `stage-node${cleared ? " cleared" : open ? " open" : " locked"}${selected ? " selected" : ""}${boss ? " boss" : ""}${
+        !boss && !meet ? " enemy" : ""
+      }`,
+      style: { left: `${pos.x}%`, top: `${pos.y}%`, "--d": `${0.1 + index * 0.05}s` },
       onClick: () => app.actions.selectStage(index),
+      "aria-label": `${stageLabel(area, index)}${boss ? " レイドボス" : ""}`,
     },
-    h("span", { class: "node-meet" }, img(def.image, `pixel${open || cleared ? "" : " silhouette"}`, def.name)),
-    h("span", { class: "node-tile" }, h("b", { class: "num" }, stageLabel(area, index)), cleared ? h("i", { class: "node-check" }, "✓") : open ? null : lockIcon(true)),
+    h("span", { class: "node-meet" }, img(def.image, `pixel${hidden && !boss ? " silhouette" : ""}${!boss && !meet ? " flip" : ""}`, def.name)),
+    boss ? h("span", { class: "boss-tag" }, "BOSS") : null,
+    h(
+      "span",
+      { class: "node-tile" },
+      h("b", { class: "num" }, stageLabel(area, index)),
+      cleared ? h("i", { class: "node-check" }, "✓") : open ? null : lockIcon(true),
+    ),
   );
 }
 
@@ -220,31 +290,51 @@ function stageCard(app, area, index) {
   const stage = area.stages[index];
   const open = stageUnlocked(story, area, index);
   const cleared = isCleared(story, key);
-  const def = app.db.def(heroId(stage.meet));
+  const boss = isFinalStage(area, index) ? app.db.def(area.boss) : null;
+  const meet = stage.meet ? app.db.def(heroId(stage.meet)) : null;
+  const shown = open || cleared;
   const joins = new Set([...(stage.meetAtStart ? [stage.meet] : []), ...stage.join]);
+  const art = boss ?? meet ?? stageEnemy(app.db, area, index);
   return h(
     "section",
-    { class: "stage-card panel" },
+    { class: `stage-card panel${boss ? " boss" : ""}` },
     h(
       "div",
       { class: "stage-card-head" },
       h("b", { class: "num stage-no" }, stageLabel(area, index)),
-      h("span", { class: "wave-chip num" }, `WAVE ${STAGE_WAVES[index]}`),
+      h("span", { class: "wave-chip num" }, `WAVE ${stageWaves(area, index)}`),
+      boss ? h("span", { class: "boss-chip" }, "RAID BOSS") : null,
       cleared ? h("span", { class: "clear-chip" }, "CLEAR") : null,
     ),
     h(
       "div",
       { class: "stage-card-body" },
-      h("div", { class: `meet-art r${def.rarity}` }, img(def.image, `pixel${open || cleared ? "" : " silhouette"}`, def.name)),
+      h(
+        "div",
+        { class: `meet-art r${art.rarity}${boss ? " boss" : ""}` },
+        img(art.image, `pixel${shown || boss ? "" : " silhouette"}${!boss && !meet ? " flip" : ""}`, art.name),
+      ),
       h(
         "div",
         { class: "stage-rewards" },
-        h("div", { class: "meet-name" }, open || cleared ? def.name : "？？？"),
+        h(
+          "div",
+          { class: "meet-name" },
+          boss ? boss.name : meet ? (shown ? meet.name : "？？？") : "エネミーの拠点",
+        ),
         h(
           "div",
           { class: "reward-row" },
-          h("span", { class: "reward-chip" }, h("small", null, "仲間"), h("b", { class: "num" }, `+${joins.size}`)),
-          !cleared && story.machine < 5 ? h("span", { class: "reward-chip part" }, h("small", null, "パーツ"), h("b", { class: "num" }, "+1")) : null,
+          joins.size
+            ? h(
+                "span",
+                { class: "reward-chip" },
+                boss && meet ? img(meet.image, `pixel reward-face${shown ? "" : " silhouette"}`, meet.name) : null,
+                h("small", null, "仲間"),
+                h("b", { class: "num" }, `+${joins.size}`),
+              )
+            : null,
+          boss && !cleared && story.machine < 5 ? h("span", { class: "reward-chip part" }, h("small", null, "パーツ"), h("b", { class: "num" }, "+1")) : null,
         ),
       ),
     ),
@@ -265,16 +355,56 @@ function stageCard(app, area, index) {
 // デッキ
 // ---------------------------------------------------------------------------
 
+const RARITY_SHORT = ["", "C", "U", "R", "E", "L"];
+
+/**
+ * デッキと、出撃するステージのマーケットの目安。ランクで決まったレアリティ（以上）のヒーローが
+ * デッキにいないと、その枠は空になる（チュートリアルのノード以外）
+ */
+function deckOdds(app, draft) {
+  const key = app.ui.deckStage;
+  if (!key) return null;
+  const odds = stageRarityOdds(key);
+  const have = [1, 2, 3, 4, 5].map((r) => draft.filter((id) => app.db.def(id).rarity === r).length);
+  const covered = (r) => have.slice(r - 1).some(Boolean);
+  const empty = deckEmptyShare(app.db, draft, key);
+  const area = areaById(key.split(":")[0]);
+  return h(
+    "div",
+    { class: "deck-odds panel" },
+    h("small", { class: "deck-odds-label" }, `${stageLabel(area, Number(key.split(":")[1]))} のマーケット`),
+    h(
+      "div",
+      { class: "odds-row" },
+      odds.map((v, i) =>
+        h(
+          "div",
+          { class: `odds-cell r${i + 1}${v ? "" : " zero"}${v && !covered(i + 1) ? " missing" : ""}`, style: { "--w": `${Math.max(v, 4)}` } },
+          h("b", null, RARITY_SHORT[i + 1]),
+          h("small", { class: "num" }, `${v}%`),
+          h("i", { class: "num have" }, `×${have[i]}`),
+        ),
+      ),
+    ),
+    empty ? h("p", { class: "odds-warn" }, `デッキにいないレアリティの枠は空になります（約${empty}%）`) : null,
+  );
+}
+
 export function deckScreen(app) {
   const story = app.story;
   const draft = app.ui.deckDraft ?? story.deck;
+  const fresh = new Set(story.fresh ?? []);
   const heroes = story.heroes
     .map((id) => app.db.def(id))
     .sort((a, b) => b.rarity - a.rarity || a.mch_id - b.mch_id);
+  const problem = deckProblem(app.db, draft);
   return h(
     "div",
     { class: "screen story-screen deck-screen" },
-    header("デッキ", `${draft.length}/${DECK_SIZE}`, { back: () => app.actions.closeDeck(false) }),
+    header("デッキ", `${draft.length}/${DECK_SIZE}`, {
+      back: () => app.actions.closeDeck(false),
+      right: h("button", { class: "btn small auto-deck-btn", onClick: () => app.actions.autoDeck() }, "おまかせ"),
+    }),
     h(
       "div",
       { class: "deck-slots" },
@@ -285,19 +415,27 @@ export function deckScreen(app) {
         return h("button", { class: `deck-slot r${def.rarity}`, onClick: () => app.actions.toggleDeck(id) }, img(def.image, "pixel", def.name));
       }),
     ),
+    deckOdds(app, draft),
     h(
       "div",
       { class: "collection" },
       heroes.map((def, i) => {
         const inDeck = draft.includes(def.id);
         const card = unitCard(def, { compact: true, seed: i });
-        return h("button", { class: `collection-item${inDeck ? " in-deck" : ""}`, onClick: () => app.actions.toggleDeck(def.id) }, card, inDeck ? h("i", { class: "deck-check" }, "✓") : null);
+        return h(
+          "button",
+          { class: `collection-item${inDeck ? " in-deck" : ""}`, onClick: () => app.actions.toggleDeck(def.id) },
+          card,
+          inDeck ? h("i", { class: "deck-check" }, "✓") : null,
+          fresh.has(def.id) ? h("i", { class: "new-badge" }, "NEW") : null,
+        );
       }),
     ),
     h(
       "div",
       { class: "deck-actions" },
-      h("button", { class: "btn primary big", onClick: () => app.actions.closeDeck(true) }, "決定"),
+      problem && draft.length ? h("p", { class: "deck-problem" }, problem) : null,
+      h("button", { class: `btn primary big${problem ? " disabled" : ""}`, onClick: () => app.actions.closeDeck(true) }, "決定"),
     ),
   );
 }
@@ -337,7 +475,7 @@ export function stageResultScreen(app, info) {
     h(
       "div",
       { class: "stage-result-panel panel" },
-      h("div", { class: "result-stage" }, `${label} クリア`),
+      h("div", { class: "result-stage" }, res.areaCleared ? `${label} クリア ・ ${areaName(area)} 制覇` : `${label} クリア`),
       res.heroes.length
         ? h(
             "div",
@@ -362,7 +500,7 @@ export function stageResultScreen(app, info) {
 
 /**
  * 次の合体ロボを黒いシルエットで出し、パーツの分だけドットを実体化する。
- * info: story.partsGain() の戻り値（before → after の割合、あと何ステージか、改良で行ける場所）
+ * info: story.partsGain() の戻り値（before → after の割合、あと何ノードか、改良で行ける場所）
  */
 export function partsScreen(app, info) {
   const next = machineByLevel(info.target);
@@ -397,7 +535,7 @@ export function partsScreen(app, info) {
         { class: "parts-remaining" },
         complete
           ? h("b", { class: "complete-note" }, "パーツがそろった！ タイムマシンを改良できます")
-          : [h("span", null, "次の改良まで あと"), h("b", { class: "num" }, info.remaining), h("span", null, "ステージクリア")],
+          : [h("span", null, "次の改良まで あと"), h("b", { class: "num" }, info.remaining), h("span", null, "ノードクリア")],
       ),
       places.length ? h("p", { class: "parts-unlock" }, h("small", null, "改良すると行ける"), h("span", null, places.join(" / "))) : null,
       h("button", { class: "btn primary big", onClick: () => app.actions.afterParts() }, "つぎへ"),

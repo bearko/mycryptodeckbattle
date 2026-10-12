@@ -1,0 +1,765 @@
+[
+ {
+  "id": "b171",
+  "mch_id": 171,
+  "side": "boss",
+  "name": "ディープ・ヨシュカ",
+  "name_en": "ディープ・ヨシュカ",
+  "image": "assets/bosses/171.png",
+  "rarity": 5,
+  "faction": 0,
+  "power": 0.9,
+  "skills": [
+   {
+    "name": "マス・アウテージ Phase 1",
+    "text": "自分のAGIを5000~40000%アップ",
+    "cd": 4.0,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 0.5
+     }
+    ],
+    "final": false
+   },
+   {
+    "name": "マス・アウテージ Phase 2",
+    "text": "自分のAGIを100~10000%アップ",
+    "cd": 3.0,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 0.8
+     }
+    ],
+    "final": false
+   },
+   {
+    "name": "マス・アウテージ Final Phase",
+    "text": "敵全体にPHYの999999%分ダメージを与える",
+    "cd": 2.0,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 1.6
+     }
+    ],
+    "final": true
+   }
+  ],
+  "passive": null
+ },
+ {
+  "id": "b172",
+  "mch_id": 172,
+  "side": "boss",
+  "name": "ディープ・ヨシュカ チョコラート",
+  "name_en": "ディープ・ヨシュカ",
+  "image": "assets/bosses/172.png",
+  "rarity": 5,
+  "faction": 0,
+  "power": 1.1,
+  "skills": [
+   {
+    "name": "マス・アウテージ Phase 1",
+    "text": "自分のAGIを5000~40000%アップ",
+    "cd": 4.0,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 0.5
+     }
+    ],
+    "final": false
+   },
+   {
+    "name": "マス・アウテージ Phase 2",
+    "text": "自分のAGIを100~10000%アップ",
+    "cd": 3.0,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 0.4
+     },
+     {
+      "kind": "weaken",
+      "weight": 0.4
+     }
+    ],
+    "final": false
+   },
+   {
+    "name": "マス・アウテージ Final Phase",
+    "text": "敵全体にPHYの999999%分ダメージを与える",
+    "cd": 2.0,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 1.6
+     }
+    ],
+    "final": true
+   }
+  ],
+  "passive": {
+   "name": "I Love You！",
+   "text": "ダメージを受けた時、10%の確率で、敵全体のPHYとINTをこのエネミーのINTの5000%分ダウン"
+  }
+ },
+ {
+  "id": "b370",
+  "mch_id": 370,
+  "side": "boss",
+  "name": "ヘイセイ・ヨシュカ",
+  "name_en": "Heisei Yoshka",
+  "image": "assets/bosses/370.png",
+  "rarity": 5,
+  "faction": 0,
+  "power": 0.9,
+  "skills": [
+   {
+    "name": "Hey !",
+    "text": "自分のAGIを5000~40000%アップ",
+    "cd": 3.5,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 0.5
+     }
+    ],
+    "final": false
+   },
+   {
+    "name": "Say !",
+    "text": "自分のAGIを100~10000%アップ",
+    "cd": 2.5,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 0.8
+     }
+    ],
+    "final": false
+   },
+   {
+    "name": "Never Die !",
+    "text": "敵全体にPHYの999999%分ダメージを与える",
+    "cd": 2.0,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 1.6
+     }
+    ],
+    "final": true
+   }
+  ],
+  "passive": null
+ },
+ {
+  "id": "b371",
+  "mch_id": 371,
+  "side": "boss",
+  "name": "モンスーン・ヨシュカ",
+  "name_en": "Monsoon Yoshka",
+  "image": "assets/bosses/371.png",
+  "rarity": 5,
+  "faction": 0,
+  "power": 1.1,
+  "skills": [
+   {
+    "name": "マス・アウテージ Phase 1",
+    "text": "自分のAGIを5000~40000%アップ",
+    "cd": 4.0,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 0.2
+     },
+     {
+      "kind": "slow",
+      "weight": 0.4
+     }
+    ],
+    "final": false
+   },
+   {
+    "name": "マス・アウテージ Phase 2",
+    "text": "自分のAGIを100~10000%アップ",
+    "cd": 3.0,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 0.8
+     }
+    ],
+    "final": false
+   },
+   {
+    "name": "マス・アウテージ Final Phase Type.A",
+    "text": "敵全体にPHYの135000%分ダメージを与え、ヨシュカのAGIを50%分ダウン",
+    "cd": 2.0,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 1.7
+     }
+    ],
+    "final": true
+   }
+  ],
+  "passive": {
+   "name": "シンギュラリティ地方は梅雨入りしました。",
+   "text": "ダメージを受けた時40％の確率で、敵全体のAGIを対象のAGIアップ分の300％分ダウン"
+  }
+ },
+ {
+  "id": "b372",
+  "mch_id": 372,
+  "side": "boss",
+  "name": "プーリー・ビースト",
+  "name_en": "Puli Beast",
+  "image": "assets/bosses/372.png",
+  "rarity": 5,
+  "faction": 0,
+  "power": 1,
+  "skills": [
+   {
+    "name": "マス・アウテージ",
+    "text": "自分のAGIを5000~40000%アップ",
+    "cd": 3.5,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 0.5
+     }
+    ],
+    "final": false
+   },
+   {
+    "name": "リブラ？",
+    "text": "相手の先頭にPHY999999%ダメージ、自分のAGIを100~10000%アップ",
+    "cd": 3.0,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 0.8
+     },
+     {
+      "kind": "slow",
+      "weight": 0.4
+     }
+    ],
+    "final": false
+   },
+   {
+    "name": "リブラ！？",
+    "text": "相手の先頭にPHY999999%ダメージ、自分のAGIを100%アップ",
+    "cd": 2.5,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 1.4
+     }
+    ],
+    "final": true
+   }
+  ],
+  "passive": {
+   "name": "いいね！",
+   "text": "ダメージを受けると100%の確率で発動,相手のAGIバフの100%相手全体のAGIをバフ,相手のPHYバフの3000%相手全体のAGIをデバフ,相手のINTバフの3000%相手全体のAGIをデバフ"
+  }
+ },
+ {
+  "id": "b374",
+  "mch_id": 374,
+  "side": "boss",
+  "name": "ハロウィン・プーリー",
+  "name_en": "Halloween Puli",
+  "image": "assets/bosses/374.png",
+  "rarity": 5,
+  "faction": 0,
+  "power": 1,
+  "skills": [
+   {
+    "name": "Trick!",
+    "text": "自分のAGIを5000~40000%アップ",
+    "cd": 3.5,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 0.2
+     },
+     {
+      "kind": "poison",
+      "weight": 0.4
+     }
+    ],
+    "final": false
+   },
+   {
+    "name": "Treat!!",
+    "text": "相手の先頭にPHY999999%ダメージ、自分のAGIを100~10000%アップ",
+    "cd": 3.0,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 1.0
+     }
+    ],
+    "final": false
+   },
+   {
+    "name": "Treat??",
+    "text": "相手の先頭にPHY999999%ダメージ、自分のAGIを100%アップ",
+    "cd": 2.5,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 1.0
+     },
+     {
+      "kind": "slow",
+      "weight": 0.4
+     }
+    ],
+    "final": true
+   }
+  ],
+  "passive": {
+   "name": "Happy Halloween!",
+   "text": "ダメージを受けると100%の確率で発動,相手のAGIバフの100%相手全体のAGIをバフ,相手のPHYバフの3000%相手全体のAGIをデバフ,相手のINTバフの3000%相手全体のAGIをデバフ"
+  }
+ },
+ {
+  "id": "b420",
+  "mch_id": 420,
+  "side": "boss",
+  "name": "ディープ・ヨシュカ チョコラート 2020",
+  "name_en": "Deep Yoshka Cioccolato 2020",
+  "image": "assets/bosses/420.png",
+  "rarity": 5,
+  "faction": 0,
+  "power": 1,
+  "skills": [
+   {
+    "name": "マス・アウテージ Phase 1",
+    "text": "自分のAGIを10000~40000%アップ",
+    "cd": 3.5,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 0.5
+     }
+    ],
+    "final": false
+   },
+   {
+    "name": "マス・アウテージ Phase 2",
+    "text": "自分のAGIを100~10000%アップ",
+    "cd": 2.5,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 0.5
+     },
+     {
+      "kind": "weaken",
+      "weight": 0.5
+     }
+    ],
+    "final": false
+   },
+   {
+    "name": "マス・アウテージ Final Phase",
+    "text": "敵全体にPHYの999999%分ダメージを与える",
+    "cd": 2.0,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 1.7
+     }
+    ],
+    "final": true
+   }
+  ],
+  "passive": {
+   "name": "I Love You！",
+   "text": "ダメージを受けた時、10%の確率で、敵全体のPHYとINTをこのエネミーのINTの5000%分ダウン"
+  }
+ },
+ {
+  "id": "b1007",
+  "mch_id": 1007,
+  "side": "boss",
+  "name": "真・ディープ・ヨシュカ",
+  "name_en": "Shin Deep-Yoshka",
+  "image": "assets/bosses/171.png",
+  "rarity": 5,
+  "faction": 0,
+  "power": 0.8,
+  "skills": [
+   {
+    "name": "マス・アウテージ type:INT",
+    "text": "自分のINTを20-30%ダウンさせ、一番AGIの高い敵に自分のINT低下分の100-150%分のダメージ",
+    "cd": 3.0,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 1.0
+     }
+    ],
+    "final": false
+   },
+   {
+    "name": "マス・アウテージ type:PHY",
+    "text": "自分のPHYを50-100%アップさせ、敵全体に自分のPHY増加分の100-150%分ダメージ。自分のPHY増加分を100%分ダウン。",
+    "cd": 3.0,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 1.0
+     },
+     {
+      "kind": "bleed",
+      "weight": 0.4
+     }
+    ],
+    "final": true
+   },
+   {
+    "name": "プリーモニション",
+    "text": "自分のAGIをAGI低下分の100%分アップし、自分のAGIを50-100%分アップ",
+    "cd": 2.5,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 0.4
+     }
+    ],
+    "final": false
+   }
+  ],
+  "passive": {
+   "name": "デリュージング",
+   "text": "アクティブ15％の確率で発動し、敵全体のPHY/INT/AGI増加分を100%ダウン、敵全体のPHY/INT/AGI低下分を100%アップし、敵全員を出血状態にすることがある"
+  }
+ },
+ {
+  "id": "b1182",
+  "mch_id": 1182,
+  "side": "boss",
+  "name": "真・ディープ・ヨシュカ",
+  "name_en": "Shin Deep-Yoshka",
+  "image": "assets/bosses/171.png",
+  "rarity": 5,
+  "faction": 0,
+  "power": 1.15,
+  "skills": [
+   {
+    "name": "オプティマイゼーション:PHY",
+    "text": "敵全員のPHYを、対象のPHY増加分の50%分ダウン / 敵全員のPHYを、対象のPHY低下分の50%分アップ",
+    "cd": 3.0,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 0.6
+     },
+     {
+      "kind": "weaken",
+      "weight": 0.4
+     }
+    ],
+    "final": false
+   },
+   {
+    "name": "オプティマイゼーション:INT",
+    "text": "敵全員のINTを、対象のINT増加分の50%分ダウン / 敵全員のINTを、対象のINT低下分の50%分アップ",
+    "cd": 3.0,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 0.6
+     },
+     {
+      "kind": "weaken",
+      "weight": 0.4
+     }
+    ],
+    "final": false
+   },
+   {
+    "name": "オプティマイゼーション:AGI",
+    "text": "自分のAGIを、敵全体のAGI低下分合計の100%分アップ / 敵全員のAGIを、対象のAGI低下分の100%分アップ / 敵全員のAGIを、対象のAGI増加分の100%分ダウン",
+    "cd": 2.5,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 1.2
+     },
+     {
+      "kind": "slow",
+      "weight": 0.4
+     }
+    ],
+    "final": true
+   }
+  ],
+  "passive": {
+   "name": "マス・アウテージ type:AGI",
+   "text": "自分がActiveSkillを使用した後、50%の確率で発動 : 自分のAGIを、自分のAGIの10%分ダウン / 一番AGIの高い敵のHPに、自分のAGI低下分の50%-100%分ダメージ / 一番AGIの低い敵のHPに、自分のAGI低下分の50%-100%分ダメージ"
+  }
+ },
+ {
+  "id": "b1183",
+  "mch_id": 1183,
+  "side": "boss",
+  "name": "ディープ・ヨシュカ フラッグ",
+  "name_en": "Deep-Yoshka Flag",
+  "image": "assets/bosses/1183.png",
+  "rarity": 5,
+  "faction": 0,
+  "power": 1.1,
+  "skills": [
+   {
+    "name": "マス・アウテージ type:AGI 2.0",
+    "text": "自分のAGIを、固定値の625ダウン / 敵全員のHPに、自分のAGI低下分の15%分ダメージ / 自分のAGIを、固定値の250アップ / 敵全員のAGIを、対象のAGI増加分の100%分ダウン",
+    "cd": 3.0,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 0.8
+     },
+     {
+      "kind": "shield",
+      "weight": 0.5
+     },
+     {
+      "kind": "slow",
+      "weight": 0.3
+     }
+    ],
+    "final": false
+   },
+   {
+    "name": "スパミング 3.0",
+    "text": "敵全員のHPに、自分のPHYの15%-30%分ダメージ、対象が睡眠時55%-70%分ダメージ / 敵全員のPHYを、対象のPHY増加分の100%分ダウン / 自分のPHYを、自分のPHY低下分の100%分アップ / 自分のCHARGEを、固定値の1900%分アップ",
+    "cd": 2.5,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 1.2
+     },
+     {
+      "kind": "weaken",
+      "weight": 0.3
+     }
+    ],
+    "final": false
+   },
+   {
+    "name": "フィッシング 3.0",
+    "text": "敵全員のHPに、自分のINTの15%-30%分ダメージ、対象が恐怖時55%-70%分ダメージ / 敵全員のINTを、対象のINT増加分の100%分ダウン / 自分のINTを、自分のINT低下分の100%分アップ",
+    "cd": 2.5,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 1.2
+     },
+     {
+      "kind": "weaken",
+      "weight": 0.3
+     }
+    ],
+    "final": false
+   }
+  ],
+  "passive": {
+   "name": "インタラプト",
+   "text": "先頭の敵がActiveSkillを使用した後、30%の確率で発動 : 敵全員のHPに、自分のAGI低下分の25%-45%分ダメージ / 自分のシールドに固定値の300%-1000%分付与 / 中衛の敵を睡眠状態にすることがある / 後衛の敵を恐怖状態にすることがある / 自分のCHARGEを、固定値の1900%分アップ"
+  }
+ },
+ {
+  "id": "b1184",
+  "mch_id": 1184,
+  "side": "boss",
+  "name": "ディープ・ヨシュカ フラッグ",
+  "name_en": "Deep-Yoshka Flag",
+  "image": "assets/bosses/1183.png",
+  "rarity": 5,
+  "faction": 0,
+  "power": 1.05,
+  "skills": [
+   {
+    "name": "ファイアウォール",
+    "text": "自分のシールドに敵全体のPHY/INT/AGI増加分合計の300%分付与 / 先頭の敵を恐怖状態にすることがある / 最後尾の敵を毒状態にすることがある",
+    "cd": 3.0,
+    "effects": [
+     {
+      "kind": "shield",
+      "weight": 0.8
+     },
+     {
+      "kind": "poison",
+      "weight": 0.5
+     }
+    ],
+    "final": false
+   },
+   {
+    "name": "マス・アウテージ type:AGI 2.1",
+    "text": "自分のAGIを、固定値の625%分ダウン / 敵全員のHPに、自分のAGI低下分の15%分ダメージ / 自分のAGIを、固定値の250%分アップ",
+    "cd": 2.5,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 2.0
+     }
+    ],
+    "final": true
+   },
+   {
+    "name": "デフラグ",
+    "text": "自分のPHYを、自分のPHY低下分の85%分アップ / 自分のINTを、自分のINT低下分の85%分アップ / 一番AGIの高い敵を毒状態にすることがある / 一番HPの低い敵を恐怖状態にすることがある",
+    "cd": 3.0,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 0.5
+     },
+     {
+      "kind": "poison",
+      "weight": 0.6
+     }
+    ],
+    "final": false
+   }
+  ],
+  "passive": {
+   "name": "インタラプト 2.0",
+   "text": "状態異常になっている敵がActive Skillを使用した後、100%の確率で発動 : 敵全員のHPに、自分のPHYの15%分ダメージ、対象が恐怖時70%分ダメージ / 敵全員のHPに、自分のINTの15%分ダメージ、対象が毒時70%分ダメージ / 敵全員のAGIを、対象のHP減少分の5%分ダウン、対象が恐怖時50%分ダウン / 自分のCHARGEを、敵全体のHP合計の60%-100%分アップ"
+  }
+ },
+ {
+  "id": "b1186",
+  "mch_id": 1186,
+  "side": "boss",
+  "name": "ディープ・ヨシュカ フラッグ",
+  "name_en": "Deep-Yoshka Flag",
+  "image": "assets/bosses/1183.png",
+  "rarity": 5,
+  "faction": 0,
+  "power": 1,
+  "skills": [
+   {
+    "name": "コンパイル type:INT",
+    "text": "敵全員のHPに、自分のINTの20%-24%分ダメージ / 自分のシールドに固定値の500%分付与 / 自分のCHARGEを、固定値の250%-500%分アップ",
+    "cd": 3.0,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 0.8
+     },
+     {
+      "kind": "shield",
+      "weight": 0.6
+     }
+    ],
+    "final": false
+   },
+   {
+    "name": "コンパイル type:PHY",
+    "text": "敵全員のHPに、自分のPHYの20%-24%分ダメージ / 敵全員のPHY/INTの高い方を、敵全体のPHY/INT/AGI増加分合計の10%-20%分ダウン / 自分のCHARGEを、固定値の250%-500%分アップ",
+    "cd": 3.0,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 0.8
+     },
+     {
+      "kind": "weaken",
+      "weight": 0.4
+     }
+    ],
+    "final": false
+   },
+   {
+    "name": "ブルートフォース",
+    "text": "一番HPの低い敵のHPに、自分のPHYの60%分ダメージ / 一番HPの高い敵のHPに、自分のINTの60%分ダメージ / 自分のPHYを、自分のPHY低下分の100%-120%分アップ / 自分のINTを、自分のINT低下分の100%-120%分アップ",
+    "cd": 2.5,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 2.6
+     }
+    ],
+    "final": true
+   }
+  ],
+  "passive": {
+   "name": "スパイラル",
+   "text": "自分がActiveSkillでダメージを受けた後、70%の確率で発動 : 自分のPHYを、自分のPHY低下分の200%分ダウン / 自分のINTを、自分のINT低下分の200%分ダウン / 一番HPの低い敵を衰弱状態にすることがある / 自分のCHARGEを、固定値の50%-100%分アップ"
+  }
+ },
+ {
+  "id": "b1187",
+  "mch_id": 1187,
+  "side": "boss",
+  "name": "ディープ・ヨシュカ フラッグ",
+  "name_en": "Deep-Yoshka Flag",
+  "image": "assets/bosses/1183.png",
+  "rarity": 5,
+  "faction": 0,
+  "power": 1,
+  "skills": [
+   {
+    "name": "アップデート",
+    "text": "自分のINTを、自分のINT低下分の130%分アップ / 自分のAGIを、自分のAGI低下分の90%分アップ / 自分のINTを、自分のINTの10%分アップ / 自分のAGIを、固定値の20%-40%分アップ / 最もAGIの高い敵を魅了にすることがある",
+    "cd": 3.0,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 0.3
+     },
+     {
+      "kind": "slow",
+      "weight": 0.6
+     }
+    ],
+    "final": false
+   },
+   {
+    "name": "マス・アウテージ type:INT",
+    "text": "敵全員のHPに、対象のHP減少分の15%-25%分ダメージ / 敵全員のHPに、自分のINTの20%-40%分ダメージ / 自分のCHARGEを、固定値の1500%分アップ / 自分のCHARGEを、このACTIONで自分が与えたダメージの500%分ダウン",
+    "cd": 2.5,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 1.6
+     }
+    ],
+    "final": true
+   },
+   {
+    "name": "マス・アウテージ type:FEAR",
+    "text": "自分を恐怖にすることがある / 自分のCHARGEを、固定値の2000%分アップ",
+    "cd": 1.5,
+    "effects": [
+     {
+      "kind": "damage",
+      "weight": 0.4
+     },
+     {
+      "kind": "bleed",
+      "weight": 0.4
+     }
+    ],
+    "final": false
+   }
+  ],
+  "passive": {
+   "name": "コルシカの悪魔[raid]",
+   "text": "自分がActiveSkillでダメージを受けた後、30%の確率で発動 : 最もMAXHPが高い敵のHPに、対象のPHY/INT/AGI増加分合計の40%-80%分ダメージ / 最もMAXHPが高い敵のHPに、自分のPHY/INT/AGI増加分合計の20%-40%分ダメージ / 自分のCHARGEを、固定値の1500%分アップ / 自分のCHARGEを、このACTIONで自分が与えたダメージの500%分ダウン"
+  }
+ }
+]

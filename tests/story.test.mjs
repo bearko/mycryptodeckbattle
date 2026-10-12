@@ -1,8 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { loadDb } from "./load-db.mjs";
-import { AREAS, STARTER_HEROES, DECK_SIZE, STAGE_WAVES, heroId, stageKey, areaById } from "../js/engine/world.js";
+import { AREAS, STARTER_HEROES, DECK_SIZE, MACHINES, heroId, stageKey, areaById, stageWaves } from "../js/engine/world.js";
 import {
+  migrateStory,
   newStory,
   areaUnlocked,
   stageUnlocked,
@@ -15,7 +16,9 @@ import {
   partsGain,
   tutorialDone,
 } from "../js/engine/story.js";
-import { finishBattle, advance, runGoal } from "../js/engine/run.js";
+import { finishBattle, advance, runGoal, prepareBattle } from "../js/engine/run.js";
+import { runBattle, battleSummary } from "../js/engine/battle.js";
+import { isBossWave } from "../js/engine/boss.js";
 
 const db = loadDb();
 const win = { winner: 0, time: 10, sides: [{ name: "a" }, { name: "b" }] };
@@ -27,7 +30,7 @@ test("すべてのヒーローが、どこか1か所で仲間になる", () => {
   STARTER_HEROES.forEach((id) => add(id, "starter"));
   for (const a of AREAS) {
     a.stages.forEach((s, i) => {
-      assert.ok(s.join.includes(s.meet) || s.meetAtStart, `${a.id}:${i} の出会うヒーローが仲間リストにない`);
+      assert.ok(!s.meet || s.join.includes(s.meet) || s.meetAtStart, `${a.id}:${i} の出会うヒーローが仲間リストにない`);
       new Set([...(s.meetAtStart ? [s.meet] : []), ...s.join]).forEach((id) => add(id, `${a.id}:${i}`));
     });
   }
@@ -35,7 +38,13 @@ test("すべてのヒーローが、どこか1か所で仲間になる", () => {
   for (const id of seen.keys()) assert.ok(db.has(heroId(id)), `データにないヒーロー ${id}`);
 });
 
-test("最初は近代・日本だけ。チュートリアルを終えてタイムマシンを改良すると国が増える", () => {
+/** ノードのステージを最初から最後までクリアする */
+function clearArea(story, id) {
+  const area = areaById(id);
+  return area.stages.map((_, i) => clearStage(story, stageKey(id, i)));
+}
+
+test("最初は近代・日本だけ。ノードをクリアすると同じ時代の国が開き、タイムマシンの改良で時代が開く", () => {
   const story = newStory();
   assert.deepEqual(story.heroes, STARTER_HEROES.map(heroId));
   assert.deepEqual(AREAS.filter((a) => areaUnlocked(story, a)).map((a) => a.id), ["kindai-jp"]);
@@ -48,38 +57,81 @@ test("最初は近代・日本だけ。チュートリアルを終えてタイ�
   assert.deepEqual(joinAtStart(story, stageKey("kindai-jp", 0)), []);
   assert.ok(story.deck.includes("h10004"));
 
+  // パーツはノードの最終ステージ（レイドボス）をクリアしたときだけ
   const r1 = clearStage(story, stageKey("kindai-jp", 0));
   assert.deepEqual(r1.heroes, ["h2036", "h2021"]);
-  assert.equal(r1.part, true);
-  assert.equal(r1.upgradedTo, null);
-  assert.equal(story.parts, 1);
-
-  // 2つでUncommonに改良。ただしチュートリアルを終えるまでは他の国へ行けない
-  const r2 = clearStage(story, stageKey("kindai-jp", 1));
-  assert.equal(r2.upgradedTo, 2);
-  assert.equal(machineInfo(story).level, 2);
-  assert.deepEqual(r2.unlockedAreas, []);
-
+  assert.equal(r1.part, false);
+  assert.equal(clearStage(story, stageKey("kindai-jp", 1)).part, false);
   const r3 = clearStage(story, stageKey("kindai-jp", 2));
   assert.ok(tutorialDone(story));
+  assert.equal(r3.areaCleared, true);
+  assert.equal(r3.part, true);
+  assert.equal(r3.upgradedTo, null);
+  assert.equal(story.parts, 1);
+  // 近代のほかの国が開く（改良はまだ）
   assert.deepEqual(r3.unlockedAreas.sort(), ["kindai-eu", "kindai-us"]);
   assert.ok(!areaUnlocked(story, areaById("kinsei-jp")));
 
+  // 2ノード目で Uncommon に改良 → 近世は日本から
+  const eu = clearArea(story, "kindai-eu");
+  assert.equal(eu.filter((r) => r.part).length, 1);
+  const last = eu[eu.length - 1];
+  assert.equal(last.upgradedTo, 2);
+  assert.equal(machineInfo(story).level, 2);
+  assert.deepEqual(last.unlockedAreas, ["kinsei-jp"]);
+  assert.ok(!areaUnlocked(story, areaById("kinsei-eu")));
+  assert.deepEqual(clearArea(story, "kinsei-jp").at(-1).unlockedAreas.sort(), ["kinsei-eu", "kinsei-sea"]);
+
   // 2回目のクリアでは報酬なし
-  const again = clearStage(story, stageKey("kindai-jp", 0));
+  const again = clearStage(story, stageKey("kindai-jp", 2));
   assert.equal(again.first, false);
   assert.equal(again.part, false);
-  assert.equal(story.parts, 1);
   assert.ok(story.deck.length <= DECK_SIZE);
 });
 
-test("時空のはざまは全エリアをクリアすると開く", () => {
+test("12ノードのパーツでちょうど Legendary。時空のはざまは全ノードのクリアで開く", () => {
   const story = newStory();
-  story.machine = 5;
-  for (const a of AREAS.filter((x) => !x.requiresAll)) a.stages.forEach((_, i) => story.cleared.push(stageKey(a.id, i)));
+  const order = AREAS.filter((a) => !a.requiresAll);
+  for (const a of order) {
+    assert.ok(areaUnlocked(story, a), `${a.id} が開いていない`);
+    clearArea(story, a.id);
+  }
+  assert.equal(story.machine, MACHINES.length);
+  assert.equal(story.parts, 0);
   assert.ok(areaUnlocked(story, areaById("hazama")));
-  story.cleared.pop();
-  assert.ok(!areaUnlocked(story, areaById("hazama")));
+  const fresh = newStory();
+  fresh.machine = 5;
+  assert.ok(!areaUnlocked(fresh, areaById("hazama")));
+});
+
+test("近代・日本は3ステージ、ほかのノードは10ステージ。どのノードにもレイドボスがいる", () => {
+  for (const a of AREAS) {
+    assert.equal(a.stages.length, a.id === "kindai-jp" ? 3 : 10, a.id);
+    assert.ok(db.has(a.boss), `${a.id} のボス ${a.boss}`);
+  }
+  const bosses = AREAS.map((a) => db.def(a.boss).mch_id);
+  for (const reserved of [373, 1188, 1189, 1190]) assert.ok(!bosses.includes(reserved), `特別ステージ用のボス ${reserved}`);
+});
+
+test("古い保存データ（パーツがステージごと）を、ノードごとのパーツに直す", () => {
+  const old = {
+    version: 1,
+    prologue: true,
+    cleared: ["kindai-jp:0", "kindai-jp:1", "kindai-jp:2", "kindai-eu:0", "kindai-eu:1", "kindai-eu:2"],
+    heroes: ["h10001", "h10002", "h10003", "h10004", "h5002"],
+    deck: ["h10001", "h5002"],
+    machine: 3,
+    parts: 1,
+    flags: { tut: "done" },
+  };
+  const s = migrateStory(old);
+  assert.equal(s.version, newStory().version);
+  assert.equal(s.machine, 1);
+  assert.equal(s.parts, 1);
+  assert.deepEqual(s.cleared, old.cleared);
+  assert.deepEqual(s.heroes, old.heroes);
+  assert.ok(areaUnlocked(s, areaById("kindai-eu")));
+  assert.ok(stageUnlocked(s, areaById("kindai-eu"), 3));
 });
 
 test("デッキはコレクションから最大8種類", () => {
@@ -94,7 +146,8 @@ test("ステージはデッキのヒーローだけが並び、決まった数�
   const story = newStory();
   joinAtStart(story, stageKey("kindai-jp", 0));
   const run = newStageRun(db, story, stageKey("kindai-jp", 0), 42);
-  assert.equal(runGoal(run), STAGE_WAVES[0]);
+  assert.equal(runGoal(run), stageWaves(areaById("kindai-jp"), 0));
+  assert.equal(run.story.boss, null);
   assert.equal(run.lives, 3);
   for (const o of run.market.offers) if (o?.type === "hero") assert.ok(story.deck.includes(o.defId));
   assert.equal(run.pending.length, 0);
@@ -102,7 +155,7 @@ test("ステージはデッキのヒーローだけが並び、決まった数�
   finishBattle(run, db, lose);
   assert.equal(run.lives, 2);
   advance(run, db);
-  for (let i = 0; i < STAGE_WAVES[0]; i++) {
+  for (let i = 0; i < runGoal(run); i++) {
     finishBattle(run, db, win);
     if (run.phase === "result") advance(run, db);
   }
@@ -119,16 +172,15 @@ test("ライフ3回分負けると撤退（復活なし）", () => {
   assert.equal(run.phase, "gameover");
 });
 
-test("パーツ獲得画面の進み具合（改良前→後、あと何ステージ）", () => {
+test("パーツ獲得画面の進み具合（改良前→後、あと何ノード）", () => {
   const story = newStory();
-  const r1 = clearStage(story, stageKey("kindai-jp", 0));
+  const r1 = clearArea(story, "kindai-jp").at(-1);
   assert.deepEqual(
     { ...partsGain(story, r1), nextAreas: undefined },
     { target: 2, before: 0, after: 0.5, parts: 1, need: 2, remaining: 1, nextAreas: undefined },
   );
-  assert.deepEqual(partsGain(story, r1).nextAreas.sort(), ["kindai-eu", "kindai-us"]);
-  const r2 = clearStage(story, stageKey("kindai-jp", 1));
-  const g2 = partsGain(story, r2);
+  assert.deepEqual(partsGain(story, r1).nextAreas, ["kinsei-jp"]);
+  const g2 = partsGain(story, clearArea(story, "kindai-us").at(-1));
   assert.equal(g2.target, 2);
   assert.equal(g2.before, 0.5);
   assert.equal(g2.after, 1);
@@ -137,6 +189,78 @@ test("パーツ獲得画面の進み具合（改良前→後、あと何ステ�
   const p = machineProgress(story);
   assert.equal(p.ratio, 0);
   assert.equal(p.remaining, 3);
-  // 2回目のクリアではパーツなし
-  assert.equal(partsGain(story, clearStage(story, stageKey("kindai-jp", 0))), null);
+  assert.deepEqual(p.nextAreas, ["chusei-jp"]);
+  // 途中のステージ・2回目のクリアではパーツなし
+  assert.equal(partsGain(story, clearStage(story, stageKey("kindai-eu", 0))), null);
+  assert.equal(partsGain(story, clearStage(story, stageKey("kindai-jp", 2))), null);
+});
+
+test("最終ステージの最後のウェーブはレイドボス（スキルを順番に使う）", () => {
+  const story = newStory();
+  clearArea(story, "kindai-jp");
+  const area = areaById("kindai-eu");
+  const key = stageKey(area.id, area.stages.length - 1);
+  const run = newStageRun(db, story, key, 99);
+  assert.equal(run.story.boss, area.boss);
+  for (let i = 0; i < runGoal(run) - 1; i++) {
+    assert.ok(!isBossWave(run));
+    finishBattle(run, db, win);
+    advance(run, db);
+  }
+  assert.ok(isBossWave(run));
+  run.party[0] = { uid: 900, defId: "h10001", level: 3, permMult: 0, cdReduce: 0 };
+  const prep = prepareBattle(run, db);
+  assert.ok(prep.ok);
+  assert.equal(prep.right.boss, true);
+  assert.equal(prep.right.fighters.length, 1);
+  const boss = prep.right.fighters[0];
+  assert.equal(boss.rotation.length, db.def(area.boss).skills.length);
+  const b = runBattle(prep.left, prep.right);
+  const s = battleSummary(b);
+  assert.ok(s.winner === 0 || s.winner === 1);
+  // 途中のステージにはボスがいない
+  assert.equal(newStageRun(db, story, stageKey(area.id, 0), 1).story.boss, null);
+});
+
+test("デッキにいないレアリティの枠は空（チュートリアルのノード以外）。デッキには Common か Uncommon が必要", async () => {
+  const { rollMarket, buyOffer, toggleOfferLock } = await import("../js/engine/market.js");
+  const { createRng } = await import("../js/engine/rng.js");
+  const { autoDeck, deckEmptyShare, deckProblem } = await import("../js/engine/story.js");
+  const story = newStory();
+  clearArea(story, "kindai-jp");
+  // 初心者だけのデッキで、難しいステージへ
+  assert.ok(setDeck(story, ["h10001", "h10002", "h10003"], db).ok);
+  const key = stageKey("kindai-eu", 8);
+  const run = newStageRun(db, story, key, 5);
+  assert.equal(run.story.strictRarity, true);
+  const rng = createRng(1);
+  let empties = 0;
+  for (let i = 0; i < 20; i++) {
+    rollMarket(run, db, rng);
+    for (const o of run.market.offers) if (o?.type === "none") empties++;
+  }
+  assert.ok(empties > 20, `空き枠 ${empties}`);
+  const idx = run.market.offers.findIndex((o) => o?.type === "none");
+  if (idx >= 0) {
+    assert.equal(buyOffer(run, db, idx).ok, false);
+    assert.equal(toggleOfferLock(run, idx), null);
+  }
+  assert.ok(deckEmptyShare(db, story.deck, key) > 50);
+  // チュートリアルのノードは空にならない
+  assert.equal(newStageRun(db, story, stageKey("kindai-jp", 2), 5).story.strictRarity, false);
+  assert.equal(deckEmptyShare(db, story.deck, stageKey("kindai-jp", 2)), 0);
+  // デッキの決まり
+  assert.ok(deckProblem(db, ["h4056", "h5008"]));
+  assert.equal(setDeck(story, ["h4056", "h5008"], db).ok, false);
+  assert.equal(deckProblem(db, ["h4056", "h2036"]), null);
+  // おまかせ編成は決まりを守り、空き枠が減る
+  const auto = autoDeck(db, story);
+  assert.ok(setDeck(story, auto, db).ok);
+  assert.ok(deckEmptyShare(db, auto, key) < 10);
+});
+
+test("新しく仲間になったヒーローは NEW（デッキ画面を閉じるまで）", () => {
+  const story = newStory();
+  clearStage(story, stageKey("kindai-jp", 0));
+  assert.deepEqual(story.fresh, ["h2036", "h2021"]);
 });

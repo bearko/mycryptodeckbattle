@@ -19,7 +19,7 @@ import {
   roleChip,
   slash,
 } from "./battle-fx.js";
-import { createBattle, stepBattle } from "../engine/battle.js";
+import { createBattle, nextSkill, stepBattle } from "../engine/battle.js";
 import { TICK, SUDDEN_DEATH_AT, PARTY_SIZE, PARTY_COLS } from "../engine/balance.js";
 import { COLUMN_NAMES, KIND_ICONS } from "../engine/content.js";
 import { bobDelay, effectShort, toast } from "./components.js";
@@ -202,6 +202,11 @@ export class BattleView {
         ),
       ),
     );
+    const boss = side.fighters.find((f) => f.boss);
+    if (boss) {
+      zone.append(this.bossUnit(index, boss, top, height));
+      return zone;
+    }
     for (let slot = 0; slot < PARTY_SIZE; slot++) {
       const g = slotGround(index, slot);
       const p = project(g.X, g.Z);
@@ -243,6 +248,33 @@ export class BattleView {
     return zone;
   }
 
+  /**
+   * レイドボス: 中衛の中央に大きく描く。頭上に次のスキル（大技は FINAL で予告）
+   */
+  bossUnit(index, f, top, height) {
+    const p = project(0, FIELD.laneZ[1] * (index === 0 ? 1 : -1));
+    const pos = h("div", {
+      class: "unit-pos boss-pos",
+      style: { left: `${p.x}%`, top: `${((p.y - top) / height) * 100}%`, zIndex: String(Math.round(10 + p.z * 10)), "--s": p.s.toFixed(3) },
+    });
+    const card = h(
+      "div",
+      { class: "fighter boss r5", style: { "--role": ROLES.damage.color } },
+      h("div", { class: "ground" }),
+      h("div", { class: "fighter-art" }, img(f.image, "pixel", f.name)),
+      h("div", { class: "boss-next" }, h("small", null, "NEXT"), h("b")),
+      h("div", { class: "charge" }, h("div", { class: "charge-fill" })),
+      h("span", { class: "mult" }),
+    );
+    const summary = `${f.name}（レイドボス）　${f.rotation.map((k) => `${k.final ? "【大技】" : ""}${k.name}`).join(" → ")}`;
+    card.title = summary;
+    card.addEventListener("click", () => toast(summary));
+    this.cards[index].set(f.slot, card);
+    this.bossCard = card;
+    pos.append(card);
+    return pos;
+  }
+
   /** 列の名前（前衛・中衛・後衛）を各列の端に置く。自分は左端、敵は右端 */
   laneTags() {
     const tags = [];
@@ -282,7 +314,14 @@ export class BattleView {
     const floor = fieldFloor();
     this.floors = [floor.querySelector(".floor-area.ally"), floor.querySelector(".floor-area.enemy")];
     this.field = h("div", { class: "battle-field" }, floor, this.laneTags(), this.zones[1], this.zones[0]);
-    const top = h("div", { class: "battle-top" }, h("div", { class: "stage-label" }, `STAGE ${this.app.run.stage}`), this.timerEl, controls);
+    this.bossFight = this.battle.sides[1].fighters.some((f) => f.boss);
+    const top = h(
+      "div",
+      { class: "battle-top" },
+      h("div", { class: `stage-label${this.bossFight ? " boss" : ""}` }, this.bossFight ? "RAID BOSS" : `STAGE ${this.app.run.stage}`),
+      this.timerEl,
+      controls,
+    );
     this.inner = h("div", { class: "battle-inner" }, top, this.heads[1], this.field, this.heads[0]);
     const backdrop = this.background
       ? battleBackdrop({
@@ -292,7 +331,7 @@ export class BattleView {
           ally: this.battle.sides[0].name,
         })
       : null;
-    return h("div", { class: "screen battle-screen" }, backdrop, this.inner, this.fx);
+    return h("div", { class: `screen battle-screen${this.bossFight ? " boss-fight" : ""}` }, backdrop, this.inner, this.fx);
   }
 
   setSpeed(s) {
@@ -326,9 +365,9 @@ export class BattleView {
       // 盤面と同じ並び: 敵が上、自分が下
       h(
         "div",
-        { class: "vs-half enemy" },
-        h("div", { class: "vs-name" }, r.name),
-        h("div", { class: "vs-figure enemy" }, img(r.leader.image, "pixel")),
+        { class: `vs-half enemy${this.bossFight ? " boss" : ""}` },
+        h("div", { class: "vs-name" }, this.bossFight ? h("small", { class: "vs-boss-tag" }, "RAID BOSS") : null, r.name),
+        h("div", { class: `vs-figure enemy${this.bossFight ? " boss" : ""}` }, img(r.leader.image, "pixel")),
       ),
       h(
         "div",
@@ -455,6 +494,14 @@ export class BattleView {
         const ratio = f.cd ? Math.min(1, f.charge / f.cd) : 0;
         card.querySelector(".charge-fill").style.width = `${ratio * 100}%`;
         card.querySelector(".charge").classList.toggle("ready", ratio > 0.85);
+        if (f.boss) {
+          const next = nextSkill(f);
+          const label = card.querySelector(".boss-next");
+          label.querySelector("b").textContent = next.name;
+          label.querySelector("small").textContent = next.final ? "FINAL" : "NEXT";
+          label.classList.toggle("final", next.final);
+          card.classList.toggle("final-ready", next.final && ratio > 0.6);
+        }
         const mult = card.querySelector(".mult");
         const pct = Math.round((f.mult - 1) * 100);
         mult.textContent = pct ? `${pct > 0 ? "+" : ""}${pct}%` : "";
@@ -595,6 +642,7 @@ export class BattleView {
     this.bump(ev.side, ev.slot);
     const f = this.fighter(ev.side, ev.slot);
     if (!f) return;
+    if (ev.skill) this.bossSkillName(ev, f, fast);
     const kind = f.effects.find((e) => e.trigger === ev.trigger)?.kind ?? mainKind(f);
     const c = this.cardPoint(ev.side, ev.slot);
     castAura(this.fx, c, kind);
@@ -716,6 +764,21 @@ export class BattleView {
       if (!fast) bloodBurst(this.fx, this.randomCardPoint(ev.side), { drops: 3, scale: 0.7 });
       this.flashSide(ev.side, "bleed-tick");
     }
+  }
+
+  /** レイドボスのスキル名。大技（final）は画面いっぱいの帯で見せる */
+  bossSkillName(ev, f, fast) {
+    if (ev.final) {
+      const el = h("div", { class: "boss-final-banner" }, h("small", null, "FINAL PHASE"), h("b", null, ev.skill));
+      this.el.append(el);
+      setTimeout(() => el.remove(), fast ? 700 : 1300);
+      shake(this.inner, 2.4);
+      this.app.audio.se("area", 0.6);
+      return;
+    }
+    if (fast) return;
+    const c = this.cardPoint(ev.side, ev.slot);
+    popText(this.el, ev.skill, c.x, c.y - 70, "boss-skill");
   }
 
   banner(text) {

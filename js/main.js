@@ -7,11 +7,12 @@ import { bestAffordableOffer, reroll, toggleOfferLock, effectiveRank } from "./e
 import { randomSeed, withRng } from "./engine/rng.js";
 import { battleSummary, runBattle } from "./engine/battle.js";
 import { PLAYERS, playerById } from "./engine/content.js";
-import { TREASURE_STAGES, stageIncome } from "./engine/balance.js";
+import { RARITY, TREASURE_STAGES, stageIncome, storyPlayerBonus } from "./engine/balance.js";
+import { isBossWave } from "./engine/boss.js";
 import { audio } from "./ui/audio.js";
 import { clearRun, loadRun, loadSettings, loadStory, saveRun, saveSettings, saveStory } from "./ui/storage.js";
 import * as Story from "./engine/story.js";
-import { AREAS, DECK_SIZE, ERAS, TUTORIAL_AREA, areaById, machineByLevel, parseStageKey } from "./engine/world.js";
+import { AREAS, DECK_SIZE, ERAS, TUTORIAL_AREA, areaById, areaName, machineByLevel, parseStageKey, stageKey } from "./engine/world.js";
 import { MAP_INTRO, PROLOGUE, TUTORIAL_DONE, areaClearScene, stageIntro, upgradeScene } from "./story/scenes.js";
 import { ScenePlayer } from "./ui/scene.js";
 import { Coach } from "./ui/coach.js";
@@ -252,10 +253,11 @@ async function enterStage() {
   audio.playBgm("bgm_market");
   await go("market", { bg: background(3), mood: "market", accent: player().color });
   const info = {
-    income: stageIncome(app.run.stage) + (app.run.story?.difficulty ?? 0),
+    income: stageIncome(app.run.stage) + (app.run.story ? storyPlayerBonus(app.run.story).income : 0),
     label: app.run.story ? stageLabelOf(app.run.story) : null,
     rank: effectiveRank(app.run),
-    treasure: TREASURE_STAGES.includes(app.run.stage),
+    treasure: !app.run.story && TREASURE_STAGES.includes(app.run.stage),
+    boss: isBossWave(app.run),
   };
   const telop = stageTelop(app, info, () => close());
   overlay.append(telop);
@@ -274,7 +276,8 @@ async function enterStage() {
       } else if (!app.run.pending.length) {
         const hasUnits = allUnits(app.run).length > 0;
         const story = Boolean(app.run.story);
-        say(hasUnits && Math.random() < 0.35 ? "hint" : story ? "wave" : "stage", { n: story ? app.run.wins + 1 : app.run.stage });
+        if (info.boss) say("boss");
+        else say(hasUnits && Math.random() < 0.35 ? "hint" : story ? "wave" : "stage", { n: story ? app.run.wins + 1 : app.run.stage });
       }
     }, 280);
   };
@@ -474,6 +477,19 @@ async function playScene(scene, { bgm = "bgm_market" } = {}) {
   await player.start();
 }
 
+/** デッキ画面で目安を出すステージ: ステージ選択から開いたら選んでいるステージ、マップからなら次に挑むステージ */
+function deckTargetStage(from) {
+  const story = app.story;
+  if (from === "area" && app.ui.storyArea) {
+    const area = areaById(app.ui.storyArea);
+    const index = app.ui.storyStage ?? Story.nextStage(story, area) ?? area.stages.length - 1;
+    return stageKey(area.id, index);
+  }
+  const open = AREAS.filter((a) => Story.areaUnlocked(story, a) && Story.nextStage(story, a) !== null);
+  const area = open[open.length - 1];
+  return area ? stageKey(area.id, Story.nextStage(story, area)) : null;
+}
+
 /** いちばん新しく開いた時代 */
 function latestEra() {
   const open = ERAS.filter((e) => Story.eraUnlocked(app.story, e.id));
@@ -558,9 +574,11 @@ const actions = {
   openArea(areaId) {
     const area = areaById(areaId);
     if (!Story.areaUnlocked(app.story, area)) {
-      if (area.requiresAll) return toast("すべてのエリアをクリアすると行けるようになります");
-      if (!Story.tutorialDone(app.story)) return toast("まずは近代・日本のエネミーを片付けよう");
-      return toast(`タイムマシン Lv${area.machine}（${machineByLevel(area.machine).short}）で行けるようになります`);
+      if (app.story.machine < area.machine) {
+        return toast(`タイムマシン Lv${area.machine}（${machineByLevel(area.machine).short}）で行けるようになります`);
+      }
+      if (area.requiresAll) return toast("すべてのノードをクリアすると行けるようになります");
+      if (area.after) return toast(`${areaName(areaById(area.after))}をクリアすると行けるようになります`);
     }
     app.ui.storyArea = areaId;
     app.ui.storyStage = null;
@@ -575,6 +593,7 @@ const actions = {
   },
   openDeck(from) {
     app.ui.deckFrom = from;
+    app.ui.deckStage = deckTargetStage(from);
     app.ui.deckDraft = [...app.story.deck];
     app.screen = "deck";
     app.ui.intro = true;
@@ -589,24 +608,47 @@ const actions = {
     audio.se("buy", 0.3);
     render();
   },
+  /** おまかせ編成 */
+  autoDeck() {
+    app.ui.deckDraft = Story.autoDeck(app.db, app.story);
+    audio.se("merge", 0.4);
+    toast("おまかせで編成しました");
+    render();
+  },
   closeDeck(commit) {
     if (commit) {
-      const res = Story.setDeck(app.story, app.ui.deckDraft);
+      const res = Story.setDeck(app.story, app.ui.deckDraft, app.db);
       if (!res.ok) return toast(res.error, "error");
-      saveStoryNow();
     }
+    app.story.fresh = [];
+    saveStoryNow();
     app.ui.deckDraft = null;
     app.screen = app.ui.deckFrom === "map" ? "worldmap" : "area";
     render();
   },
-  /** 出撃: 出会いのシーン → ステージ開始 */
-  async sortie(key) {
+  /** 出撃: 出会いのシーン → ステージ開始。マーケットの枠が多く空くデッキなら先に確認する */
+  async sortie(key, { force = false } = {}) {
     const parsed = parseStageKey(key);
     if (!parsed || !Story.stageUnlocked(app.story, parsed.area, parsed.index)) return;
+    const empty = Story.deckEmptyShare(app.db, app.story.deck, key);
+    if (!force && empty >= 30) {
+      app.ui.modal = () =>
+        confirmModal(
+          app,
+          `デッキに高いレアリティのヒーローが足りないため、マーケットの枠が約${empty}%空になります。デッキを見直しますか？`,
+          () => {
+            app.ui.modal = null;
+            actions.openDeck("area");
+          },
+          { yes: "デッキを見直す", no: "このまま出撃", onNo: () => actions.sortie(key, { force: true }) },
+        );
+      return render();
+    }
+    app.ui.modal = null;
     const story = app.story;
     const first = !story.flags[`met:${key}`] && !Story.isCleared(story, key);
     Story.joinAtStart(story, key);
-    await playScene(stageIntro(parsed.area, parsed.index, { first }));
+    await playScene(stageIntro(parsed.area, parsed.index, { first, boss: app.db.def(parsed.area.boss) }));
     story.flags[`met:${key}`] = true;
     saveStoryNow();
     app.run = Story.newStageRun(app.db, story, key, randomSeed());
@@ -615,7 +657,7 @@ const actions = {
     save();
     enterStage();
   },
-  /** ステージ結果の「つぎへ」: パーツ獲得 → 改良の演出 → エリアクリアの会話 → 画面へ戻る */
+  /** ステージ結果の「つぎへ」: パーツ獲得 → 改良の演出 → ノードクリアの会話 → 画面へ戻る */
   async afterStageResult() {
     const info = app.ui.stageResult;
     const area = areaById(info.areaId);
@@ -629,8 +671,10 @@ const actions = {
       return;
     }
     if (res?.upgradedTo) await playScene(upgradeScene(res.upgradedTo - 1, res.upgradedTo, res.unlockedAreas), { bgm: "bgm_title" });
-    if (res?.first && Story.areaCleared(app.story, area)) {
-      await playScene(area.id === TUTORIAL_AREA ? TUTORIAL_DONE : areaClearScene(area));
+    if (res?.areaCleared) {
+      // 改良の会話で行ける場所を話していなければ、ここで（同じ時代のほかの国が開いたとき）
+      const opened = res.upgradedTo ? [] : res.unlockedAreas;
+      await playScene(area.id === TUTORIAL_AREA ? TUTORIAL_DONE : areaClearScene(area, opened));
       return actions.openMap();
     }
     actions.openArea(area.id);
@@ -785,6 +829,10 @@ const actions = {
       app.ui.selected = { type: "unit", zone, index };
     }
     render();
+  },
+  /** 空の枠（デッキにそのレアリティ以上のヒーローがいない）をタップしたとき */
+  emptyOfferInfo(rarity) {
+    toast(`デッキに${RARITY[rarity].name}以上のヒーローがいないため、この枠は空です。ステージ選択の「デッキ」で入れておきましょう`);
   },
   clickOffer(index) {
     const sel = app.ui.selected;
@@ -987,17 +1035,18 @@ async function boot() {
   audio.playBgm("bgm_title");
   document.addEventListener("pointerdown", () => audio.unlock(), { once: true });
   try {
-    const [heroes, enemies, extensions, manifest] = await Promise.all([
+    const [heroes, enemies, extensions, bosses, manifest] = await Promise.all([
       loadJson("data/heroes.json"),
       loadJson("data/enemies.json"),
       loadJson("data/extensions.json"),
+      loadJson("data/bosses.json"),
       loadJson("data/manifest.json"),
     ]);
-    app.db = createDb({ heroes, enemies, extensions });
+    app.db = createDb({ heroes, enemies, extensions, bosses });
     app.backgrounds = manifest.backgrounds;
     app.battleBackgrounds = manifest.battleBackgrounds ?? [];
     const saved = loadStory();
-    app.story = saved?.version === Story.STORY_VERSION ? saved : Story.newStory();
+    app.story = saved?.cleared ? Story.migrateStory(saved) : Story.newStory();
   } catch (err) {
     clear(root).append(h("div", { class: "loading error" }, `データの読み込みに失敗しました: ${err.message}`));
     throw err;

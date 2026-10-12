@@ -502,6 +502,22 @@
   animation: telop-num 0.5s var(--spring) 0.15s both;
 }
 
+/* レイドボスのウェーブ */
+.stage-telop.boss .telop-band {
+  border-color: #ff4f6d;
+  background: linear-gradient(90deg, #1a0408, #3c0a16 50%, #1a0408);
+}
+
+.stage-telop.boss .telop-band .t-small {
+  color: #ff8fa3;
+}
+
+.stage-telop.boss .telop-band .t-num {
+  font-size: clamp(40px, 13vw, 72px);
+  text-shadow: 4px 4px 0 #b0142f;
+  white-space: nowrap;
+}
+
 @keyframes telop-num {
   from {
     transform: scale(2.2);

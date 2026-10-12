@@ -4,8 +4,8 @@
 import { h, img } from "./h.js";
 import { compactMaterial, compactUnit, extensionIcon, gumAmount, materialCard, pips, unitCard } from "./components.js";
 import { COLUMN_NAMES, materialById, playerById } from "../engine/content.js";
-import { MATERIAL_SLOT, WINS_TO_CLEAR, marketOdds, sellValue } from "../engine/balance.js";
-import { bestAffordableOffer, effectiveRank, rerollCost } from "../engine/market.js";
+import { MATERIAL_SLOT, RARITY, WINS_TO_CLEAR, marketOdds, sellValue } from "../engine/balance.js";
+import { bestAffordableOffer, effectiveRank, isEmptyOffer, rerollCost } from "../engine/market.js";
 import { canStartBattle, playerTeam, runGoal, runMods, targetMaterial } from "../engine/run.js";
 import { areaById, stageLabel } from "../engine/world.js";
 import { allUnits, canAcquire, countCopies, mergePreview, mergeProgress } from "../engine/roster.js";
@@ -16,15 +16,16 @@ function stat(label, value, cls = "") {
   return h("div", { class: `stat ${cls}` }, h("small", null, label), h("b", { class: "num" }, value));
 }
 
-export function winGauge(wins, total = WINS_TO_CLEAR, label = "勝利") {
+/** 勝利（ウェーブ）のゲージ。boss のときは最後の1つがレイドボス */
+export function winGauge(wins, total = WINS_TO_CLEAR, label = "勝利", { boss = false } = {}) {
   return h(
     "div",
-    { class: "win-gauge", "aria-label": `${label} ${wins}/${total}` },
+    { class: `win-gauge${boss ? " has-boss" : ""}`, "aria-label": `${label} ${wins}/${total}` },
     h("small", null, `${label} ${wins}/${total}`),
     h(
       "div",
       { class: "segs" },
-      Array.from({ length: total }, (_, i) => h("i", { class: i < wins ? "on" : "" })),
+      Array.from({ length: total }, (_, i) => h("i", { class: `${i < wins ? "on" : ""}${boss && i === total - 1 ? " boss" : ""}` })),
     ),
   );
 }
@@ -42,7 +43,7 @@ export function hud(app) {
     ),
     run.story ? stat("ステージ", stageLabel(areaById(run.story.areaId), run.story.index), "story-stage") : stat("ステージ", run.stage),
     stat("ライフ", run.lives, `lives${run.lives <= (run.story ? 1 : 3) ? " danger" : ""}`),
-    run.story ? winGauge(run.wins, runGoal(run), "ウェーブ") : winGauge(run.wins),
+    run.story ? winGauge(run.wins, runGoal(run), "ウェーブ", { boss: Boolean(run.story.boss) }) : winGauge(run.wins),
     h("div", { class: "hud-gum" }, gumAmount(run.gum, "big")),
     h(
       "div",
@@ -166,6 +167,15 @@ function offerView(app, offer, index) {
   const style = { "--d": `${index * 0.06}s` };
   if (!offer) {
     return h("div", { class: `offer sold${deal}${index === MATERIAL_SLOT ? " material-slot" : ""}`, style }, "SOLD");
+  }
+  // デッキにそのレアリティ以上のヒーローがいない枠（ストーリー）
+  if (isEmptyOffer(offer)) {
+    return h(
+      "div",
+      { class: `offer empty-offer r${offer.rarity}${deal}`, style, onClick: () => app.actions.emptyOfferInfo(offer.rarity) },
+      h("b", { class: "empty-rarity" }, RARITY[offer.rarity].name),
+      h("small", null, "デッキに\nいない"),
+    );
   }
   const merge = offer.type === "hero" ? mergePreview(run, offer.defId) : null;
   const lv1 = offer.type === "hero" ? countCopies(run, offer.defId, 1) : 0;

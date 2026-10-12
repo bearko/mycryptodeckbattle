@@ -23,20 +23,44 @@ export function topRarity(rank) {
   return 1;
 }
 
+/** そのレアリティのヒーロー。いなければ近いレアリティ（下 → 上の順）から選ぶ（ストーリーのデッキは種類が少ないため） */
 export function poolByRarity(db, pool, rarity) {
   for (let r = rarity; r >= 1; r--) {
+    const list = pool.filter((id) => db.def(id).rarity === r);
+    if (list.length) return list;
+  }
+  for (let r = rarity + 1; r <= 5; r++) {
     const list = pool.filter((id) => db.def(id).rarity === r);
     if (list.length) return list;
   }
   return pool;
 }
 
+/** そのレアリティ以上で、いちばん近いレアリティのヒーロー（いなければ空） */
+export function poolAtOrAbove(db, pool, rarity) {
+  for (let r = rarity; r <= 5; r++) {
+    const list = pool.filter((id) => db.def(id).rarity === r);
+    if (list.length) return list;
+  }
+  return [];
+}
+
+/**
+ * ヒーローの枠を1つ引く。ストーリー（チュートリアル以外）は strictRarity: ランクで決まったレアリティ
+ * 以上のヒーローがデッキにいなければ、その枠は空（type: "none"）。低いレアリティだけのデッキでは
+ * 難しいステージほど並ぶヒーローが減る
+ */
 export function rollHeroOffer(owner, db, rng) {
   const odds = marketOdds(effectiveRank(owner));
   const rarity = rng.weighted(odds.map((w, i) => [i + 1, w]).filter(([, w]) => w > 0));
-  const defId = rng.pick(poolByRarity(db, owner.heroPool, rarity));
+  const list = owner.story?.strictRarity ? poolAtOrAbove(db, owner.heroPool, rarity) : poolByRarity(db, owner.heroPool, rarity);
+  if (!list.length) return { type: "none", rarity };
+  const defId = rng.pick(list);
   return { type: "hero", defId, cost: RARITY[db.def(defId).rarity].cost };
 }
+
+/** 空の枠（デッキにそのレアリティ以上のヒーローがいない）か */
+export const isEmptyOffer = (offer) => offer?.type === "none";
 
 export function rollMaterialOffer(rng) {
   const m = rng.pick(MATERIALS);
@@ -86,7 +110,7 @@ export function reroll(owner, db, rng) {
 /** 1枠ずつの取り置き（GUMが足りなくてもできる）。戻り値は取り置き後の状態、枠が空なら null */
 export function toggleOfferLock(owner, index) {
   const offer = owner.market.offers[index];
-  if (!offer) return null;
+  if (!offer || isEmptyOffer(offer)) return null;
   offer.locked = !offer.locked;
   return offer.locked;
 }
@@ -98,6 +122,7 @@ export function toggleOfferLock(owner, index) {
 export function buyOffer(owner, db, index) {
   const offer = owner.market.offers[index];
   if (!offer) return { ok: false, error: "売り切れです" };
+  if (isEmptyOffer(offer)) return { ok: false, error: `デッキに${RARITY[offer.rarity].name}以上のヒーローがいません` };
   if (owner.gum < offer.cost) return { ok: false, error: "GUMが足りません" };
 
   if (offer.type === "hero") {

@@ -180,12 +180,14 @@ export function stageTelop(app, info, onDone) {
   const el = h(
     "div",
     { class: "stage-telop", onClick: () => onDone() },
-    h(
-      "div",
-      { class: "telop-band" },
-      h("span", { class: "t-small" }, app.run.story ? "WAVE" : "STAGE"),
-      h("span", { class: "t-num" }, String(app.run.story ? app.run.wins + 1 : app.run.stage).padStart(2, "0")),
-    ),
+    info.boss
+      ? h("div", { class: "telop-band boss" }, h("span", { class: "t-small" }, "WARNING"), h("span", { class: "t-num" }, "RAID BOSS"))
+      : h(
+          "div",
+          { class: "telop-band" },
+          h("span", { class: "t-small" }, app.run.story ? "WAVE" : "STAGE"),
+          h("span", { class: "t-num" }, String(app.run.story ? app.run.wins + 1 : app.run.stage).padStart(2, "0")),
+        ),
     h("div", { class: `telop-figure ${player.id}` }, playerImg(player, pick(player.poses))),
     h(
       "div",
@@ -197,6 +199,7 @@ export function stageTelop(app, info, onDone) {
     ),
   );
   el.style.setProperty("--player", player.color);
+  if (info.boss) el.classList.add("boss");
   return el;
 }
 
@@ -385,13 +388,13 @@ export function menuModal(app) {
   );
 }
 
-export function confirmModal(app, message, onYes) {
+export function confirmModal(app, message, onYes, { yes = "はい", no = "いいえ", onNo = null } = {}) {
   return modal(null, h("p", { class: "confirm-text" }, message), {
     footer: h(
       "div",
       { class: "modal-actions" },
-      h("button", { class: "btn danger", onClick: onYes }, "はい"),
-      h("button", { class: "btn", onClick: () => app.actions.closeModal() }, "いいえ"),
+      h("button", { class: onNo ? "btn primary" : "btn danger", onClick: onYes }, yes),
+      h("button", { class: "btn", onClick: onNo ?? (() => app.actions.closeModal()) }, no),
     ),
   });
 }
@@ -404,7 +407,9 @@ export function resultPanel(app, result) {
   const run = app.run;
   const player = playerById(run.playerId);
   const won = result.won;
-  const rows = [h("div", { class: "result-row" }, run.story ? winGauge(run.wins, runGoal(run), "ウェーブ") : winGauge(run.wins))];
+  const rows = [
+    h("div", { class: "result-row" }, run.story ? winGauge(run.wins, runGoal(run), "ウェーブ", { boss: Boolean(run.story.boss) }) : winGauge(run.wins)),
+  ];
   if (won) {
     if (result.gumGained) rows.push(h("div", { class: "result-row" }, gumAmount(`+${result.gumGained}`)));
     if (result.buffed) {
@@ -520,8 +525,8 @@ export function fighterModal(app, battle, sideIndex, slot, onClose) {
           "div",
           { class: "detail-badges" },
           h("span", { class: `side-chip ${isEnemy ? "enemy" : "player"}` }, isEnemy ? "相手" : "自分"),
-          h("span", { class: "lane-chip" }, COLUMN_NAMES[f.slot % PARTY_COLS]),
-          rarityBadge(def.rarity),
+          f.rotation ? null : h("span", { class: "lane-chip" }, COLUMN_NAMES[f.slot % PARTY_COLS]),
+          f.rotation ? h("span", { class: "boss-chip" }, "RAID BOSS") : rarityBadge(def.rarity),
           def.faction ? factionBadge(def.faction) : null,
           f.slot === mvpSlot(side) && f.contribution > 0 ? h("span", { class: "mvp" }, "MVP") : null,
         ),
@@ -535,7 +540,7 @@ export function fighterModal(app, battle, sideIndex, slot, onClose) {
         multPct ? h("div", { class: `detail-notes${multPct < 0 ? " down" : ""}` }, `バトル中の効果量 ${multPct > 0 ? "+" : ""}${multPct}%`) : null,
       ),
     ),
-    h(
+    f.rotation ? bossRotation(f) : h(
       "div",
       { class: "skill-block" },
       h("div", { class: "skill-name" }, def.skill_name),
@@ -555,12 +560,45 @@ export function fighterModal(app, battle, sideIndex, slot, onClose) {
       ),
     ),
     h("p", { class: "merge-rule" }, "このバトルでの数値（エクステンション・Lvを反映）。活躍度はダメージ・回復・シールドなどの合計です。"),
-    h("details", { class: "source-text" }, h("summary", null, "元のスキル（MCH）"), h("p", null, def.source_text)),
+    h(
+      "details",
+      { class: "source-text" },
+      h("summary", null, "元のスキル（MCH）"),
+      h("p", null, def.skills ? def.skills.map((k) => `${k.name}: ${k.text}`).join("\n") : def.source_text),
+    ),
   );
   return modal(null, body, {
     className: "detail-modal review-modal",
     footer: h("button", { class: "btn modal-close", onClick: onClose }, "閉じる"),
   });
+}
+
+/** レイドボスのスキル（順番に使う。大技に印） */
+function bossRotation(f) {
+  return h(
+    "div",
+    { class: "skill-block boss-rotation" },
+    f.rotation.map((k, i) =>
+      h(
+        "div",
+        { class: `rotation-skill${k.final ? " final" : ""}` },
+        h("div", { class: "skill-name" }, h("span", { class: "num" }, `${i + 1}`), k.name, k.final ? h("span", { class: "boss-chip" }, "大技") : null),
+        h(
+          "ul",
+          { class: "skill-lines" },
+          k.effects.map((e) =>
+            h(
+              "li",
+              { class: `skill-line kind-${e.kind}` },
+              h("span", { class: "trigger trigger-charge" }, `チャージ${k.cd}秒`),
+              img(KIND_ICONS[e.kind], "kind-icon"),
+              h("span", { class: "skill-text" }, effectText(e.kind, formatValue(e.kind, e.value))),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -586,10 +624,11 @@ function helpPages(app) {
     ["エネミー", "CPUの部隊を構成するユニット。"],
     ["プレイヤー", "クリスくん・マインちゃん・MAIから選ぶ。プレイヤースキルを持つ。"],
     ["クエスト", "フリーバトルの1回の挑戦。10勝でクリア、ライフが尽きると失敗。"],
-    ["エリア", "ストーリーの行き先。時代（近代・近世・中世・古代）×地域。ステージが3つ。"],
+    ["ノード", "ストーリーの行き先。時代（近代・近世・中世・古代）×地域。ステージが10個（近代・日本は3個）、最後のステージにレイドボス。"],
     ["ウェーブ", "ストーリーのステージの1戦。決まった数のウェーブを勝ち抜くとステージクリア（ライフ3）。"],
-    ["デッキ", "ステージに連れて行くヒーロー（最大8種類）。マーケットにはデッキのヒーローだけが並ぶ。"],
-    ["タイムマシン", "マインの発明（合体ロボ）。パーツを集めて改良すると、行ける国・時代が増える。"],
+    ["レイドボス", "ノードの最終ステージの最後のウェーブに出る大きなエネミー。スキルを順番に使い、大技（FINAL）は予告される。倒すとパーツ。"],
+    ["デッキ", "ステージに連れて行くヒーロー（最大8種類、Common か Uncommon を1体以上）。マーケットにはデッキのヒーローだけが並ぶ。マーケットのランクで決まったレアリティ（以上）のヒーローがデッキにいないと、その枠は空になる（近代・日本以外）。"],
+    ["タイムマシン", "マインの発明（合体ロボ）。ノードをクリアするとパーツが1つ。そろえて改良すると、行ける時代が増える。同じ時代のほかの国は、その時代の最初のノードをクリアすると開く。"],
     ["ステージ", "マーケットでの準備→バトルの1サイクル。"],
     ["GUM", "マーケットで使う通貨。ステージ開始時に獲得。"],
     ["マーケット", "ヒーローとマテリアルを購入する場所。↻でラインナップ更新。南京錠をタップすると1枠ずつ取り置きでき、更新しても次のステージでも残る（GUMが足りなくても取り置ける）。"],
@@ -605,7 +644,7 @@ function helpPages(app) {
     ["エクステンション（EXT）", "所持しているだけで効果を発揮する装備品。重複して効果が上がる。"],
     ["マテリアル", "魔石など。購入した瞬間に効果を発揮。1ステージ1回まで。"],
     ["クリプトエナジー", "ヒーローのLvを1上げる（宝箱から入手）。"],
-    ["宝箱", "ステージ3・6・9で3つの報酬から1つを選べる。"],
+    ["宝箱", "ステージ3・6・9で3つの報酬から1つを選べる（フリーバトルのみ）。"],
     ["復活", "ライフが初めて0になったとき、ライフ1で1度だけ復活できる。"],
     ["勢力", "朱雀・青龍・玄武・黄竜・白虎。エクステンションの対象になる。"],
   ];
@@ -646,7 +685,7 @@ function helpPages(app) {
           h("li", null, "「バトル開始」でエネミー部隊とオートバトル。"),
           h("li", null, "負けるとライフが減る（ステージ1〜2: 1、3〜4: 2、5以降: 3）。"),
           h("li", null, `${WINS_TO_CLEAR}勝でクエストクリア！（フリーバトル）`),
-          h("li", null, "ストーリーでは、ステージのウェーブをすべて勝ち抜くとクリア。ヒーローが仲間になり、タイムマシンのパーツが手に入る。"),
+          h("li", null, "ストーリーでは、ステージのウェーブをすべて勝ち抜くとクリア。ヒーローが仲間になる。ノードの最後のレイドボスを倒すと、タイムマシンのパーツが手に入る。"),
         ),
       ],
     },

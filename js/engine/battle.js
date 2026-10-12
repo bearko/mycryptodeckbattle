@@ -8,6 +8,7 @@
 // - 出血: 0.5秒ごとにスタック数ダメージ→1減少 / 毒: 1秒ごとにスタック数ダメージ（減少しない）
 // - 出血・毒ダメージはシールドに対して15%軽減
 // - 30秒でサドンデス開始。0.5秒ごとに両陣営へ増加していくダメージ
+// - rotation を持つユニット（レイドボス）は、発動のたびに次のスキルへ進む。チャージ時間もスキルごと
 
 import {
   TICK,
@@ -233,9 +234,16 @@ export function stepBattle(b) {
       f.charge += TICK;
       if (f.charge >= f.cd - 1e-9) {
         f.charge = Math.max(0, f.charge - f.cd);
+        const skill = f.rotation ? f.rotation[f.casts % f.rotation.length] : null;
         f.casts += 1;
+        if (skill) {
+          f.effects = skill.effects;
+          f.cd = f.rotation[f.casts % f.rotation.length].cd;
+        }
         for (let i = 0; i < f.multicast; i++) queue.push({ side: side.index, fighter: f });
-        events.push({ type: "cast", side: side.index, slot: f.slot, trigger: "charge", multicast: f.multicast });
+        const ev = { type: "cast", side: side.index, slot: f.slot, trigger: "charge", multicast: f.multicast };
+        if (skill) Object.assign(ev, { skill: skill.name, final: skill.final });
+        events.push(ev);
       }
     }
   }
@@ -275,6 +283,11 @@ export function stepBattle(b) {
     end(b, l.hp / l.maxHp >= r.hp / r.maxHp ? 1 : 0, events);
   }
   return events;
+}
+
+/** rotation を持つユニットが次に使うスキル */
+export function nextSkill(f) {
+  return f.rotation ? f.rotation[f.casts % f.rotation.length] : null;
 }
 
 /** 決着まで一気に進める */

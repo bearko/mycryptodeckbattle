@@ -5,7 +5,7 @@
 // 仮想プレイヤーにステージ1から同じルールで買い物をさせ、その日の盤面を作る。
 
 import { createRng } from "./rng.js";
-import { stageIncome } from "./balance.js";
+import { stageIncome, storyCpuBonus } from "./balance.js";
 import { rollMarket } from "./market.js";
 import { emptyRoster } from "./roster.js";
 import { botShop, unitValue } from "./bot.js";
@@ -35,15 +35,9 @@ export function opponentSeed(run, stage) {
   return (Math.imul(run.seed ^ 0x9e3779b9, 2654435761) + stage * 40503) >>> 0;
 }
 
-/**
- * ストーリーのCPUの強さ。デッキで種類が絞られるプレイヤーより不利にならないよう、
- * マーケットランクは難しさの半分だけ上げ、収入は控えめにする（チュートリアルのエリアは handicap でさらに弱め）。
- */
+/** ストーリーのCPUの強さ（補正の係数は balance.js の STORY_BALANCE） */
 export function storyCpuTuning(story) {
-  return {
-    rank: Math.floor(story.difficulty / 2),
-    income: Math.floor(story.difficulty / 2) - 2 - (story.handicap ?? 0),
-  };
+  return storyCpuBonus(story);
 }
 
 /**
