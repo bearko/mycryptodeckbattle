@@ -1,5 +1,7 @@
 // ストーリーのシーン（会話劇）を再生する。台本は js/story/scenes.js。
-// 背景・立ち絵（左/中央/右）・名前つきの会話枠。タップで次へ、文字送り中のタップは全文表示。SKIP で最後まで飛ばす。
+// 背景・立ち絵・名前つきの会話枠。タップで次へ、文字送り中のタップは全文表示。SKIP で最後まで飛ばす。
+// 立ち絵は2体まで: 左はクリス（exit / enter で消す・出す）、右はそれ以外の誰か1体（新しく出ると入れ替わる）。
+// 右の役はクリスの方（左）を向く。立ち絵を出さずに話すときは say に offscreen: true。
 
 import { h, img } from "./h.js";
 import { shake } from "./fx.js";
@@ -25,7 +27,6 @@ const CAST = {
       wave: "chris_wave.png",
       cry: "chris_cry_loop.gif",
     },
-    at: "left",
   },
   mine: {
     name: "マイン",
@@ -42,7 +43,6 @@ const CAST = {
       wink: "navi_ain_wink.png",
       greet: "navi_ain_greeting_loop.gif",
     },
-    at: "right",
   },
 };
 
@@ -131,11 +131,12 @@ export class ScenePlayer {
     }
     // enter / exit は fx（登場・退場のしかた）を持つので、単独の fx より先に見る
     if (step.enter) {
-      this.showActor(step.enter, { at: step.at, image: step.image, fx: step.fx });
+      this.showActor(step.enter, { image: step.image, fx: step.fx, name: step.name });
       return this.auto(step.fx === "drop" ? 650 : 380);
     }
     if (step.exit) {
-      this.hideActor(step.exit, step.fx);
+      if (step.exit === "all") for (const key of [...this.actors.keys()]) this.hideActor(key, step.fx);
+      else this.hideActor(step.exit, step.fx);
       return this.auto(500);
     }
     if (step.fx) return this.effect(step.fx);
@@ -143,7 +144,8 @@ export class ScenePlayer {
     if (step.title) return this.showTitle(step.title, step.sub);
     if (step.narr) return this.speak(null, step.narr);
     if (step.say) {
-      const actor = this.showActor(step.say, { at: step.at, face: step.face });
+      // offscreen: 立ち絵を出さず（入れ替えず）に話す。右にボスなどを出したまま、マインが説明するとき
+      const actor = step.offscreen ? { el: null, info: this.cast(step.say, { face: step.face }) } : this.showActor(step.say, { face: step.face });
       return this.speak(actor, step.text);
     }
     this.next();
@@ -157,26 +159,40 @@ export class ScenePlayer {
   }
 
   /** 役（chris / mine / hero:ID / enemy）の表示名・色・画像 */
-  cast(key, { face, image } = {}) {
+  cast(key, { face, image, name } = {}) {
     if (CAST[key]) {
       const c = CAST[key];
-      return { name: c.name, color: c.color, src: DIR + (c.faces[face] ?? c.faces.normal), pixel: true, at: c.at };
+      return { name: c.name, color: c.color, src: DIR + (c.faces[face] ?? c.faces.normal), pixel: true };
     }
     if (key.startsWith("hero:")) {
       const def = this.db.def(`h${key.slice(5)}`);
-      return { name: def.name, color: "#ffd23f", src: def.image, pixel: true, at: "center", hero: true };
+      return { name: def.name, color: "#ffd23f", src: def.image, pixel: true, hero: true };
     }
-    return { name: "エネミー", color: "#ff4f6d", src: image ?? this.actors.get(key)?.src, pixel: true, at: "right", enemy: true };
+    // enemy: 通常のエネミー / boss: レイドボス（大きく描く。name で名前）。MCHのエネミーは元から左向き
+    const prev = this.actors.get(key);
+    return {
+      name: name ?? prev?.info.name ?? "エネミー",
+      color: "#ff4f6d",
+      src: image ?? prev?.src,
+      pixel: true,
+      enemy: true,
+      boss: key === "boss",
+    };
   }
 
-  showActor(key, { at, face, image, fx } = {}) {
-    const info = this.cast(key, { face, image });
-    const pos = at ?? this.actors.get(key)?.at ?? info.at;
+  showActor(key, { face, image, fx, name } = {}) {
+    const info = this.cast(key, { face, image, name });
+    // 左はクリスだけ。ほかは右（同じ位置にいる役は入れ替わる）
+    const pos = key === "chris" ? "left" : "right";
     let actor = this.actors.get(key);
     if (!actor) {
       // 同じ位置にいる別の役は退場させる
       for (const [k, a] of this.actors) if (a.at === pos) this.hideActor(k);
-      const el = h("div", { class: `actor ${pos}${info.hero ? " hero" : ""}${info.enemy ? " enemy" : ""}${fx === "drop" ? " drop" : " enter"}` }, img(info.src, info.pixel ? "pixel" : "", info.name));
+      const el = h(
+        "div",
+        { class: `actor ${pos}${info.hero ? " hero" : ""}${info.enemy ? " enemy" : ""}${info.boss ? " boss" : ""}${fx === "drop" ? " drop" : " enter"}` },
+        img(info.src, info.pixel ? "pixel" : "", info.name),
+      );
       this.stage.append(el);
       actor = { el, at: pos, src: info.src, info };
       this.actors.set(key, actor);
@@ -207,9 +223,13 @@ export class ScenePlayer {
       this.nameEl.textContent = actor.info.name;
       this.nameEl.style.setProperty("--speaker", actor.info.color);
       this.nameEl.hidden = false;
-      actor.el.classList.remove("talk");
-      void actor.el.offsetWidth;
-      actor.el.classList.add("talk");
+      if (actor.el) {
+        actor.el.classList.remove("talk");
+        void actor.el.offsetWidth;
+        actor.el.classList.add("talk");
+      } else {
+        for (const a of this.actors.values()) a.el.classList.add("dim");
+      }
     } else {
       this.nameEl.hidden = true;
       this.box.classList.add("narr");

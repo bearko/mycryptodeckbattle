@@ -78,6 +78,7 @@
   right: 2%;
 }
 
+/* 右の役（マイン・ヒーロー）は元が右向きなので、反転してクリスの方を向く */
 .actor.right img {
   transform: scaleX(-1);
 }
@@ -107,9 +108,22 @@
   z-index: -1;
 }
 
+/* MCHのエネミーは元から左向き（クリスの方）なので、右に置いても反転しない */
 .actor.enemy img {
-  transform: scaleX(-1);
+  transform: none;
   filter: drop-shadow(0 0 12px rgba(255, 79, 109, 0.6));
+}
+
+/* レイドボス（128pxのドット絵。元から左向き） */
+.actor.boss {
+  /* スマホの幅では、左のクリスに重ならない大きさまで */
+  height: min(52%, 300px, 60vw);
+  bottom: 4%;
+}
+
+.actor.boss img {
+  transform: none;
+  filter: drop-shadow(0 0 16px rgba(255, 79, 109, 0.75)) drop-shadow(0 0 2px #fff);
 }
 
 .actor.dim {
@@ -1605,4 +1619,236 @@ img.silhouette {
 .parts-screen.done .complete-note {
   animation: telop-num 0.45s var(--spring) both;
   display: inline-block;
+}
+
+/* ------------------------------------------------------------- ノード（10ステージ）とレイドボス */
+
+/* 10ステージのノードはタイルを小さく */
+.stages-10 .node-meet {
+  width: clamp(34px, 10vw, 50px);
+  height: clamp(34px, 10vw, 50px);
+}
+
+.stages-10 .node-tile {
+  width: 50px;
+  height: 28px;
+  clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 8px 100%, 0 50%);
+}
+
+.stages-10 .node-tile b {
+  font-size: 12px;
+}
+
+.stages-10 .node-tile .lock-icon {
+  right: 8px;
+  width: 10px;
+  height: 10px;
+}
+
+.stages-10 .node-check {
+  right: 5px;
+  top: 0;
+  font-size: 11px;
+}
+
+.stages-10 .stage-node {
+  gap: 2px;
+}
+
+/* 出会うヒーローがいない拠点はエネミーを小さく */
+.stage-node.enemy .node-meet {
+  transform: scale(0.82);
+  filter: drop-shadow(0 0 4px rgba(255, 79, 109, 0.5));
+}
+
+img.flip {
+  transform: scaleX(-1);
+}
+
+/* 最終ステージ: レイドボス */
+.stage-node.boss .node-meet,
+.stages-10 .stage-node.boss .node-meet {
+  width: clamp(64px, 19vw, 96px);
+  height: clamp(64px, 19vw, 96px);
+  animation: boss-float 3s ease-in-out infinite;
+}
+
+.stage-node.boss .node-meet img {
+  filter: drop-shadow(0 0 8px rgba(255, 79, 109, 0.8)) drop-shadow(0 4px 0 rgba(0, 0, 0, 0.5));
+}
+
+.stage-node.boss.locked .node-meet img {
+  filter: brightness(0.25) drop-shadow(0 0 6px rgba(255, 79, 109, 0.9));
+}
+
+.stage-node.boss .node-tile {
+  box-shadow: inset 0 0 0 2px rgba(255, 79, 109, 0.6), inset 0 -4px 0 #ff4f6d;
+}
+
+@keyframes boss-float {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-4px) scale(1.03);
+  }
+}
+
+.boss-tag,
+.boss-chip {
+  font-family: var(--font-num);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #fff;
+  background: #c8183a;
+  clip-path: polygon(5px 0, 100% 0, calc(100% - 5px) 100%, 0 100%);
+}
+
+.boss-tag {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  padding: 0 8px;
+  font-size: 10px;
+}
+
+.boss-chip {
+  padding: 1px 10px;
+  font-size: 11px;
+}
+
+.meet-art.boss {
+  width: 72px;
+  height: 72px;
+  margin: -10px 0 -6px;
+  background: radial-gradient(circle, rgba(255, 79, 109, 0.35), transparent 70%);
+}
+
+.stage-card.boss {
+  box-shadow: inset 0 0 0 1px rgba(255, 79, 109, 0.45);
+}
+
+.reward-face {
+  width: 22px;
+  height: 22px;
+  align-self: center;
+  margin: -4px 0;
+}
+
+/* デッキのボタン: デッキの外に新しい仲間がいる数 */
+.deck-btn {
+  position: relative;
+}
+
+.new-count {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  font-style: normal;
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
+  color: #fff;
+  background: #ff4f6d;
+  border-radius: 9px;
+  animation: pin-pulse 1.4s ease-in-out infinite;
+}
+
+.new-badge {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  font-style: normal;
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 9px;
+  padding: 0 4px;
+  color: #fff;
+  background: #ff4f6d;
+}
+
+/* デッキ画面: 出撃するステージのマーケットに並ぶレアリティと、デッキの数 */
+.deck-odds {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 6px 8px;
+}
+
+.deck-odds-label {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.odds-row {
+  display: flex;
+  gap: 2px;
+}
+
+.odds-cell {
+  flex: var(--w) 1 0;
+  min-width: 26px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2px 0;
+  background: color-mix(in srgb, var(--rc) 22%, rgba(0, 0, 0, 0.4));
+  box-shadow: inset 0 -2px 0 var(--rc);
+  line-height: 1.1;
+}
+
+.odds-cell b {
+  font-family: var(--font-num);
+  font-size: 11px;
+  color: var(--rc);
+}
+
+.odds-cell small {
+  font-size: 10px;
+}
+
+.odds-cell .have {
+  font-style: normal;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.odds-cell.zero {
+  opacity: 0.35;
+}
+
+.odds-cell.missing {
+  background: repeating-linear-gradient(-45deg, rgba(255, 79, 109, 0.25) 0 4px, rgba(0, 0, 0, 0.4) 4px 8px);
+  box-shadow: inset 0 0 0 1px #ff4f6d;
+}
+
+.odds-cell.missing .have {
+  color: #ff8fa3;
+}
+
+.odds-warn,
+.deck-problem {
+  margin: 0;
+  font-size: 11px;
+  color: #ff8fa3;
+}
+
+.deck-problem {
+  margin-bottom: 4px;
+  text-align: center;
+}
+
+.deck-actions .btn.disabled {
+  opacity: 0.5;
+}
+
+.auto-deck-btn {
+  white-space: nowrap;
 }
