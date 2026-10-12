@@ -17,7 +17,8 @@ import {
   stageKey,
   stageLabel,
 } from "../engine/world.js";
-import { areaCleared, areaUnlocked, eraUnlocked, isCleared, machineInfo, nextStage, stageUnlocked } from "../engine/story.js";
+import { areaCleared, areaUnlocked, eraUnlocked, isCleared, machineInfo, machineProgress, nextStage, stageUnlocked } from "../engine/story.js";
+import { machineCanvas } from "./machine-reveal.js";
 
 const bgUrl = (id) => `assets/backgrounds/${id}.webp`;
 
@@ -51,23 +52,15 @@ function header(title, sub, { back, right = null } = {}) {
   );
 }
 
-/** 次の合体ロボのアートを必要数に分割したパーツ（集めた分だけ光る） */
-export function partPieces(story, { size = "" } = {}) {
-  const info = machineInfo(story);
-  if (!info.nextMachine) return h("div", { class: "parts done" }, "MAX");
-  const n = info.need;
+/** 次の合体ロボのシルエット（進み具合の分だけ実体化）と割合 */
+export function nextMachineProgress(story, { cls = "" } = {}) {
+  const prog = machineProgress(story);
+  if (!prog.next) return h("div", { class: `next-machine done ${cls}` }, h("b", { class: "num" }, "MAX"));
   return h(
     "div",
-    { class: `parts ${size}`, style: { "--n": n }, "aria-label": `パーツ ${info.parts}/${n}` },
-    Array.from({ length: n }, (_, i) =>
-      h("i", {
-        class: `piece${i < info.parts ? " on" : ""}`,
-        style: {
-          backgroundImage: `url("${info.nextMachine.image}")`,
-          backgroundPosition: `${n > 1 ? (i / (n - 1)) * 100 : 0}% 50%`,
-        },
-      }),
-    ),
+    { class: `next-machine ${cls}`, "aria-label": `次の改良まで ${Math.round(prog.ratio * 100)}%` },
+    h("div", { class: "next-machine-art" }, machineCanvas(prog.next.image, prog.ratio)),
+    h("b", { class: "num" }, `${Math.round(prog.ratio * 100)}%`),
   );
 }
 
@@ -83,13 +76,11 @@ export function machinePanel(story) {
       { class: "machine-body" },
       h("small", null, `TIME MACHINE Lv${info.level}`),
       h("b", null, info.short),
-      h(
-        "div",
-        { class: "machine-parts" },
-        partPieces(story),
-        info.nextMachine ? h("span", { class: "num" }, `${info.parts}/${info.need}`) : null,
-      ),
+      info.nextMachine
+        ? h("small", { class: "machine-next-note" }, `次の改良まで あと${info.need - info.parts}ステージ`)
+        : h("small", { class: "machine-next-note" }, "これ以上は改良できません"),
     ),
+    nextMachineProgress(story),
   );
 }
 
@@ -316,7 +307,6 @@ export function deckScreen(app) {
 // ---------------------------------------------------------------------------
 
 export function stageResultScreen(app, info) {
-  const story = app.story;
   const area = areaById(info.areaId);
   const label = stageLabel(area, info.index);
   if (!info.cleared) {
@@ -360,33 +350,57 @@ export function stageResultScreen(app, info) {
             ),
           )
         : null,
-      res.part
-        ? h(
-            "div",
-            { class: "part-get" },
-            h("small", null, res.upgradedTo ? "パーツがそろった！" : "タイムマシンのパーツ"),
-            partPiecesFor(story, res),
-          )
-        : null,
+      res.part ? h("div", { class: "part-chip" }, img("assets/story/machine-1.png", "pixel", ""), h("span", null, "タイムマシンのパーツ"), h("b", { class: "num" }, "+1")) : null,
       h("button", { class: "btn primary big", onClick: () => app.actions.afterStageResult() }, "つぎへ"),
     ),
   );
 }
 
-/** 改良した直後は、そろったパーツ（改良前の必要数）を全部光らせて見せる */
-function partPiecesFor(story, res) {
-  if (!res.upgradedTo) return partPieces(story, { size: "big" });
-  const prev = machineByLevel(res.upgradedTo - 1);
-  const n = prev.next;
-  const next = machineByLevel(res.upgradedTo);
+// ---------------------------------------------------------------------------
+// タイムマシンのパーツ獲得（クリア画面の次）
+// ---------------------------------------------------------------------------
+
+/**
+ * 次の合体ロボを黒いシルエットで出し、パーツの分だけドットを実体化する。
+ * info: story.partsGain() の戻り値（before → after の割合、あと何ステージか、改良で行ける場所）
+ */
+export function partsScreen(app, info) {
+  const next = machineByLevel(info.target);
+  const places = info.nextAreas.map((id) => areaName(areaById(id)));
+  const pct = (v) => `${Math.round(v * 100)}%`;
+  const complete = info.after >= 1;
   return h(
     "div",
-    { class: "parts big complete", style: { "--n": n } },
-    Array.from({ length: n }, (_, i) =>
-      h("i", {
-        class: "piece on",
-        style: { backgroundImage: `url("${next.image}")`, backgroundPosition: `${n > 1 ? (i / (n - 1)) * 100 : 0}% 50%` },
-      }),
+    { class: `screen story-screen parts-screen${complete ? " complete" : ""}` },
+    h("div", { class: "parts-head" }, h("small", null, "TIME MACHINE PARTS"), h("b", null, "タイムマシンのパーツ")),
+    h(
+      "div",
+      { class: "parts-stage" },
+      h("div", { class: "parts-rays" }),
+      h("div", { class: "parts-art" }, machineCanvas(next.image, info.before, { cls: "reveal-target" })),
+      // そろったときの名前は、実体化し終わってから出す（main.js の playPartsReveal）
+      h("div", { class: "parts-level" }, h("small", null, `NEXT  Lv${next.level}`), h("b", { "data-name": complete ? next.short : "" }, "？？？")),
+    ),
+    h(
+      "div",
+      { class: "parts-panel panel" },
+      h(
+        "div",
+        { class: "parts-percent" },
+        h("span", { class: "num before" }, pct(info.before)),
+        h("span", { class: "arrow" }, "→"),
+        h("b", { class: "num after", "data-to": String(info.after) }, pct(info.before)),
+      ),
+      h("div", { class: "parts-bar" }, h("i", { class: "bar-before", style: { width: pct(info.before) } }), h("i", { class: "bar-after", style: { width: pct(info.before) } })),
+      h(
+        "p",
+        { class: "parts-remaining" },
+        complete
+          ? h("b", { class: "complete-note" }, "パーツがそろった！ タイムマシンを改良できます")
+          : [h("span", null, "次の改良まで あと"), h("b", { class: "num" }, info.remaining), h("span", null, "ステージクリア")],
+      ),
+      places.length ? h("p", { class: "parts-unlock" }, h("small", null, "改良すると行ける"), h("span", null, places.join(" / "))) : null,
+      h("button", { class: "btn primary big", onClick: () => app.actions.afterParts() }, "つぎへ"),
     ),
   );
 }

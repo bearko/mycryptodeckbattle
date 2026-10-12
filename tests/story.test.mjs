@@ -11,6 +11,8 @@ import {
   setDeck,
   newStageRun,
   machineInfo,
+  machineProgress,
+  partsGain,
   tutorialDone,
 } from "../js/engine/story.js";
 import { finishBattle, advance, runGoal } from "../js/engine/run.js";
@@ -115,4 +117,26 @@ test("ライフ3回分負けると撤退（復活なし）", () => {
     if (run.phase === "result") advance(run, db);
   }
   assert.equal(run.phase, "gameover");
+});
+
+test("パーツ獲得画面の進み具合（改良前→後、あと何ステージ）", () => {
+  const story = newStory();
+  const r1 = clearStage(story, stageKey("kindai-jp", 0));
+  assert.deepEqual(
+    { ...partsGain(story, r1), nextAreas: undefined },
+    { target: 2, before: 0, after: 0.5, parts: 1, need: 2, remaining: 1, nextAreas: undefined },
+  );
+  assert.deepEqual(partsGain(story, r1).nextAreas.sort(), ["kindai-eu", "kindai-us"]);
+  const r2 = clearStage(story, stageKey("kindai-jp", 1));
+  const g2 = partsGain(story, r2);
+  assert.equal(g2.target, 2);
+  assert.equal(g2.before, 0.5);
+  assert.equal(g2.after, 1);
+  assert.equal(g2.remaining, 0);
+  // 改良後は次（Rare）へ向けて 0/3
+  const p = machineProgress(story);
+  assert.equal(p.ratio, 0);
+  assert.equal(p.remaining, 3);
+  // 2回目のクリアではパーツなし
+  assert.equal(partsGain(story, clearStage(story, stageKey("kindai-jp", 0))), null);
 });

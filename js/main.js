@@ -16,7 +16,8 @@ import { MAP_INTRO, PROLOGUE, TUTORIAL_DONE, areaClearScene, stageIntro, upgrade
 import { ScenePlayer } from "./ui/scene.js";
 import { Coach } from "./ui/coach.js";
 import { TUTORIAL_STEPS } from "./story/tutorial.js";
-import { areaScreen, deckScreen, stageResultScreen, storyBackground, worldMapScreen } from "./ui/story-views.js";
+import { areaScreen, deckScreen, partsScreen, stageResultScreen, storyBackground, worldMapScreen } from "./ui/story-views.js";
+import { revealMachine } from "./ui/machine-reveal.js";
 import { clear, h } from "./ui/h.js";
 import { toast } from "./ui/components.js";
 import { marketScreen } from "./ui/market-view.js";
@@ -164,6 +165,9 @@ function render() {
       break;
     case "stageResult":
       screen = stageResultScreen(app, app.ui.stageResult);
+      break;
+    case "parts":
+      screen = partsScreen(app, app.ui.partsInfo);
       break;
     default:
       screen = titleScreen(app, { hasSave: Boolean(validSave()) });
@@ -476,6 +480,32 @@ function latestEra() {
   return (open[open.length - 1] ?? ERAS[0]).id;
 }
 
+/** パーツ獲得画面: シルエットのドットを実体化し、割合のゲージと数字を進める */
+async function playPartsReveal(info) {
+  const canvas = root.querySelector(".parts-screen .reveal-target");
+  const label = root.querySelector(".parts-percent .after");
+  const bar = root.querySelector(".parts-bar .bar-after");
+  await new Promise((r) => setTimeout(r, 450));
+  audio.se("merge", 0.6);
+  await revealMachine(canvas, info.before, info.after, {
+    duration: 1500,
+    onProgress: (p) => {
+      if (label) label.textContent = `${Math.round(p * 100)}%`;
+      if (bar) bar.style.width = `${p * 100}%`;
+    },
+  });
+  if (!canvas?.isConnected) return;
+  pop(label);
+  if (info.after >= 1) {
+    audio.se("treasure", 0.7);
+    const screen = root.querySelector(".parts-screen");
+    screen?.classList.add("done");
+    const name = screen?.querySelector(".parts-level b");
+    if (name?.dataset.name) name.textContent = name.dataset.name;
+    confetti({ duration: 1400, count: 80 });
+  }
+}
+
 /** ステージが終わったとき（クリア / 撤退） */
 function storyStageEnd() {
   const run = app.run;
@@ -585,17 +615,28 @@ const actions = {
     save();
     enterStage();
   },
-  /** ステージ結果の「つぎへ」: 改良の演出 → エリアクリアの会話 → 画面へ戻る */
+  /** ステージ結果の「つぎへ」: パーツ獲得 → 改良の演出 → エリアクリアの会話 → 画面へ戻る */
   async afterStageResult() {
     const info = app.ui.stageResult;
     const area = areaById(info.areaId);
     const res = info.result;
+    const gain = !info.partsShown ? Story.partsGain(app.story, res) : null;
+    if (gain) {
+      info.partsShown = true;
+      app.ui.partsInfo = gain;
+      await go("parts", { bg: storyBackground("2505"), mood: "parts", accent: "#ffd23f" });
+      playPartsReveal(gain);
+      return;
+    }
     if (res?.upgradedTo) await playScene(upgradeScene(res.upgradedTo - 1, res.upgradedTo, res.unlockedAreas), { bgm: "bgm_title" });
     if (res?.first && Story.areaCleared(app.story, area)) {
       await playScene(area.id === TUTORIAL_AREA ? TUTORIAL_DONE : areaClearScene(area));
       return actions.openMap();
     }
     actions.openArea(area.id);
+  },
+  afterParts() {
+    actions.afterStageResult();
   },
   confirmRetreat() {
     app.ui.modal = () =>

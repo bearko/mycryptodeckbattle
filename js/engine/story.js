@@ -80,6 +80,50 @@ export function machineInfo(story) {
   };
 }
 
+/** 次の改良までの進み具合（0〜1）と、あと何ステージクリアで改良できるか */
+export function machineProgress(story) {
+  const m = machineByLevel(story.machine);
+  if (!m.next) return { level: m.level, ratio: 1, remaining: 0, next: null, nextAreas: [] };
+  return {
+    level: m.level,
+    ratio: story.parts / m.next,
+    remaining: m.next - story.parts,
+    next: MACHINES[m.level],
+    nextAreas: AREAS.filter((a) => a.machine === m.level + 1 && !a.requiresAll).map((a) => a.id),
+  };
+}
+
+/**
+ * ステージクリアでパーツを手に入れたときの、改良前→後の進み具合（パーツ獲得画面用）。
+ * res は clearStage() の戻り値（clearStage の後で呼ぶ）
+ */
+export function partsGain(story, res) {
+  if (!res?.part) return null;
+  if (res.upgradedTo) {
+    const prev = machineByLevel(res.upgradedTo - 1);
+    return {
+      target: res.upgradedTo,
+      before: (prev.next - 1) / prev.next,
+      after: 1,
+      parts: prev.next,
+      need: prev.next,
+      remaining: 0,
+      nextAreas: res.unlockedAreas.length ? res.unlockedAreas : AREAS.filter((a) => a.machine === res.upgradedTo && !a.requiresAll).map((a) => a.id),
+    };
+  }
+  const prog = machineProgress(story);
+  const need = machineByLevel(story.machine).next;
+  return {
+    target: story.machine + 1,
+    before: (story.parts - 1) / need,
+    after: story.parts / need,
+    parts: story.parts,
+    need,
+    remaining: prog.remaining,
+    nextAreas: prog.nextAreas,
+  };
+}
+
 function addHero(story, id) {
   if (story.heroes.includes(id)) return false;
   story.heroes.push(id);
