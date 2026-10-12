@@ -9,6 +9,8 @@ import { COLUMN_NAMES, KIND_ICONS, PLAYERS, TREASURES, playerById, treasureById 
 import { ROLES, mainKind } from "./battle-fx.js";
 import { PARTY_COLS, START_LIVES, WINS_TO_CLEAR } from "../engine/balance.js";
 import { effectText, triggerLabel } from "../engine/units.js";
+import { runGoal } from "../engine/run.js";
+import { areaById, stageLabel } from "../engine/world.js";
 
 function playerImg(player, src, cls = "") {
   return img(src, `${player.pixelated === false ? "" : "pixel"} ${cls}`, player.name);
@@ -59,10 +61,15 @@ export function titleScreen(app, { hasSave }) {
       hasSave ? h("button", { class: "btn primary big enter-up", style: { "--d": "0.5s" }, onClick: () => app.actions.continueRun() }, "つづきから") : null,
       h(
         "button",
-        { class: `btn big enter-up${hasSave ? "" : " primary"}`, style: { "--d": "0.58s" }, onClick: () => app.actions.newGame() },
-        "はじめから",
+        { class: `btn big enter-up story-start${hasSave ? "" : " primary"}`, style: { "--d": "0.58s" }, onClick: () => app.actions.openStory() },
+        "ストーリー",
       ),
-      h("button", { class: "btn enter-up", style: { "--d": "0.66s" }, onClick: () => app.actions.showHelp() }, "遊び方"),
+      h(
+        "div",
+        { class: "title-sub-actions enter-up", style: { "--d": "0.66s" } },
+        h("button", { class: "btn", onClick: () => app.actions.newGame() }, "フリーバトル"),
+        h("button", { class: "btn", onClick: () => app.actions.showHelp() }, "遊び方"),
+      ),
     ),
     h("p", { class: "title-note" }, "UNOFFICIAL FAN GAME"),
     h(
@@ -176,8 +183,8 @@ export function stageTelop(app, info, onDone) {
     h(
       "div",
       { class: "telop-band" },
-      h("span", { class: "t-small" }, "STAGE"),
-      h("span", { class: "t-num" }, String(app.run.stage).padStart(2, "0")),
+      h("span", { class: "t-small" }, app.run.story ? "WAVE" : "STAGE"),
+      h("span", { class: "t-num" }, String(app.run.story ? app.run.wins + 1 : app.run.stage).padStart(2, "0")),
     ),
     h("div", { class: `telop-figure ${player.id}` }, playerImg(player, pick(player.poses))),
     h(
@@ -186,6 +193,7 @@ export function stageTelop(app, info, onDone) {
       h("span", { style: { "--d": "0.35s" } }, gumAmount(`+${info.income}`)),
       h("span", { style: { "--d": "0.45s" } }, "R", h("b", null, info.rank)),
       info.treasure ? h("span", { style: { "--d": "0.55s" } }, "宝箱") : null,
+      info.label ? h("span", { style: { "--d": "0.55s" } }, info.label) : null,
     ),
   );
   el.style.setProperty("--player", player.color);
@@ -370,6 +378,7 @@ export function menuModal(app) {
       { class: "menu-list" },
       h("button", { class: "btn big", onClick: () => app.actions.toggleSound() }, app.audio.muted ? "サウンド OFF" : "サウンド ON"),
       h("button", { class: "btn big", onClick: () => app.actions.showHelp() }, "遊び方"),
+      app.run?.story ? h("button", { class: "btn big danger", onClick: () => app.actions.confirmRetreat() }, "ステージをやめる") : null,
       h("button", { class: "btn big danger", onClick: () => app.actions.confirmQuit() }, "タイトルへ"),
     ),
     { className: "menu-modal", footer: closeButton(app) },
@@ -395,7 +404,7 @@ export function resultPanel(app, result) {
   const run = app.run;
   const player = playerById(run.playerId);
   const won = result.won;
-  const rows = [h("div", { class: "result-row" }, winGauge(run.wins))];
+  const rows = [h("div", { class: "result-row" }, run.story ? winGauge(run.wins, runGoal(run), "ウェーブ") : winGauge(run.wins))];
   if (won) {
     if (result.gumGained) rows.push(h("div", { class: "result-row" }, gumAmount(`+${result.gumGained}`)));
     if (result.buffed) {
@@ -417,7 +426,8 @@ export function resultPanel(app, result) {
     }
   }
   const phase = run.phase;
-  const nextLabel = phase === "clear" ? "クリア！" : phase === "gameover" ? "結果へ" : "次へ";
+  const story = run.story;
+  const nextLabel = phase === "clear" ? (story ? "ステージクリア！" : "クリア！") : phase === "gameover" ? (story ? "撤退…" : "結果へ") : "次へ";
   return h(
     "div",
     { class: `result-overlay ${won ? "win" : "lose"}` },
@@ -426,7 +436,7 @@ export function resultPanel(app, result) {
     h(
       "div",
       { class: "result-panel panel" },
-      h("div", { class: "result-stage" }, `STAGE ${result.stage}`),
+      h("div", { class: "result-stage" }, story ? `${stageLabel(areaById(story.areaId), story.index)} · WAVE ${run.wins}/${runGoal(run)}` : `STAGE ${result.stage}`),
       h("div", { class: "result-rows" }, rows),
       reviewRows(app, app.battleView?.battle),
       h("button", { class: "btn primary big", onClick: () => app.actions.next() }, nextLabel),
@@ -575,7 +585,11 @@ function helpPages(app) {
     ["ヒーロー", "パーティに編成して戦うユニット。マイクリの偉人ヒーロー。"],
     ["エネミー", "CPUの部隊を構成するユニット。"],
     ["プレイヤー", "クリスくん・マインちゃん・MAIから選ぶ。プレイヤースキルを持つ。"],
-    ["クエスト", "1回の挑戦。10勝でクリア、ライフが尽きると失敗。"],
+    ["クエスト", "フリーバトルの1回の挑戦。10勝でクリア、ライフが尽きると失敗。"],
+    ["エリア", "ストーリーの行き先。時代（近代・近世・中世・古代）×地域。ステージが3つ。"],
+    ["ウェーブ", "ストーリーのステージの1戦。決まった数のウェーブを勝ち抜くとステージクリア（ライフ3）。"],
+    ["デッキ", "ステージに連れて行くヒーロー（最大8種類）。マーケットにはデッキのヒーローだけが並ぶ。"],
+    ["タイムマシン", "マインの発明（合体ロボ）。パーツを集めて改良すると、行ける国・時代が増える。"],
     ["ステージ", "マーケットでの準備→バトルの1サイクル。"],
     ["GUM", "マーケットで使う通貨。ステージ開始時に獲得。"],
     ["マーケット", "ヒーローとマテリアルを購入する場所。↻でラインナップ更新。南京錠をタップすると1枠ずつ取り置きでき、更新しても次のステージでも残る（GUMが足りなくても取り置ける）。"],
@@ -631,7 +645,8 @@ function helpPages(app) {
           h("li", null, "パーティのヒーローをタップ→別の枠をタップで入れ替え。"),
           h("li", null, "「バトル開始」でエネミー部隊とオートバトル。"),
           h("li", null, "負けるとライフが減る（ステージ1〜2: 1、3〜4: 2、5以降: 3）。"),
-          h("li", null, `${WINS_TO_CLEAR}勝でクエストクリア！`),
+          h("li", null, `${WINS_TO_CLEAR}勝でクエストクリア！（フリーバトル）`),
+          h("li", null, "ストーリーでは、ステージのウェーブをすべて勝ち抜くとクリア。ヒーローが仲間になり、タイムマシンのパーツが手に入る。"),
         ),
       ],
     },

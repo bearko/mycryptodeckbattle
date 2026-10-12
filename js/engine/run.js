@@ -108,7 +108,29 @@ export function startStage(run, db) {
     delete run.market.locked;
     if (!run.story && TREASURE_STAGES.includes(run.stage)) run.pending.push(treasureEvent(run, rng));
   });
+  if (run.story?.tutorial) tutorialOffers(run, db);
   run.phase = "market";
+}
+
+/**
+ * チュートリアル（1-1）のラインナップ。説明に合わせて、
+ * ウェーブ1は同じヒーローを2体（合成の準備）、ウェーブ2は合成できるヒーローを先頭に並べる。
+ */
+function tutorialOffers(run, db) {
+  const offers = run.market.offers;
+  const hero = (defId) => ({ type: "hero", defId, cost: RARITY[db.def(defId).rarity].cost });
+  const pool = run.heroPool;
+  if (run.wins === 0 && run.stage === 1) {
+    offers[0] = hero(pool[0]);
+    offers[1] = hero(pool[0]);
+    return;
+  }
+  if (run.wins === 1) {
+    const counts = new Map();
+    for (const { unit } of allUnits(run)) if (unit.level === 1) counts.set(unit.defId, (counts.get(unit.defId) || 0) + 1);
+    const best = [...counts.entries()].sort((a, b) => b[1] - a[1])[0];
+    offers[0] = hero(best && best[1] >= 2 ? best[0] : pool[0]);
+  }
 }
 
 // ---------------------------------------------------------------------------

@@ -364,7 +364,8 @@ export class BattleView {
     if (!this.running || !this.el.isConnected) return;
     const dt = Math.min(0.25, (now - this.last) / 1000);
     this.last = now;
-    if (!this.cutinActive) {
+    // チュートリアルの説明中（paused）は止める
+    if (!this.cutinActive && !this.paused) {
       this.acc += dt * this.speed;
       while (this.acc >= TICK && !this.battle.over) {
         this.acc -= TICK;

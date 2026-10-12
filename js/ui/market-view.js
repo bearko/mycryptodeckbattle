@@ -6,7 +6,8 @@ import { compactMaterial, compactUnit, extensionIcon, gumAmount, materialCard, p
 import { COLUMN_NAMES, materialById, playerById } from "../engine/content.js";
 import { MATERIAL_SLOT, WINS_TO_CLEAR, marketOdds, sellValue } from "../engine/balance.js";
 import { effectiveRank, rerollCost } from "../engine/market.js";
-import { canStartBattle, playerTeam, runMods, targetMaterial } from "../engine/run.js";
+import { canStartBattle, playerTeam, runGoal, runMods, targetMaterial } from "../engine/run.js";
+import { areaById, stageLabel } from "../engine/world.js";
 import { allUnits, countCopies, mergePreview, mergeProgress } from "../engine/roster.js";
 
 const RARITY_SHORT = ["", "C", "U", "R", "E", "L"];
@@ -39,9 +40,9 @@ export function hud(app) {
       { class: `hud-avatar ${player.id}`, onClick: () => app.actions.showPlayer(), "aria-label": player.name },
       img(player.images.idle, player.pixelated === false ? "" : "pixel", player.name),
     ),
-    stat("ステージ", run.stage),
-    stat("ライフ", run.lives, `lives${run.lives <= 3 ? " danger" : ""}`),
-    winGauge(run.wins),
+    run.story ? stat("ステージ", stageLabel(areaById(run.story.areaId), run.story.index), "story-stage") : stat("ステージ", run.stage),
+    stat("ライフ", run.lives, `lives${run.lives <= (run.story ? 1 : 3) ? " danger" : ""}`),
+    run.story ? winGauge(run.wins, runGoal(run), "ウェーブ") : winGauge(run.wins),
     h("div", { class: "hud-gum" }, gumAmount(run.gum, "big")),
     h(
       "div",

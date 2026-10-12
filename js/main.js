@@ -9,7 +9,14 @@ import { battleSummary, runBattle } from "./engine/battle.js";
 import { PLAYERS, playerById } from "./engine/content.js";
 import { TREASURE_STAGES, stageIncome } from "./engine/balance.js";
 import { audio } from "./ui/audio.js";
-import { clearRun, loadRun, loadSettings, saveRun, saveSettings } from "./ui/storage.js";
+import { clearRun, loadRun, loadSettings, loadStory, saveRun, saveSettings, saveStory } from "./ui/storage.js";
+import * as Story from "./engine/story.js";
+import { AREAS, DECK_SIZE, ERAS, TUTORIAL_AREA, areaById, machineByLevel, parseStageKey } from "./engine/world.js";
+import { MAP_INTRO, PROLOGUE, TUTORIAL_DONE, areaClearScene, stageIntro, upgradeScene } from "./story/scenes.js";
+import { ScenePlayer } from "./ui/scene.js";
+import { Coach } from "./ui/coach.js";
+import { TUTORIAL_STEPS } from "./story/tutorial.js";
+import { areaScreen, deckScreen, stageResultScreen, storyBackground, worldMapScreen } from "./ui/story-views.js";
 import { clear, h } from "./ui/h.js";
 import { toast } from "./ui/components.js";
 import { marketScreen } from "./ui/market-view.js";
@@ -50,6 +57,7 @@ const app = {
   audio,
   ui: { selected: null, modal: null, flash: null, arriving: null, deal: false, lastGum: null, treasureKey: null },
   battleView: null,
+  story: null,
   saveSettings() {
     saveSettings({ ...loadSettings(), ...app.settings, muted: audio.muted });
   },
@@ -66,6 +74,7 @@ function save() {
 }
 
 function background(offset = 0) {
+  if (app.run?.story) return storyBackground(areaById(app.run.story.areaId).bg);
   const list = app.backgrounds;
   return new URL(list[((app.run?.stage ?? 0) + offset) % list.length], document.baseURI).href;
 }
@@ -100,6 +109,8 @@ function setTalking(on) {
 
 /** プレイヤーキャラクターに喋らせる。anchor を省略するとHUDのアイコンから */
 function say(kind, vars = {}, { tone = "", anchor = null, text = null } = {}) {
+  // チュートリアルでマインが案内している間は、クリスのセリフを控える（吹き出しが重なるため）
+  if (coach.el?.isConnected && tone !== "error") return;
   const p = player();
   const msg = text ?? line(p.id, kind, vars);
   if (!msg) return;
@@ -129,7 +140,7 @@ function currentModal() {
 }
 
 function render() {
-  if (app.screen === "battle") return;
+  if (app.screen === "battle" || app.screen === "scene") return;
   clear(root);
   let screen;
   switch (app.screen) {
@@ -141,6 +152,18 @@ function render() {
       break;
     case "end":
       screen = endScreen(app);
+      break;
+    case "worldmap":
+      screen = worldMapScreen(app);
+      break;
+    case "area":
+      screen = areaScreen(app);
+      break;
+    case "deck":
+      screen = deckScreen(app);
+      break;
+    case "stageResult":
+      screen = stageResultScreen(app, app.ui.stageResult);
       break;
     default:
       screen = titleScreen(app, { hasSave: Boolean(validSave()) });
@@ -156,6 +179,8 @@ function render() {
 function afterRender() {
   app.ui.deal = false;
   app.ui.intro = false;
+  if (app.run?.story?.tutorial) coachUpdate();
+  else coach.hide();
   if (app.screen !== "market" || !app.run) return;
   const gumEl = root.querySelector(".hud-gum .n");
   if (app.ui.lastGum !== null && app.ui.lastGum !== app.run.gum) countUp(gumEl, app.ui.lastGum, app.run.gum);
@@ -193,6 +218,7 @@ function flashAt(pos, levelUp = false) {
 /** 画面をワイプで切り替える */
 function go(screen, { bg = null, mood = screen, accent = null } = {}) {
   speech.dismiss();
+  coach.hide();
   return wipe(
     () => {
       app.screen = screen;
@@ -222,7 +248,8 @@ async function enterStage() {
   audio.playBgm("bgm_market");
   await go("market", { bg: background(3), mood: "market", accent: player().color });
   const info = {
-    income: stageIncome(app.run.stage),
+    income: stageIncome(app.run.stage) + (app.run.story?.difficulty ?? 0),
+    label: app.run.story ? stageLabelOf(app.run.story) : null,
     rank: effectiveRank(app.run),
     treasure: TREASURE_STAGES.includes(app.run.stage),
   };
@@ -238,9 +265,12 @@ async function enterStage() {
       telop.remove();
       app.ui.telopActive = false;
       render();
-      if (!app.run.pending.length) {
+      if (app.run.story?.tutorial) {
+        coachUpdate();
+      } else if (!app.run.pending.length) {
         const hasUnits = allUnits(app.run).length > 0;
-        say(hasUnits && Math.random() < 0.35 ? "hint" : "stage", { n: app.run.stage });
+        const story = Boolean(app.run.story);
+        say(hasUnits && Math.random() < 0.35 ? "hint" : story ? "wave" : "stage", { n: story ? app.run.wins + 1 : app.run.stage });
       }
     }, 280);
   };
@@ -325,7 +355,243 @@ function mergeTipShown() {
   return false;
 }
 
+// ---------------------------------------------------------------------------
+// チュートリアル（1-1 でマインが操作を案内する）
+// ---------------------------------------------------------------------------
+
+const coach = new Coach(document.body);
+
+/** いま戦っている（準備している）ウェーブ。バトル中は結果を先に反映しているので開始時の値を使う */
+function currentWave() {
+  return app.pendingResult ? app.ui.battleWave : app.run.wins + 1;
+}
+
+function tutorialStep() {
+  if (!app.run?.story?.tutorial || app.story.flags.tut === "done") return null;
+  const wave = currentWave();
+  let i = app.story.flags.tut ?? 0;
+  // 先のウェーブに進んでいたら、それより前の案内は飛ばす
+  while (i < TUTORIAL_STEPS.length && TUTORIAL_STEPS[i].wave < wave) i++;
+  if (i >= TUTORIAL_STEPS.length) {
+    app.story.flags.tut = "done";
+    saveStoryNow();
+    return null;
+  }
+  if (i !== (app.story.flags.tut ?? 0)) {
+    app.story.flags.tut = i;
+    saveStoryNow();
+  }
+  return TUTORIAL_STEPS[i];
+}
+
+/** いまの画面（案内を出す場所の判定用） */
+function coachScreen() {
+  if (app.screen !== "market") return app.screen;
+  if (app.ui.telopActive) return "telop";
+  const ev = app.run?.pending[0];
+  if (ev?.type === "extension" && !app.ui.holdModal) return "modal-extension";
+  return "market";
+}
+
+/** target が無いときは fallback の案内（OKで進む）にする */
+function stepView(step) {
+  if (step.fallback && step.target && !document.querySelector(step.target)) return { ...step, ...step.fallback, until: "ok" };
+  return step;
+}
+
+function coachUpdate() {
+  const step = tutorialStep();
+  if (!step || step.screen !== coachScreen() || step.wave !== currentWave()) {
+    coach.hide();
+    return;
+  }
+  const view = stepView(step);
+  coach.show({ text: view.text, target: view.target, button: view.button, onOk: () => tutorialEvent("ok") });
+  if (step.screen === "battle" && app.battleView) app.battleView.paused = true;
+  // 登場アニメーションで位置が動くので、少し後にもう一度合わせる
+  setTimeout(() => coach.place(), 480);
+}
+
+function tutorialEvent(name) {
+  const step = tutorialStep();
+  // 本来の操作（buy など）でも、代わりの案内の OK でも進む（操作で対象が消えて代わりの案内になることがあるため）
+  if (!step || (step.until !== name && stepView(step).until !== name)) return;
+  app.story.flags.tut = TUTORIAL_STEPS.indexOf(step) + 1;
+  saveStoryNow();
+  if (app.battleView) app.battleView.paused = false;
+  coach.hide();
+  setTimeout(coachUpdate, 80);
+}
+
+// ---------------------------------------------------------------------------
+// ストーリー
+// ---------------------------------------------------------------------------
+
+function saveStoryNow() {
+  saveStory(app.story);
+}
+
+function stageLabelOf(st) {
+  const area = areaById(st.areaId);
+  return `${area.no}-${st.index + 1}`;
+}
+
+/** シーン（会話劇）を再生して、終わるまで待つ */
+async function playScene(scene, { bgm = "bgm_market" } = {}) {
+  speech.dismiss();
+  if (bgm) audio.playBgm(bgm);
+  const player = new ScenePlayer(scene, { db: app.db });
+  await wipe(
+    () => {
+      app.screen = "scene";
+      clear(root);
+      root.append(player.el);
+      if (scene.bg) ambient.setBackground(storyBackground(scene.bg), { mood: "story" });
+    },
+    { accent: "#4fd8ff" },
+  );
+  await player.start();
+}
+
+/** いちばん新しく開いた時代 */
+function latestEra() {
+  const open = ERAS.filter((e) => Story.eraUnlocked(app.story, e.id));
+  return (open[open.length - 1] ?? ERAS[0]).id;
+}
+
+/** ステージが終わったとき（クリア / 撤退） */
+function storyStageEnd() {
+  const run = app.run;
+  const st = run.story;
+  const cleared = run.phase === "clear";
+  const result = cleared ? Story.clearStage(app.story, st.key) : null;
+  saveStoryNow();
+  clearRun();
+  app.run = null;
+  app.ui.stageResult = { areaId: st.areaId, index: st.index, key: st.key, cleared, result };
+  audio.stopBgm();
+  if (cleared) audio.se("clear", 0.7);
+  const area = areaById(st.areaId);
+  go("stageResult", { bg: storyBackground(area.bg), mood: "result", accent: area.color }).then(() => {
+    if (cleared) confetti({ duration: 1800, count: 110 });
+  });
+}
+
 const actions = {
+  /** タイトルの「ストーリー」: 初回はプロローグ → ワールドマップの説明 */
+  async openStory() {
+    const story = app.story;
+    if (!story.prologue) {
+      await playScene(PROLOGUE);
+      story.prologue = true;
+      saveStoryNow();
+    }
+    if (!story.flags.mapIntro) {
+      await playScene(MAP_INTRO, { bgm: "bgm_title" });
+      story.flags.mapIntro = true;
+      saveStoryNow();
+    }
+    actions.openMap();
+  },
+  openMap() {
+    app.ui.modal = null;
+    app.ui.storyEra = app.ui.storyEra && Story.eraUnlocked(app.story, app.ui.storyEra) ? app.ui.storyEra : latestEra();
+    audio.playBgm("bgm_title");
+    go("worldmap", { bg: storyBackground("2105"), mood: "map", accent: "#5fe3ff" });
+  },
+  selectEra(eraId) {
+    if (!Story.eraUnlocked(app.story, eraId)) {
+      const need = Math.min(...AREAS.filter((a) => a.era === eraId && !a.requiresAll).map((a) => a.machine));
+      return toast(`タイムマシン Lv${need}（${machineByLevel(need).short}）で行けるようになります`);
+    }
+    app.ui.storyEra = eraId;
+    audio.se("buy", 0.3);
+    render();
+  },
+  openArea(areaId) {
+    const area = areaById(areaId);
+    if (!Story.areaUnlocked(app.story, area)) {
+      if (area.requiresAll) return toast("すべてのエリアをクリアすると行けるようになります");
+      if (!Story.tutorialDone(app.story)) return toast("まずは近代・日本のエネミーを片付けよう");
+      return toast(`タイムマシン Lv${area.machine}（${machineByLevel(area.machine).short}）で行けるようになります`);
+    }
+    app.ui.storyArea = areaId;
+    app.ui.storyStage = null;
+    app.ui.storyEra = area.era;
+    audio.playBgm("bgm_title");
+    go("area", { bg: storyBackground(area.bg), mood: "area", accent: area.color });
+  },
+  selectStage(index) {
+    app.ui.storyStage = index;
+    audio.se("buy", 0.3);
+    render();
+  },
+  openDeck(from) {
+    app.ui.deckFrom = from;
+    app.ui.deckDraft = [...app.story.deck];
+    app.screen = "deck";
+    app.ui.intro = true;
+    render();
+  },
+  toggleDeck(id) {
+    const draft = app.ui.deckDraft;
+    const i = draft.indexOf(id);
+    if (i >= 0) draft.splice(i, 1);
+    else if (draft.length >= DECK_SIZE) return toast(`デッキは${DECK_SIZE}種類までです`);
+    else draft.push(id);
+    audio.se("buy", 0.3);
+    render();
+  },
+  closeDeck(commit) {
+    if (commit) {
+      const res = Story.setDeck(app.story, app.ui.deckDraft);
+      if (!res.ok) return toast(res.error, "error");
+      saveStoryNow();
+    }
+    app.ui.deckDraft = null;
+    app.screen = app.ui.deckFrom === "map" ? "worldmap" : "area";
+    render();
+  },
+  /** 出撃: 出会いのシーン → ステージ開始 */
+  async sortie(key) {
+    const parsed = parseStageKey(key);
+    if (!parsed || !Story.stageUnlocked(app.story, parsed.area, parsed.index)) return;
+    const story = app.story;
+    const first = !story.flags[`met:${key}`] && !Story.isCleared(story, key);
+    Story.joinAtStart(story, key);
+    await playScene(stageIntro(parsed.area, parsed.index, { first }));
+    story.flags[`met:${key}`] = true;
+    saveStoryNow();
+    app.run = Story.newStageRun(app.db, story, key, randomSeed());
+    app.ui.treasureKey = null;
+    app.ui.stageResult = null;
+    save();
+    enterStage();
+  },
+  /** ステージ結果の「つぎへ」: 改良の演出 → エリアクリアの会話 → 画面へ戻る */
+  async afterStageResult() {
+    const info = app.ui.stageResult;
+    const area = areaById(info.areaId);
+    const res = info.result;
+    if (res?.upgradedTo) await playScene(upgradeScene(res.upgradedTo - 1, res.upgradedTo, res.unlockedAreas), { bgm: "bgm_title" });
+    if (res?.first && Story.areaCleared(app.story, area)) {
+      await playScene(area.id === TUTORIAL_AREA ? TUTORIAL_DONE : areaClearScene(area));
+      return actions.openMap();
+    }
+    actions.openArea(area.id);
+  },
+  confirmRetreat() {
+    app.ui.modal = () =>
+      confirmModal(app, "ステージをやめますか？（このステージの進み具合は失われます）", () => {
+        const st = app.run?.story;
+        app.ui.modal = null;
+        clearRun();
+        app.run = null;
+        if (st) actions.openArea(st.areaId);
+        else actions.toTitle();
+      });
+    render();
+  },
   newGame() {
     app.ui.modal = null;
     app.ui.selectIndex = app.ui.selectIndex ?? 0;
@@ -468,6 +734,7 @@ const actions = {
     if (sel?.type === "offer" && sel.index === index) return actions.buy(index);
     app.ui.selected = { type: "offer", index };
     render();
+    tutorialEvent("select");
   },
   buy(index, target = null) {
     const cap = captureBuy(index);
@@ -488,6 +755,7 @@ const actions = {
     save();
     render();
     animateBuy(res, cap);
+    tutorialEvent(last ? "merge" : "buy");
   },
   sell(zone, index) {
     const unit = app.run[zone][index];
@@ -564,6 +832,7 @@ const actions = {
       audio.se("buff");
       save();
       render();
+      tutorialEvent("extension");
       const strip = root.querySelector(".ext-list") ?? root.querySelector(".info-bar");
       if (r && strip) flyGhost(res.extension.image, r, strip.getBoundingClientRect(), { duration: 480 }).then(() => pop(strip));
       say("ext");
@@ -573,12 +842,16 @@ const actions = {
   startBattle() {
     const prep = Run.prepareBattle(app.run, app.db);
     if (!prep.ok) return sayError(prep.error);
+    app.ui.battleWave = app.run.wins + 1;
+    // 結果を反映する前に（ウェーブ数が変わる前に）チュートリアルを進める
+    tutorialEvent("battle");
     // バトルは決定的なので、先に結果を確定・保存してから演出を再生する（再読み込みでのやり直しを防ぐ）
     const summary = battleSummary(runBattle(prep.left, prep.right));
     app.pendingResult = Run.finishBattle(app.run, app.db, summary);
     save();
     app.ui.selected = null;
     speech.dismiss();
+    coach.hide();
     audio.playBgm("bgm_battle");
     wipe(
       () => {
@@ -606,8 +879,10 @@ const actions = {
   battleSpeak(kind) {
     const anchor = root.querySelector(".side-head.player .side-leader");
     say(kind, {}, { anchor });
+    if (app.run?.story?.tutorial) coachUpdate();
   },
   battleFinished() {
+    coach.hide();
     const result = app.pendingResult;
     app.pendingResult = null;
     audio.stopBgm();
@@ -628,6 +903,7 @@ const actions = {
       save();
       return enterStage();
     }
+    if (run.story) return storyStageEnd();
     const cleared = run.phase === "clear";
     if (cleared) audio.se("clear", 0.7);
     clearRun();
@@ -662,6 +938,8 @@ async function boot() {
     app.db = createDb({ heroes, enemies, extensions });
     app.backgrounds = manifest.backgrounds;
     app.battleBackgrounds = manifest.battleBackgrounds ?? [];
+    const saved = loadStory();
+    app.story = saved?.version === Story.STORY_VERSION ? saved : Story.newStory();
   } catch (err) {
     clear(root).append(h("div", { class: "loading error" }, `データの読み込みに失敗しました: ${err.message}`));
     throw err;

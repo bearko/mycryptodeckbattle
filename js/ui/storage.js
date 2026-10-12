@@ -2,6 +2,7 @@
 
 const RUN_KEY = "mcdb.run.v1";
 const SETTINGS_KEY = "mcdb.settings.v1";
+const STORY_KEY = "mcdb.story.v1";
 
 function safe(fn, fallback = null) {
   try {
@@ -24,6 +25,17 @@ export function saveRun(run) {
 
 export function clearRun() {
   safe(() => localStorage.removeItem(RUN_KEY));
+}
+
+export function loadStory() {
+  return safe(() => {
+    const raw = localStorage.getItem(STORY_KEY);
+    return raw ? JSON.parse(raw) : null;
+  });
+}
+
+export function saveStory(story) {
+  safe(() => localStorage.setItem(STORY_KEY, JSON.stringify(story)));
 }
 
 export function loadSettings() {
