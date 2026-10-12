@@ -280,6 +280,258 @@
   "source_text": "自身がActive Skillでダメージを受けた後に25%の確率で発動 / 自身のチャージを自身のHP減少量の100 ~ 250%アップ"
  },
  {
+  "id": "h10001",
+  "mch_id": 10001,
+  "side": "hero",
+  "name": "MCHウォーリアー",
+  "name_en": "MCH Warrior",
+  "image": "assets/heroes/10001.png",
+  "rarity": 1,
+  "novice": true,
+  "faction": 1,
+  "attributes": [],
+  "skill_name": "クリプトスラッシュ",
+  "agi_pct": 0.0415,
+  "hp_pct": 0.0466,
+  "stats": {
+   "hp": 162,
+   "phy": 63,
+   "int": 42,
+   "agi": 53
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "自身のHPが50%未満の時に100%の確率で1回だけ発動 / 先頭の敵に自身のPHYの120%ダメージ"
+ },
+ {
+  "id": "h10002",
+  "mch_id": 10002,
+  "side": "hero",
+  "name": "MCHタクティシャン",
+  "name_en": "MCH Tactician",
+  "image": "assets/heroes/10002.png",
+  "rarity": 1,
+  "novice": true,
+  "faction": 2,
+  "attributes": [],
+  "skill_name": "クリプトタクティクス",
+  "agi_pct": 0.0415,
+  "hp_pct": 0.0466,
+  "stats": {
+   "hp": 162,
+   "phy": 42,
+   "int": 63,
+   "agi": 53
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "自身のHPが50%未満の時に100%の確率で1回だけ発動 / 先頭の敵に自身のINTの120%ダメージ"
+ },
+ {
+  "id": "h10003",
+  "mch_id": 10003,
+  "side": "hero",
+  "name": "MCHアーティスト",
+  "name_en": "MCH Artist",
+  "image": "assets/heroes/10003.png",
+  "rarity": 1,
+  "novice": true,
+  "faction": 3,
+  "attributes": [],
+  "skill_name": "クリプトアート",
+  "agi_pct": 0.0415,
+  "hp_pct": 0.0466,
+  "stats": {
+   "hp": 159,
+   "phy": 53,
+   "int": 53,
+   "agi": 53
+  },
+  "effects": [
+   {
+    "kind": "heal",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "自身が死亡した後に65%の確率で1回だけ発動 / 味方全体のHPを回復係数の70%回復"
+ },
+ {
+  "id": "h10004",
+  "mch_id": 10004,
+  "side": "hero",
+  "name": "福沢諭吉",
+  "name_en": "Fukuzawa Yukichi",
+  "image": "assets/heroes/10004.png",
+  "rarity": 1,
+  "novice": true,
+  "faction": 3,
+  "attributes": [],
+  "skill_name": "KO義塾",
+  "agi_pct": 0.3368,
+  "hp_pct": 0.0,
+  "stats": {
+   "hp": 93,
+   "phy": 65,
+   "int": 150,
+   "agi": 94
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "自身が死亡した後に100%の確率で1回だけ発動 / 味方全体のINTを自身のINTの20%アップ"
+ },
+ {
+  "id": "h10005",
+  "mch_id": 10005,
+  "side": "hero",
+  "name": "孫尚香",
+  "name_en": "Sun Shangxiang",
+  "image": "assets/heroes/10005.png",
+  "rarity": 1,
+  "novice": true,
+  "faction": 1,
+  "attributes": [],
+  "skill_name": "弓腰姫",
+  "agi_pct": 0.3212,
+  "hp_pct": 0.2617,
+  "stats": {
+   "hp": 264,
+   "phy": 97,
+   "int": 64,
+   "agi": 91
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 1.0,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "自身がActive Skillでダメージを受けた後に100%の確率で発動 / 先頭の敵に自身のPHYの15%ダメージ"
+ },
+ {
+  "id": "h10006",
+  "mch_id": 10006,
+  "side": "hero",
+  "name": "パスカル",
+  "name_en": "Blaise Pascal",
+  "image": "assets/heroes/10006.png",
+  "rarity": 1,
+  "novice": true,
+  "faction": 3,
+  "attributes": [],
+  "skill_name": "考える葦",
+  "agi_pct": 0.171,
+  "hp_pct": 0.0829,
+  "stats": {
+   "hp": 186,
+   "phy": 38,
+   "int": 78,
+   "agi": 74
+  },
+  "effects": [
+   {
+    "kind": "heal",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "自身のHPが70%未満の時に100%の確率で1回だけ発動 / 味方全体のINTを自身のINTの10%アップ / 味方全体のHPを回復係数の10%回復"
+ },
+ {
+  "id": "h10007",
+  "mch_id": 10007,
+  "side": "hero",
+  "name": "ダビデ",
+  "name_en": "David",
+  "image": "assets/heroes/10007.png",
+  "rarity": 1,
+  "novice": true,
+  "faction": 1,
+  "attributes": [],
+  "skill_name": "巨人殺し",
+  "agi_pct": 0.943,
+  "hp_pct": 0.4326,
+  "stats": {
+   "hp": 318,
+   "phy": 74,
+   "int": 52,
+   "agi": 152
+  },
+  "effects": [
+   {
+    "kind": "bleed",
+    "weight": 0.65,
+    "trigger": "charge"
+   },
+   {
+    "kind": "damage",
+    "weight": 0.35,
+    "trigger": "charge"
+   }
+  ],
+  "source_text": "自身がActive Skillを使用した後に35%の確率で発動 / 先頭の敵に自身のPHYの30%ダメージ"
+ },
+ {
+  "id": "h10008",
+  "mch_id": 10008,
+  "side": "hero",
+  "name": "雷電為右衛門",
+  "name_en": "Raiden Tameemon",
+  "image": "assets/heroes/10008.png",
+  "rarity": 1,
+  "novice": true,
+  "faction": 1,
+  "attributes": [],
+  "skill_name": "突っ張り",
+  "agi_pct": 0.171,
+  "hp_pct": 0.2617,
+  "stats": {
+   "hp": 264,
+   "phy": 70,
+   "int": 21,
+   "agi": 73
+  },
+  "effects": [
+   {
+    "kind": "damage",
+    "weight": 0.8,
+    "trigger": "charge"
+   },
+   {
+    "kind": "buff",
+    "weight": 0.6,
+    "trigger": "start"
+   }
+  ],
+  "source_text": "バトル開始時に100%の確率で発動 / 自身のPHYを自身のPHYの30%アップ"
+ },
+ {
   "id": "h2001",
   "mch_id": 2001,
   "side": "hero",

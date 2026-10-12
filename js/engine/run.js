@@ -1,7 +1,9 @@
 // クエスト（参考作 の1ラン相当）の進行管理。
 // run はセーブデータとしてそのまま JSON 保存できるプレーンなオブジェクト。
+// ストーリーのステージも同じ仕組みで、run.story があるときは「決まった数のウェーブを勝ち抜く」ルールになる。
 
 import { withRng } from "./rng.js";
+import { STAGE_LIVES } from "./world.js";
 import {
   RARITY,
   START_LIVES,
@@ -26,13 +28,20 @@ export function runMods(run, db) {
 function pickPool(db, defs, rng) {
   const ids = [];
   for (let r = 1; r <= 5; r++) {
-    const list = defs.filter((d) => d.rarity === r).map((d) => d.id);
+    const list = defs.filter((d) => d.rarity === r && !d.novice).map((d) => d.id);
     ids.push(...rng.sample(list, RARITY[r].poolSize));
   }
   return ids;
 }
 
-export function newRun(db, { playerId, seed }) {
+/** クリアに必要な勝利数（ストーリーはウェーブ数） */
+export const runGoal = (run) => run.story?.waves ?? WINS_TO_CLEAR;
+
+/**
+ * 新しいラン。heroPool / enemyPool を省略するとランダムに選ぶ（フリーバトル）。
+ * story を渡すとストーリーのステージ（ウェーブ制・ライフ3・宝箱なし）になる。
+ */
+export function newRun(db, { playerId, seed, heroPool = null, enemyPool = null, story = null }) {
   const player = playerById(playerId);
   if (!player) throw new Error(`unknown player: ${playerId}`);
   const run = {
@@ -61,9 +70,15 @@ export function newRun(db, { playerId, seed }) {
     lastResult: null,
     ...emptyRoster(),
   };
+  if (story) {
+    run.story = { ...story };
+    run.lives = STAGE_LIVES;
+    run.revived = true; // ストーリーでは復活なし
+    run.rankBonus += story.difficulty;
+  }
   withRng(run, (rng) => {
-    run.heroPool = pickPool(db, db.heroes, rng);
-    run.enemyPool = pickPool(db, db.enemies, rng);
+    run.heroPool = heroPool ? [...heroPool] : pickPool(db, db.heroes, rng);
+    run.enemyPool = enemyPool ? [...enemyPool] : pickPool(db, db.enemies, rng);
   });
   startStage(run, db);
   return run;
@@ -84,14 +99,14 @@ export function startStage(run, db) {
   const player = playerById(run.playerId);
   const mods = runMods(run, db);
   run.stage += 1;
-  run.gum += stageIncome(run.stage) + mods.income;
+  run.gum += stageIncome(run.stage) + mods.income + (run.story?.difficulty ?? 0);
   run.freeRerolls += (player.effect.freeRerolls || 0) + mods.freeReroll;
   run.itemUses = MATERIAL_USES_PER_STAGE;
   withRng(run, (rng) => {
     // 取り置きした枠は次のステージへ持ち越す（market.locked は旧仕様の全体取り置き）
     restockMarket(run, db, rng, { keepAll: Boolean(run.market.locked) });
     delete run.market.locked;
-    if (TREASURE_STAGES.includes(run.stage)) run.pending.push(treasureEvent(run, rng));
+    if (!run.story && TREASURE_STAGES.includes(run.stage)) run.pending.push(treasureEvent(run, rng));
   });
   run.phase = "market";
 }
@@ -312,7 +327,7 @@ export function finishBattle(run, db, summary) {
     }
   } else {
     run.losses += 1;
-    result.livesLost = lifeLoss(run.stage);
+    result.livesLost = run.story ? 1 : lifeLoss(run.stage);
     run.lives -= result.livesLost;
     if (run.lives <= 0) {
       if (!run.revived) {
@@ -324,7 +339,7 @@ export function finishBattle(run, db, summary) {
   }
   run.history.push({ stage: run.stage, won, opponent: result.opponent, time: summary.time });
   run.lastResult = result;
-  if (run.wins >= WINS_TO_CLEAR) run.phase = "clear";
+  if (run.wins >= runGoal(run)) run.phase = "clear";
   else if (run.lives <= 0) run.phase = "gameover";
   else run.phase = "result";
   return result;

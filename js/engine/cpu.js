@@ -35,11 +35,29 @@ export function opponentSeed(run, stage) {
   return (Math.imul(run.seed ^ 0x9e3779b9, 2654435761) + stage * 40503) >>> 0;
 }
 
+/**
+ * ストーリーのCPUの強さ。デッキで種類が絞られるプレイヤーより不利にならないよう、
+ * マーケットランクは難しさの半分だけ上げ、収入は控えめにする（チュートリアルのエリアは handicap でさらに弱め）。
+ */
+export function storyCpuTuning(story) {
+  return {
+    rank: Math.floor(story.difficulty / 2),
+    income: Math.floor(story.difficulty / 2) - 2 - (story.handicap ?? 0),
+  };
+}
+
+/**
+ * CPUの部隊を作る。stage ラウンドぶんマーケットで買い物をした結果のパーティ。
+ * ストーリーではステージの難しさだけマーケットランクと収入を上乗せする（チュートリアルは弱め）。
+ */
 export function buildCpuOpponent(db, run, stage) {
   const rng = createRng(opponentSeed(run, stage));
+  const story = run.story;
+  const tune = story ? storyCpuTuning(story) : { rank: 0, income: 0 };
+  const extraIncome = tune.income;
   const ghost = {
     stage: 0,
-    rankBonus: 0,
+    rankBonus: tune.rank,
     gum: 0,
     freeRerolls: 0,
     itemUses: 0,
@@ -53,7 +71,7 @@ export function buildCpuOpponent(db, run, stage) {
 
   for (let s = 1; s <= stage; s++) {
     ghost.stage = s;
-    ghost.gum += stageIncome(s) + cpuBonusIncome(s);
+    ghost.gum += Math.max(0, stageIncome(s) + cpuBonusIncome(s) + extraIncome);
     rollMarket(ghost, db, rng);
     botShop(ghost, db, rng, {
       maxRerolls: 2,

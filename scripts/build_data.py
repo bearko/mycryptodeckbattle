@@ -48,6 +48,10 @@ EXCLUDED_ENEMY_IMAGES = {"Image/Enemies/715.png"}  # ゴースト・猿田彦
 BACKGROUND_IDS = ["1001", "1003", "1023", "1038", "1050", "2105", "2405", "2705"]
 # バトル用（MCHの色違いの背景）。ステージごとに順番に使う
 BATTLE_BACKGROUND_IDS = ["2105", "2405", "2805", "2705", "2301", "2205", "2605", "2505", "2905"]
+# ストーリー（エリア・場面）で使う背景。どれを使うかは js/engine/world.js で決める
+STORY_BACKGROUND_IDS = ["1001", "1002", "1003", "1004", "1010", "1023", "1030", "1037", "1041", "1046", "1051", "1052", "1053", "1056"]
+# タイムマシン: エクステンション「合体ロボ」シリーズ（Common〜Legendary）
+TIME_MACHINE_EXTENSION_IDS = [1123, 2123, 3123, 4123, 5123]
 
 
 def find_source() -> Path:
@@ -169,6 +173,13 @@ def percentile_map(values):
 # ---------------------------------------------------------------------------
 
 
+def rank_of(value, ordered):
+    """ordered（昇順）の中での value の順位（0..1）。表に無い値でも使える"""
+    below = sum(1 for v in ordered if v < value)
+    same = sum(1 for v in ordered if v == value)
+    return (below + max(0, same - 1) / 2) / max(1, len(ordered) - 1)
+
+
 def build_heroes(src: Path):
     heroes = json.loads((src / "Data/Heroes/heroes.json").read_text(encoding="utf-8"))
     pool = [
@@ -181,13 +192,22 @@ def build_heroes(src: Path):
     ]
     agi_pct = percentile_map([h["max_level_stats"]["agi"] for h in pool])
     hp_pct = percentile_map([h["max_level_stats"]["hp"] for h in pool])
+    # ストーリーで使う初心者用ヒーロー（MCHのnovice）は Common として加える。
+    # 順位は original の分布の中で測る（original の数値は変えない）
+    novices = [h for h in heroes if h.get("category") == "novice" and h.get("passive") and (src / h["image_file_path"]).exists()]
+    agi_sorted = sorted(h["max_level_stats"]["agi"] for h in pool)
+    hp_sorted = sorted(h["max_level_stats"]["hp"] for h in pool)
+    for h in novices:
+        agi_pct.setdefault(h["max_level_stats"]["agi"], rank_of(h["max_level_stats"]["agi"], agi_sorted))
+        hp_pct.setdefault(h["max_level_stats"]["hp"], rank_of(h["max_level_stats"]["hp"], hp_sorted))
 
     out = []
     out_dir = ROOT / "assets/heroes"
     out_dir.mkdir(parents=True, exist_ok=True)
-    for h in pool:
+    for h in pool + novices:
         if h["id"] in EXCLUDED_HERO_IDS:
             continue
+        novice = h.get("category") == "novice"
         passive = h["passive"]
         desc = passive["description"]["ja"]
         kinds = [classify_effect(e["description"]) for e in desc["effects"]]
@@ -204,7 +224,8 @@ def build_heroes(src: Path):
                 "name": h["name"]["ja"],
                 "name_en": h["name"]["en"],
                 "image": f"assets/heroes/{image_name}",
-                "rarity": RARITY_IDS[h["rarity"]["name"]],
+                "rarity": 1 if novice else RARITY_IDS[h["rarity"]["name"]],
+                **({"novice": True} if novice else {}),
                 "faction": h["faction"]["id"],
                 "attributes": [a["name"]["ja"] for a in h.get("attributes", [])],
                 "skill_name": passive["name"]["ja"],
@@ -426,6 +447,12 @@ def copy_misc(src: Path):
             shutil.copyfile(s, dst)
         return str(dst.relative_to(ROOT))
 
+    for bid in STORY_BACKGROUND_IDS:
+        convert(bid)
+    story_dir = ROOT / "assets/story"
+    story_dir.mkdir(parents=True, exist_ok=True)
+    for level, eid in enumerate(TIME_MACHINE_EXTENSION_IDS, start=1):
+        shutil.copyfile(src / f"Image/Extensions/{eid}.png", story_dir / f"machine-{level}.png")
     return [convert(bid) for bid in BACKGROUND_IDS], [convert(bid) for bid in BATTLE_BACKGROUND_IDS]
 
 
