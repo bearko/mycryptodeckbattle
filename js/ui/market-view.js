@@ -41,9 +41,9 @@ export function hud(app) {
       { class: `hud-avatar ${player.id}`, onClick: () => app.actions.showPlayer(), "aria-label": player.name },
       img(player.images.idle, player.pixelated === false ? "" : "pixel", player.name),
     ),
-    run.story ? stat("ステージ", stageLabel(areaById(run.story.areaId), run.story.index), "story-stage") : stat("ステージ", run.stage),
-    stat("ライフ", run.lives, `lives${run.lives <= (run.story ? 1 : 3) ? " danger" : ""}`),
-    run.story ? winGauge(run.wins, runGoal(run), "ウェーブ", { boss: Boolean(run.story.boss) }) : winGauge(run.wins),
+    run.story ? stat("ステージ", stageLabel(areaById(run.story.areaId), run.story.index, run.story.lane), "story-stage") : stat("ステージ", run.stage),
+    run.story?.supply ? h("div", { class: "supply-badge" }, "補給") : stat("ライフ", run.lives, `lives${run.lives <= (run.story ? 1 : 3) ? " danger" : ""}`),
+    run.story?.supply ? null : run.story ? winGauge(run.wins, runGoal(run), "ウェーブ", { boss: Boolean(run.story.boss) }) : winGauge(run.wins),
     h("div", { class: "hud-gum" }, gumAmount(run.gum, "big")),
     h(
       "div",
@@ -393,14 +393,21 @@ export function marketScreen(app) {
     h(
       "footer",
       { class: "market-footer" },
-      h(
-        "button",
-        {
-          class: `btn battle-btn${check.ok ? "" : " off"}${check.ok && bestAffordableOffer(app.run) >= 0 ? " wait" : ""}`,
-          onClick: () => app.actions.startBattle(),
-        },
-        "バトル開始",
-      ),
+      // 補給のステージはバトルなし。宝箱を選び、買い物をして「出発」
+      app.run.story?.supply
+        ? h(
+            "button",
+            { class: `btn battle-btn depart-btn${app.run.pending.length ? " off" : ""}`, onClick: () => app.actions.departSupply() },
+            "出発",
+          )
+        : h(
+            "button",
+            {
+              class: `btn battle-btn${check.ok ? "" : " off"}${check.ok && bestAffordableOffer(app.run) >= 0 ? " wait" : ""}`,
+              onClick: () => app.actions.startBattle(),
+            },
+            "バトル開始",
+          ),
     ),
   );
   screen.style.setProperty("--player", player.color);

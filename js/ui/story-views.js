@@ -8,20 +8,26 @@ import {
   AREAS,
   DECK_SIZE,
   ERAS,
+  FIELDS,
+  FOES,
+  STAGE_KINDS,
   areaById,
   areaName,
   eraById,
   heroId,
-  isFinalStage,
   machineByLevel,
+  nodeMap,
+  parseStageKey,
   stageKey,
   stageLabel,
   stageWaves,
 } from "../engine/world.js";
+import { FACTIONS, KIND_ICONS, KIND_LABELS } from "../engine/content.js";
 import {
   areaCleared,
-  areaEnemyPool,
+  areaProgress,
   areaUnlocked,
+  foePool,
   deckEmptyShare,
   deckProblem,
   eraUnlocked,
@@ -31,8 +37,11 @@ import {
   canSortie,
   defaultStage,
   nodeRun,
+  sortieOptions,
+  stageMatch,
   stageRarityOdds,
   stageUnlocked,
+  teamTraits,
 } from "../engine/story.js";
 import { machineCanvas } from "./machine-reveal.js";
 
@@ -155,7 +164,7 @@ function mapPin(app, area) {
   const story = app.story;
   const open = areaUnlocked(story, area);
   const cleared = areaCleared(story, area);
-  const done = area.stages.filter((_, i) => isCleared(story, stageKey(area.id, i))).length;
+  const { done, total } = areaProgress(story, area);
   const cls = cleared ? "cleared" : open ? "open" : "locked";
   return h(
     "button",
@@ -170,7 +179,7 @@ function mapPin(app, area) {
       "span",
       { class: "pin-label" },
       h("b", null, area.region),
-      open ? h("small", { class: "num" }, `${done}/${area.stages.length}`) : h("small", null, lockedReason(story, area)),
+      open ? h("small", { class: "num" }, `${done}/${total}`) : h("small", null, lockedReason(story, area)),
     ),
   );
 }
@@ -184,63 +193,75 @@ function lockedReason(story, area) {
 }
 
 // ---------------------------------------------------------------------------
-// ステージ選択（タイルが線でつながった道。最後のタイルはレイドボス）
+// ステージ選択（参考作 のように、下から上へ進む道。後半は3つのレーンに分かれ、最後はレイドボス）
 // ---------------------------------------------------------------------------
 
-const NODE_POS = {
-  3: [
-    { x: 20, y: 76 },
-    { x: 50, y: 52 },
-    { x: 78, y: 30 },
-  ],
-  10: [
-    { x: 11, y: 90 },
-    { x: 35, y: 86 },
-    { x: 59, y: 90 },
-    { x: 85, y: 80 },
-    { x: 68, y: 62 },
-    { x: 42, y: 58 },
-    { x: 16, y: 52 },
-    { x: 22, y: 30 },
-    { x: 47, y: 25 },
-    { x: 78, y: 30 },
-  ],
-};
-
-const nodePositions = (area) => NODE_POS[area.stages.length] ?? NODE_POS[10];
-
-/** ステージで出会うヒーローがいないときに、タイルに出すエネミー（ノードの顔ぶれから） */
-function stageEnemy(db, area, index) {
-  const pool = areaEnemyPool(db, area);
-  const tier = Math.min(4, Math.floor(index / 2));
-  return db.def(pool[tier * 6 + (index % 6)] ?? pool[0]);
+/** 道の上の位置（地図の横・縦に対する%）。下の行ほど下、レーンは左・真ん中・右 */
+function routePos(rows, row, lane) {
+  const top = 7;
+  const bottom = 93;
+  const y = bottom - (row * (bottom - top)) / Math.max(1, rows - 1);
+  const x = lane === null || lane === undefined ? 50 : [20, 50, 80][lane];
+  return { x, y };
 }
+
+/** 出会うヒーローがいないステージに出すエネミー（そのステージのエネミーの傾向の顔ぶれから） */
+function stageEnemy(db, area, stage) {
+  const pool = foePool(db, area, stage.foe);
+  const tier = Math.min(4, Math.floor(stage.row / 2));
+  return db.def(pool[tier * 6 + ((stage.lane ?? 0) + stage.row) % 6] ?? pool[0]);
+}
+
+/** ステージのタイルに出す絵（出会うヒーロー・エネミー・補給・レイドボス） */
+function stageArt(app, area, stage) {
+  if (stage.kind === "boss") return { image: app.db.def(area.boss).image, cls: "", def: app.db.def(area.boss) };
+  if (stage.kind === "supply") return { image: "assets/icons/gold_dust.webp", cls: "supply-art" };
+  if (stage.meet) {
+    const def = app.db.def(heroId(stage.meet));
+    return { image: def.image, cls: "", def };
+  }
+  const def = stageEnemy(app.db, area, stage);
+  return { image: def.image, cls: "enemy-art", def };
+}
+
+const keyOf = (area, st) => stageKey(area.id, st.row, st.lane);
 
 export function areaScreen(app) {
   const story = app.story;
   const area = areaById(app.ui.storyArea);
   const era = eraById(area.era);
-  const selected = app.ui.storyStage ?? defaultStage(story, area);
-  const path = nodePositions(area)
-    .map((p) => `${p.x},${p.y}`)
-    .join(" ");
+  const route = nodeMap(area);
+  const selectedKey = app.ui.storyStage ?? defaultStage(story, area);
+  const run = nodeRun(story, area.id);
+  // 通ってきた道（いまのチームで進んだレーン）
+  const walked = (r, lane) => r < run.next && (run.path[r] ?? null) === (lane ?? null);
+  const lines = [];
+  route.next.forEach((links, r) =>
+    links.forEach((targets, i) =>
+      targets.forEach((j) => {
+        const from = route.rows[r][i];
+        const to = route.rows[r + 1][j];
+        const a = routePos(route.rows.length, r, from.lane);
+        const b = routePos(route.rows.length, r + 1, to.lane);
+        const cls = walked(r, from.lane) && (walked(r + 1, to.lane) || (r + 1 === run.next && canSortie(story, area, r + 1, to.lane))) ? "path-line walked" : "path-line";
+        lines.push(`<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" class="path-under"/><line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" class="${cls}"/>`);
+      }),
+    ),
+  );
   return h(
     "div",
-    { class: `screen story-screen area-screen stages-${area.stages.length}`, style: { "--area": area.color } },
+    { class: "screen story-screen area-screen route-screen", style: { "--area": area.color } },
     header(areaName(area), `${era.en} · ${era.years}`, {
       back: () => app.actions.openMap(),
       right: deckButton(app, "area"),
     }),
     h(
       "div",
-      { class: "stage-map" },
-      h("div", {
-        class: "stage-path",
-        html: `<svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points="${path}" class="path-under"/><polyline points="${path}" class="path-line"/></svg>`,
-      }),
-      area.stages.map((stage, i) => stageNode(app, area, i, i === selected)),
+      { class: "stage-map route-map" },
+      h("div", { class: "stage-path", html: `<svg viewBox="0 0 100 100" preserveAspectRatio="none">${lines.join("")}</svg>` }),
+      route.rows.flat().map((st) => stageNode(app, area, st, keyOf(area, st) === selectedKey, walked(st.row, st.lane))),
     ),
-    stageCard(app, area, selected),
+    stageCard(app, area, parseStageKey(selectedKey)?.stage ?? route.rows[0][0]),
   );
 }
 
@@ -255,60 +276,73 @@ function deckButton(app, from) {
   );
 }
 
-function stageNode(app, area, index, selected) {
+function stageNode(app, area, stage, selected, walked) {
   const story = app.story;
-  const key = stageKey(area.id, index);
+  const key = keyOf(area, stage);
   const cleared = isCleared(story, key);
-  const open = stageUnlocked(story, area, index);
-  const boss = isFinalStage(area, index);
-  const meet = area.stages[index].meet;
-  const def = boss ? app.db.def(area.boss) : meet ? app.db.def(heroId(meet)) : stageEnemy(app.db, area, index);
-  const pos = nodePositions(area)[index];
-  const hidden = !(open || cleared);
-  const next = canSortie(story, area, index);
+  const next = canSortie(story, area, stage.row, stage.lane);
+  const known = stageUnlocked(story, area, stage.row, stage.lane);
+  const pos = routePos(nodeMap(area).rows.length, stage.row, stage.lane);
+  const art = stageArt(app, area, stage);
+  const field = stage.field ? FIELDS[stage.field] : null;
   return h(
     "button",
     {
-      class: `stage-node${cleared ? " cleared" : open ? " open" : " locked"}${next ? " next" : ""}${selected ? " selected" : ""}${boss ? " boss" : ""}${
-        !boss && !meet ? " enemy" : ""
+      class: `route-node kind-${stage.kind}${cleared ? " cleared" : ""}${next ? " next" : ""}${walked ? " walked" : ""}${selected ? " selected" : ""}${
+        known || next || stage.kind !== "battle" ? "" : " far"
       }`,
-      style: { left: `${pos.x}%`, top: `${pos.y}%`, "--d": `${0.1 + index * 0.05}s` },
-      onClick: () => app.actions.selectStage(index),
-      "aria-label": `${stageLabel(area, index)}${boss ? " レイドボス" : ""}`,
+      style: { left: `${pos.x}%`, top: `${pos.y}%`, "--d": `${0.05 + stage.row * 0.04}s` },
+      onClick: () => app.actions.selectStage(key),
+      dataset: { key },
+      "aria-label": `${stageLabel(area, stage.row, stage.lane)} ${STAGE_KINDS[stage.kind].name}`,
     },
-    h("span", { class: "node-meet" }, img(def.image, `pixel${hidden && !boss ? " silhouette" : ""}${!boss && !meet ? " flip" : ""}`, def.name)),
-    boss ? h("span", { class: "boss-tag" }, "BOSS") : null,
+    h("span", { class: `route-art ${art.cls}` }, img(art.image, `pixel${art.cls === "enemy-art" ? " flip" : ""}`, "")),
+    field ? h("span", { class: "route-field" }, fieldIcon(field)) : null,
+    stage.kind === "elite" ? h("span", { class: "route-kind" }, "強") : null,
+    stage.kind === "boss" ? h("span", { class: "boss-tag" }, "BOSS") : null,
+    cleared ? h("i", { class: "node-check" }, "✓") : null,
     next ? h("span", { class: "next-tag" }, "NEXT") : null,
-    h(
-      "span",
-      { class: "node-tile" },
-      h("b", { class: "num" }, stageLabel(area, index)),
-      cleared ? h("i", { class: "node-check" }, "✓") : open ? null : lockIcon(true),
-    ),
   );
 }
 
-function stageCard(app, area, index) {
+/** 地形のアイコン（スキルの種類・勢力・列） */
+function fieldIcon(field) {
+  if (field.kinds) return img(KIND_ICONS[field.kinds[0]], "field-icon", field.name);
+  if (field.faction) return h("i", { class: "field-faction", style: { "--fc": FACTIONS[field.faction].color } }, FACTIONS[field.faction].name[0]);
+  return h("i", { class: "field-col" }, field.col === 0 ? "前" : "後");
+}
+
+/** 相性の印（◎○－）と、得をするヒーローの数 */
+function matchMark(m) {
+  if (!m) return null;
+  return h("b", { class: `match-mark m${Math.min(2, m.n)}` }, m.mark);
+}
+
+function stageCard(app, area, stage) {
   const story = app.story;
-  const key = stageKey(area.id, index);
-  const stage = area.stages[index];
-  const open = stageUnlocked(story, area, index);
+  const index = stage.row;
+  const key = keyOf(area, stage);
   const cleared = isCleared(story, key);
-  const boss = isFinalStage(area, index) ? app.db.def(area.boss) : null;
+  const sortie = canSortie(story, area, index, stage.lane);
+  const known = stageUnlocked(story, area, index, stage.lane) || sortie;
+  const boss = stage.kind === "boss" ? app.db.def(area.boss) : null;
   const meet = stage.meet ? app.db.def(heroId(stage.meet)) : null;
-  const shown = open || cleared;
   const joins = new Set([...(stage.meetAtStart ? [stage.meet] : []), ...stage.join]);
-  const art = boss ?? meet ?? stageEnemy(app.db, area, index);
-  const sortie = canSortie(story, area, index);
+  const art = stageArt(app, area, stage);
+  const team = nodeRun(story, area.id).team;
+  const match = stageMatch(teamTraits(app.db, team), stage);
+  const field = stage.field ? FIELDS[stage.field] : null;
+  const foe = stage.foe ? FOES[stage.foe] : null;
+  const title = boss ? boss.name : meet ? (known ? meet.name : "？？？") : stage.kind === "supply" ? "補給地点" : "エネミーの拠点";
   return h(
     "section",
-    { class: `stage-card panel${boss ? " boss" : ""}` },
+    { class: `stage-card panel kind-${stage.kind}${boss ? " boss" : ""}` },
     h(
       "div",
       { class: "stage-card-head" },
-      h("b", { class: "num stage-no" }, stageLabel(area, index)),
-      h("span", { class: "wave-chip num" }, `WAVE ${stageWaves(area, index)}`),
-      boss ? h("span", { class: "boss-chip" }, "RAID BOSS") : null,
+      h("b", { class: "num stage-no" }, stageLabel(area, index, stage.lane)),
+      h("span", { class: `kind-chip kind-${stage.kind}` }, stage.kind === "boss" ? "RAID BOSS" : STAGE_KINDS[stage.kind].name),
+      stage.kind !== "supply" ? h("span", { class: "wave-chip num" }, `WAVE ${stageWaves(area, index)}`) : null,
       cleared ? h("span", { class: "clear-chip" }, "CLEAR") : null,
     ),
     h(
@@ -316,17 +350,28 @@ function stageCard(app, area, index) {
       { class: "stage-card-body" },
       h(
         "div",
-        { class: `meet-art r${art.rarity}${boss ? " boss" : ""}` },
-        img(art.image, `pixel${shown || boss ? "" : " silhouette"}${!boss && !meet ? " flip" : ""}`, art.name),
+        { class: `meet-art r${art.def?.rarity ?? 1}${boss ? " boss" : ""} ${art.cls}` },
+        img(art.image, `pixel${known || boss || !meet ? "" : " silhouette"}${art.cls === "enemy-art" ? " flip" : ""}`, title),
       ),
       h(
         "div",
         { class: "stage-rewards" },
-        h(
-          "div",
-          { class: "meet-name" },
-          boss ? boss.name : meet ? (shown ? meet.name : "？？？") : "エネミーの拠点",
-        ),
+        h("div", { class: "meet-name" }, title),
+        // 特性（地形・エネミーの傾向）とチームの相性
+        field
+          ? h("div", { class: "trait-row" }, fieldIcon(field), h("b", null, field.name), h("small", null, field.text), matchMark(match.field))
+          : null,
+        foe
+          ? h(
+              "div",
+              { class: "trait-row foe" },
+              h("i", { class: "foe-icon" }, "敵"),
+              h("b", null, foe.name),
+              h("small", null, foe.counter.length ? `強い: ${foe.counter.map((k) => KIND_LABELS[k]).join("・")}` : foe.text),
+              matchMark(match.foe),
+            )
+          : null,
+        stage.kind === "supply" ? h("div", { class: "trait-row" }, h("small", null, STAGE_KINDS.supply.text)) : null,
         h(
           "div",
           { class: "reward-row" },
@@ -334,16 +379,17 @@ function stageCard(app, area, index) {
             ? h(
                 "span",
                 { class: "reward-chip" },
-                boss && meet ? img(meet.image, `pixel reward-face${shown ? "" : " silhouette"}`, meet.name) : null,
+                [...joins].slice(0, 3).map((id) => img(app.db.def(heroId(id)).image, `pixel reward-face${known ? "" : " silhouette"}`, "")),
                 h("small", null, "仲間"),
                 h("b", { class: "num" }, `+${joins.size}`),
               )
             : null,
+          stage.kind === "elite" ? h("span", { class: "reward-chip part" }, h("small", null, "撃破で"), h("b", null, "宝箱")) : null,
           boss && !cleared && story.machine < 5 ? h("span", { class: "reward-chip part" }, h("small", null, "パーツ"), h("b", { class: "num" }, "+1")) : null,
         ),
       ),
     ),
-    teamRow(app, area, index),
+    teamRow(app, area, stage),
     h(
       "div",
       { class: "stage-actions" },
@@ -351,25 +397,26 @@ function stageCard(app, area, index) {
       h(
         "button",
         { class: `btn primary big sortie-btn${sortie ? "" : " disabled"}`, onClick: () => app.actions.sortie(key), disabled: sortie ? null : "true" },
-        sortie ? "出撃" : cleared ? "クリア済み" : "未開放",
+        sortie ? (stage.kind === "supply" ? "立ち寄る" : "出撃") : cleared ? "クリア済み" : "未開放",
       ),
     ),
   );
 }
 
 /**
- * 繰り越すチーム。次に出撃するステージなら、前のステージをクリアしたときのパーティとGUM。
- * それ以外は、出撃できるのが次のステージだけであることを短く出す
+ * 繰り越すチーム。次に出撃できるステージなら、前のステージをクリアしたときのパーティとGUM。
+ * それ以外は、出撃できるのが道でつながった次のステージだけであることを短く出す
  */
-function teamRow(app, area, index) {
+function teamRow(app, area, stage) {
   const story = app.story;
   const carry = nodeRun(story, area.id);
   const rebuild = carry.next > 0 ? h("button", { class: "btn small rebuild-btn", onClick: () => app.actions.rebuildNode(area.id) }, "作り直す") : null;
-  if (index !== carry.next) {
-    if (!areaUnlocked(story, area) || (index > carry.next && !isCleared(story, stageKey(area.id, index)))) return null;
-    return h("div", { class: "team-row note" }, h("small", null, `チームを繰り越して進みます。次は ${stageLabel(area, carry.next)}`), rebuild);
+  if (!canSortie(story, area, stage.row, stage.lane)) {
+    if (!areaUnlocked(story, area)) return null;
+    const options = sortieOptions(story, area).map((o) => stageLabel(area, o.index, o.lane));
+    return h("div", { class: "team-row note" }, h("small", null, options.length ? `チームを繰り越して進みます。次は ${options.join(" / ")}` : ""), rebuild);
   }
-  if (!carry.team) return h("div", { class: "team-row note" }, h("small", null, index === 0 ? "新しいチームで出撃" : "チームなし"));
+  if (!carry.team) return h("div", { class: "team-row note" }, h("small", null, stage.row === 0 ? "新しいチームで出撃" : "チームなし"));
   const units = carry.team.party.filter(Boolean);
   return h(
     "div",
@@ -405,11 +452,11 @@ function deckOdds(app, draft) {
   const have = [1, 2, 3, 4, 5].map((r) => draft.filter((id) => app.db.def(id).rarity === r).length);
   const covered = (r) => have.slice(r - 1).some(Boolean);
   const empty = deckEmptyShare(app.db, draft, key);
-  const area = areaById(key.split(":")[0]);
+  const parsed = parseStageKey(key);
   return h(
     "div",
     { class: "deck-odds panel" },
-    h("small", { class: "deck-odds-label" }, `${stageLabel(area, Number(key.split(":")[1]))} のマーケット`),
+    h("small", { class: "deck-odds-label" }, `${stageLabel(parsed.area, parsed.index, parsed.lane)} のマーケット`),
     h(
       "div",
       { class: "odds-row" },
@@ -483,7 +530,7 @@ export function deckScreen(app) {
 
 export function stageResultScreen(app, info) {
   const area = areaById(info.areaId);
-  const label = stageLabel(area, info.index);
+  const label = stageLabel(area, info.index, info.lane);
   if (!info.cleared) {
     return h(
       "div",
@@ -527,15 +574,22 @@ export function stageResultScreen(app, info) {
         : null,
       res.part ? h("div", { class: "part-chip" }, img("assets/story/machine-1.png", "pixel", ""), h("span", null, "タイムマシンのパーツ"), h("b", { class: "num" }, "+1")) : null,
       // 最終ステージ以外は、繰り越したチームのまま次のステージへ
-      info.index < area.stages.length - 1
-        ? h(
-            "div",
-            { class: "stage-result-actions" },
-            h("button", { class: "btn primary big", onClick: () => app.actions.sortieNext() }, `次のステージへ（${stageLabel(area, info.index + 1)}）`),
-            h("button", { class: "btn", onClick: () => app.actions.afterStageResult() }, "ステージ選択へ"),
-          )
-        : h("button", { class: "btn primary big", onClick: () => app.actions.afterStageResult() }, "つぎへ"),
+      info.index < area.stages.length - 1 ? nextStageActions(app, area) : h("button", { class: "btn primary big", onClick: () => app.actions.afterStageResult() }, "つぎへ"),
     ),
+  );
+}
+
+/** クリア画面の次の行き先: 次のステージが1つならそのまま出撃、枝分かれならルートを選ぶ */
+function nextStageActions(app, area) {
+  const options = sortieOptions(app.story, area);
+  const one = options.length === 1 ? options[0] : null;
+  return h(
+    "div",
+    { class: "stage-result-actions" },
+    one
+      ? h("button", { class: "btn primary big", onClick: () => app.actions.sortie(one.key) }, `次のステージへ（${stageLabel(area, one.index, one.lane)}）`)
+      : h("button", { class: "btn primary big", onClick: () => app.actions.afterStageResult() }, "ルートを選ぶ"),
+    one ? h("button", { class: "btn", onClick: () => app.actions.afterStageResult() }, "ステージ選択へ") : null,
   );
 }
 

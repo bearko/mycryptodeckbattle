@@ -10,8 +10,14 @@ import {
   TUTORIAL_AREA,
   areaById,
   areaRankCap,
+  FIELDS,
+  FOES,
+  allStages,
   heroId,
   isFinalStage,
+  linked,
+  nodeMap,
+  stageAt,
   machineByLevel,
   parseStageKey,
   stageKey,
@@ -19,12 +25,13 @@ import {
   wavesBefore,
 } from "./world.js";
 import { createRng } from "./rng.js";
-import { continueRun, newRun } from "./run.js";
+import { addTreasure, continueRun, newRun } from "./run.js";
 import { RARITY, marketOdds, stageIncome, storyPlayerBonus } from "./balance.js";
 
 // 2: パーツがステージごと → ノード（時代×地域）のクリアごとに。ノードのステージ数が 3 → 10 に
 // 3: ノードの中でチームを繰り越す（nodeRuns）
-export const STORY_VERSION = 3;
+// 4: ノードの後半が枝分かれ（X-5〜X-9 のステージIDが "ノード:行.レーン" に）
+export const STORY_VERSION = 4;
 export const STORY_PLAYER = "chris";
 
 export function newStory() {
@@ -60,13 +67,24 @@ export function migrateStory(story) {
   }
   // v3: 繰り越しのチームはないので、途中までクリアしたノードは X-1 からチームを作って進む
   next.nodeRuns = story.nodeRuns ?? {};
+  // v4: 枝分かれした行の古いステージID（"ノード:5"）は、真ん中のレーン（B）として扱う
+  if ((story.version ?? 1) < 4) {
+    next.cleared = next.cleared.map((key) => (parseStageKey(key) ? key : `${key}.1`)).filter((key) => parseStageKey(key));
+    for (const [areaId, run] of Object.entries(next.nodeRuns)) {
+      const area = areaById(areaId);
+      if (!area) continue;
+      const prev = run.next > 0 ? nodeMap(area).rows[run.next - 1] : null;
+      run.at = prev && prev.length > 1 ? 1 : null;
+    }
+  }
   return next;
 }
 
 export const isCleared = (story, key) => story.cleared.includes(key);
 
+/** ノードをクリアしたか（最終ステージのレイドボスを倒したか。枝分かれの全部を通る必要はない） */
 export function areaCleared(story, area) {
-  return area.stages.every((_, i) => isCleared(story, stageKey(area.id, i)));
+  return isCleared(story, stageKey(area.id, area.stages.length - 1));
 }
 
 /** チュートリアル（近代・日本）を最後までクリアしたか */
@@ -90,27 +108,51 @@ export function areaUnlocked(story, area) {
 
 /** ノードの繰り越し（次に出撃するステージと、そのときのチーム） */
 export function nodeRun(story, areaId) {
-  return story.nodeRuns?.[areaId] ?? { next: 0, team: null };
+  return story.nodeRuns?.[areaId] ?? { next: 0, at: null, team: null, path: [] };
 }
 
 /**
- * 出撃できるステージ。ノードの中はチームを繰り越して順に進むので、出撃できるのは次のステージだけ
- * （チームを作り直すと X-1 から。クリア済みのステージは報酬なしで進む）
+ * 出撃できるステージか。ノードの中はチームを繰り越して1行ずつ進む。
+ * 次の行のうち、いまいるステージ（at）から道でつながっているステージだけ（チームを作り直すと X-1 から）
  */
-export function canSortie(story, area, index) {
-  return areaUnlocked(story, area) && index === nodeRun(story, area.id).next;
+export function canSortie(story, area, index, lane = null) {
+  if (!areaUnlocked(story, area)) return false;
+  const run = nodeRun(story, area.id);
+  if (index !== run.next || !stageAt(area, index, lane)) return false;
+  return index === 0 || linked(area, index - 1, run.at, lane);
 }
 
-/** ステージ選択で最初に選んでおくステージ（次に出撃するステージ） */
-export const defaultStage = (story, area) => nodeRun(story, area.id).next;
+/** 次に出撃できるステージ（枝分かれでは複数）。[{ index, lane, key, stage }] */
+export function sortieOptions(story, area) {
+  const run = nodeRun(story, area.id);
+  const row = nodeMap(area).rows[run.next] ?? [];
+  return row
+    .filter((st) => canSortie(story, area, run.next, st.lane))
+    .map((st) => ({ index: run.next, lane: st.lane, key: stageKey(area.id, run.next, st.lane), stage: st }));
+}
+
+/** ステージ選択で最初に選んでおくステージのID（次に出撃できるステージ。同じレーンをまっすぐ進むものを優先） */
+export function defaultStage(story, area) {
+  const options = sortieOptions(story, area);
+  const at = nodeRun(story, area.id).at;
+  return (options.find((o) => o.lane === at) ?? options[0])?.key ?? stageKey(area.id, 0);
+}
 
 /** ステージをクリアしたチームを、次のステージへ繰り越す（最終ステージならノードの繰り越しは終わり） */
 export function carryOver(story, run) {
-  const { areaId, index } = run.story;
+  const { areaId, index, lane, elite } = run.story;
   const area = areaById(areaId);
   story.nodeRuns ??= {};
-  if (isFinalStage(area, index)) delete story.nodeRuns[areaId];
-  else story.nodeRuns[areaId] = { next: index + 1, team: JSON.parse(JSON.stringify(run)) };
+  if (isFinalStage(area, index)) {
+    delete story.nodeRuns[areaId];
+    return;
+  }
+  const team = JSON.parse(JSON.stringify(run));
+  // 強敵を倒した報酬: 次のステージの最初に宝箱
+  if (elite) team.bonus = "elite";
+  // path: 通ってきたレーン（行ごと。1本道は null）。ステージ選択で通った道を光らせる
+  const path = [...(story.nodeRuns[areaId]?.path ?? []), lane ?? null];
+  story.nodeRuns[areaId] = { next: index + 1, at: lane ?? null, team, path };
 }
 
 /** チームを作り直す（X-1 から） */
@@ -118,8 +160,47 @@ export function resetNodeRun(story, areaId) {
   if (story.nodeRuns) delete story.nodeRuns[areaId];
 }
 
-export function stageUnlocked(story, area, index) {
-  return areaUnlocked(story, area) && (index === 0 || isCleared(story, stageKey(area.id, index - 1)));
+/** チーム（run）の特性: パーティにいるヒーローのスキルの種類・勢力・列の数 */
+export function teamTraits(db, team) {
+  const traits = { kinds: {}, factions: {}, cols: [0, 0, 0], size: 0 };
+  (team?.party ?? []).forEach((unit, slot) => {
+    if (!unit || !db.has(unit.defId)) return;
+    const def = db.def(unit.defId);
+    traits.size += 1;
+    for (const kind of new Set(def.effects.map((e) => e.kind))) traits.kinds[kind] = (traits.kinds[kind] || 0) + 1;
+    traits.factions[def.faction] = (traits.factions[def.faction] || 0) + 1;
+    traits.cols[slot % 3] += 1;
+  });
+  return traits;
+}
+
+/**
+ * ステージの特性とチームの相性。field: 地形で得をするヒーローの数 / counter: エネミーの傾向に強いヒーローの数。
+ * mark は ◎（2体以上）○（1体）－（0体）
+ */
+export function stageMatch(traits, stage) {
+  const mark = (n) => (n >= 2 ? "◎" : n === 1 ? "○" : "－");
+  const out = { field: null, foe: null };
+  const field = stage.field ? FIELDS[stage.field] : null;
+  if (field) {
+    let n = 0;
+    if (field.kinds) n = field.kinds.reduce((a, k) => a + (traits.kinds[k] || 0), 0);
+    if (field.faction) n = traits.factions[field.faction] || 0;
+    if (field.col !== undefined) n = traits.cols[field.col];
+    out.field = { n, mark: mark(n) };
+  }
+  const foe = stage.foe ? FOES[stage.foe] : null;
+  if (foe?.counter.length) {
+    const n = foe.counter.reduce((a, k) => a + (traits.kinds[k] || 0), 0);
+    out.foe = { n, mark: mark(n) };
+  }
+  return out;
+}
+
+/** ステージ選択で中身を見せてよいか（ノードが開いていて、出撃できるかクリア済みか、前の行より手前） */
+export function stageUnlocked(story, area, index, lane = null) {
+  if (!areaUnlocked(story, area)) return false;
+  return canSortie(story, area, index, lane) || isCleared(story, stageKey(area.id, index, lane)) || index < nodeRun(story, area.id).next;
 }
 
 /** その時代のエリアが1つでも開いているか */
@@ -127,11 +208,14 @@ export function eraUnlocked(story, eraId) {
   return AREAS.some((a) => a.era === eraId && areaUnlocked(story, a));
 }
 
-/** 次に挑戦できるステージ（クリアしていない最初のもの） */
-export function nextStage(story, area) {
-  const i = area.stages.findIndex((_, idx) => !isCleared(story, stageKey(area.id, idx)));
-  return i < 0 ? null : i;
+/** ノードのクリアしたステージの数と、全部の数（枝分かれも含む） */
+export function areaProgress(story, area) {
+  const stages = allStages(area);
+  return { done: stages.filter((st) => isCleared(story, stageKey(area.id, st.row, st.lane))).length, total: stages.length };
 }
+
+/** まだクリアしていないノードか（最終ステージのレイドボスを倒していない） */
+export const nextStage = (story, area) => (areaCleared(story, area) ? null : nodeRun(story, area.id).next);
 
 /** タイムマシンの状態 */
 export function machineInfo(story) {
@@ -319,18 +403,48 @@ export function areaEnemyPool(db, area) {
   return ids;
 }
 
+/**
+ * エネミーの傾向に合わせた顔ぶれ。レアリティ帯ごとに、傾向のスキルを持つエネミーを4体と、ノードの顔ぶれから2体
+ */
+export function foePool(db, area, foeId) {
+  const base = areaEnemyPool(db, area);
+  const foe = FOES[foeId];
+  if (!foe?.kinds) return base;
+  let h = 2166136261;
+  for (const c of `${area.id}:${foeId}`) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
+  const rng = createRng(h >>> 0);
+  const ids = [];
+  for (let r = 1; r <= 5; r++) {
+    const tier = db.enemies.filter((d) => d.rarity === r);
+    const match = tier.filter((d) => d.effects.some((e) => foe.kinds.includes(e.kind))).map((d) => d.id);
+    const picked = rng.sample(match, 4);
+    const rest = base.filter((id) => db.def(id).rarity === r && !picked.includes(id));
+    ids.push(...picked, ...rng.sample(rest, 6 - picked.length));
+  }
+  return ids;
+}
+
 /** ステージの難しさ（ノードの時代 ＋ ステージ番号）。後半のステージほどエネミーの収入が増えて強くなる */
 export function stageDifficulty(area, index) {
   return area.difficulty + index;
 }
 
 /** ステージの情報（run.story） */
-function stageInfo(area, index, key) {
+function stageInfo(area, index, lane, key) {
+  const stage = stageAt(area, index, lane);
+  const supply = stage.kind === "supply";
   return {
     key,
     areaId: area.id,
     index,
-    waves: stageWaves(area, index),
+    lane,
+    kind: stage.kind,
+    // 補給はバトルなし（ウェーブ0）
+    waves: supply ? 0 : stageWaves(area, index),
+    supply,
+    elite: stage.kind === "elite",
+    field: stage.field,
+    foe: stage.foe,
     difficulty: stageDifficulty(area, index),
     rankCap: areaRankCap(area),
     boss: isFinalStage(area, index) ? area.boss : null,
@@ -344,16 +458,25 @@ function stageInfo(area, index, key) {
 
 /**
  * ステージを始める（ウェーブ制のラン）。デッキのヒーローだけがマーケットに並ぶ。最終ステージは最後のウェーブがレイドボス。
- * 前のステージをクリアしたチームがあれば、それを繰り越して始める（ノードの最初のステージは新しいチーム）
+ * 前のステージをクリアしたチームがあれば、それを繰り越して始める（ノードの最初のステージは新しいチーム）。
+ * 補給のステージと、強敵を倒した次のステージは、最初に宝箱を選ぶ
  */
 export function newStageRun(db, story, key, seed) {
   const parsed = parseStageKey(key);
   if (!parsed) throw new Error(`unknown stage: ${key}`);
-  const { area, index } = parsed;
+  const { area, index, lane } = parsed;
   const deck = story.deck.filter((id) => db.has(id));
   if (!deck.length) throw new Error("デッキが空です");
-  const info = stageInfo(area, index, key);
+  const info = stageInfo(area, index, lane, key);
+  // エネミーの傾向に合わせた顔ぶれ（ノードの顔ぶれと同じ形のIDの並び）
+  info.enemyPool = foePool(db, area, info.foe);
   const carry = nodeRun(story, area.id);
-  if (index > 0 && carry.next === index && carry.team) return continueRun(db, carry.team, { seed, heroPool: deck, story: info });
-  return newRun(db, { playerId: STORY_PLAYER, seed, heroPool: deck, enemyPool: areaEnemyPool(db, area), story: info });
+  const run =
+    index > 0 && carry.next === index && carry.team
+      ? continueRun(db, carry.team, { seed, heroPool: deck, story: info })
+      : newRun(db, { playerId: STORY_PLAYER, seed, heroPool: deck, enemyPool: areaEnemyPool(db, area), story: info });
+  if (run.bonus === "elite") addTreasure(run, "elite");
+  delete run.bonus;
+  if (info.supply) addTreasure(run, "supply");
+  return run;
 }

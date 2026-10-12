@@ -182,6 +182,8 @@ export function stageTelop(app, info, onDone) {
     { class: "stage-telop", onClick: () => onDone() },
     info.boss
       ? h("div", { class: "telop-band boss" }, h("span", { class: "t-small" }, "WARNING"), h("span", { class: "t-num" }, "RAID BOSS"))
+      : info.supply
+        ? h("div", { class: "telop-band supply" }, h("span", { class: "t-small" }, "REST"), h("span", { class: "t-num" }, "SUPPLY"))
       : h(
           "div",
           { class: "telop-band" },
@@ -262,7 +264,7 @@ const CHEST_SVG =
 
 export function treasureModal(app, ev) {
   return modal(
-    ev.reason === "revive" ? "復活！ 宝箱" : "宝箱",
+    ev.reason === "revive" ? "復活！ 宝箱" : ev.reason === "supply" ? "補給: 宝箱" : ev.reason === "elite" ? "強敵を倒した宝箱" : "宝箱",
     h(
       "div",
       { class: "choice-row" },
@@ -441,7 +443,11 @@ export function resultPanel(app, result) {
     h(
       "div",
       { class: "result-panel panel" },
-      h("div", { class: "result-stage" }, story ? `${stageLabel(areaById(story.areaId), story.index)} · WAVE ${run.wins}/${runGoal(run)}` : `STAGE ${result.stage}`),
+      h(
+        "div",
+        { class: "result-stage" },
+        story ? `${stageLabel(areaById(story.areaId), story.index, story.lane)} · WAVE ${run.wins}/${runGoal(run)}` : `STAGE ${result.stage}`,
+      ),
       h("div", { class: "result-rows" }, rows),
       reviewRows(app, app.battleView?.battle),
       h("button", { class: "btn primary big", onClick: () => app.actions.next() }, nextLabel),
@@ -626,6 +632,10 @@ function helpPages(app) {
     ["クエスト", "フリーバトルの1回の挑戦。10勝でクリア、ライフが尽きると失敗。"],
     ["ノード", "ストーリーの行き先。時代（近代・近世・中世・古代）×地域。ステージが10個（近代・日本は3個）、最後のステージにレイドボス。"],
     ["繰り越し", "ノードの中では、ステージをクリアしたチーム（ヒーロー・Lv・エクステンション・残りのGUM）のまま次のステージへ進む。負けたらそのステージの最初から。「作り直す」でノードの最初のステージから新しいチーム。後半のステージほどエネミーが強い。"],
+    ["ルート", "ノードの X-5〜X-9 は3つの道（A・B・C）に分かれる。いまのステージから線でつながったステージへ進める。地形・エネミーの傾向とパーティの相性（◎ 2体以上 / ○ 1体 / － いない）を見て選ぶ。"],
+    ["強敵", "エネミーの効果量・HP +30% のステージ。クリアすると次のステージの最初に宝箱。"],
+    ["補給", "バトルのないステージ。宝箱を1つ選び、マーケットで買い物をして「出発」。"],
+    ["地形", "そのステージのバトルで両陣営に効く（毒・出血・回復・ダメージなどの効果量アップ、前衛・後衛アップ）。勢力の地はその勢力のヒーローだけ（エネミーには勢力がない）。"],
     ["ウェーブ", "ストーリーのステージの1戦。決まった数のウェーブを勝ち抜くとステージクリア（ライフ3）。"],
     ["レイドボス", "ノードの最終ステージの最後のウェーブに出る大きなエネミー。スキルを順番に使い、大技（FINAL）は予告される。倒すとパーツ。"],
     ["デッキ", "ステージに連れて行くヒーロー（最大8種類、Common か Uncommon を1体以上）。マーケットにはデッキのヒーローだけが並ぶ。マーケットのランクで決まったレアリティ（以上）のヒーローがデッキにいないと、その枠は空になる（近代・日本以外）。"],

@@ -3,7 +3,7 @@
 // ストーリーのステージも同じ仕組みで、run.story があるときは「決まった数のウェーブを勝ち抜く」ルールになる。
 
 import { withRng } from "./rng.js";
-import { STAGE_LIVES } from "./world.js";
+import { FIELDS, STAGE_LIVES } from "./world.js";
 import {
   RARITY,
   START_LIVES,
@@ -17,7 +17,7 @@ import {
 import { CRYPTO_ENERGY, TREASURES, materialById, playerById, treasureGum } from "./content.js";
 import { effectiveRank, poolByRarity, restockMarket, topRarity, buyOffer, sellUnit } from "./market.js";
 import { acquireUnit, allUnits, canAcquire, emptyRoster, levelUp } from "./roster.js";
-import { buildTeam, collectMods } from "./units.js";
+import { addFieldMods, buildTeam, collectMods } from "./units.js";
 import { buildCpuOpponent } from "./cpu.js";
 import { buildBossOpponent, isBossWave } from "./boss.js";
 
@@ -165,7 +165,8 @@ function tutorialOffers(run, db) {
 // ---------------------------------------------------------------------------
 
 function treasureEvent(run, rng, reason = "stage") {
-  const entries = TREASURES.filter((t) => !(t.id === "life" && run.lives >= START_LIVES)).map((t) => [t.id, t.weight]);
+  // ストーリーのライフはステージごとなので、ライフ回復は出さない
+  const entries = TREASURES.filter((t) => !(t.id === "life" && (run.story || run.lives >= START_LIVES))).map((t) => [t.id, t.weight]);
   const options = [];
   while (options.length < 3 && entries.length) {
     const id = rng.weighted(entries);
@@ -176,6 +177,19 @@ function treasureEvent(run, rng, reason = "stage") {
     );
   }
   return { type: "treasure", reason, options };
+}
+
+/** 宝箱の選択を足す（ストーリーの補給・強敵を倒した報酬） */
+export function addTreasure(run, reason) {
+  withRng(run, (rng) => run.pending.push(treasureEvent(run, rng, reason)));
+}
+
+/** 補給のステージを終える（宝箱を選んだあと「出発」）。バトルはないのでそのままクリア */
+export function departSupply(run) {
+  if (!run.story?.supply) return { ok: false, error: "補給のステージではありません" };
+  if (run.pending.length) return { ok: false, error: "先に選択を済ませてください" };
+  run.phase = "clear";
+  return { ok: true };
 }
 
 function extensionEvent(run, db, rng) {
@@ -320,17 +334,20 @@ export function sell(run, db, zone, index) {
 export function playerTeam(run, db) {
   const player = playerById(run.playerId);
   const units = run.party.map((unit, slot) => unit && { unit, slot }).filter(Boolean);
+  // ストーリーの地形（両陣営に効く）
+  const mods = addFieldMods(runMods(run, db), FIELDS[run.story?.field]);
   return buildTeam({
     name: player.name,
     units,
     stage: run.stage,
-    mods: runMods(run, db),
+    mods,
     db,
     leader: { name: player.name, image: player.images.idle, pixelated: player.pixelated !== false },
   });
 }
 
 export function canStartBattle(run) {
+  if (run.story?.supply) return { ok: false, error: "補給ではバトルしません。「出発」で次へ" };
   if (run.phase !== "market") return { ok: false, error: "いまはバトルできません" };
   if (run.pending.length) return { ok: false, error: "先に選択を済ませてください" };
   if (!run.party.some(Boolean)) return { ok: false, error: "パーティにヒーローを1体以上配置してください" };

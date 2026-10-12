@@ -9,7 +9,8 @@ import { RARITY, stageIncome, storyCpuBonus } from "./balance.js";
 import { rollMarket } from "./market.js";
 import { emptyRoster } from "./roster.js";
 import { botShop, unitValue } from "./bot.js";
-import { buildTeam, collectMods } from "./units.js";
+import { addFieldMods, buildTeam, collectMods } from "./units.js";
+import { FIELDS } from "./world.js";
 
 /** CPUにだけ与える追加GUM（宝箱・マテリアル・プレイヤースキルを使わない分の補正） */
 export function cpuBonusIncome(stage) {
@@ -56,7 +57,8 @@ export function buildCpuOpponent(db, run, stage) {
     gum: 0,
     freeRerolls: 0,
     itemUses: 0,
-    heroPool: run.enemyPool,
+    // ストーリーはステージのエネミーの傾向に合わせた顔ぶれ
+    heroPool: story?.enemyPool ?? run.enemyPool,
     nextUid: 1,
     market: { offers: [] },
     extensions: [],
@@ -77,10 +79,10 @@ export function buildCpuOpponent(db, run, stage) {
   }
 
   const units = ghost.party.map((unit, slot) => unit && { unit, slot }).filter(Boolean);
-  if (!units.length) units.push({ unit: { uid: ghost.nextUid++, defId: run.enemyPool[0], level: 1, permMult: 0, cdReduce: 0 }, slot: 0 });
+  if (!units.length) units.push({ unit: { uid: ghost.nextUid++, defId: ghost.heroPool[0], level: 1, permMult: 0, cdReduce: 0 }, slot: 0 });
   const leaderUnit = units.reduce((a, c) => (unitValue(db, c.unit) > unitValue(db, a.unit) ? c : a), units[0]).unit;
   const leaderDef = db.def(leaderUnit.defId);
-  const mods = collectMods(ghost.extensions, db);
+  const mods = addFieldMods(collectMods(ghost.extensions, db), FIELDS[story?.field]);
   // ストーリー: 後半のステージほどエネミーの効果量とパーティHPを上げる（盤面が埋まったあとも強くなるように）
   if (tune.power) for (const { unit } of units) unit.permMult += tune.power;
   const team = buildTeam({

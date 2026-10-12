@@ -1937,3 +1937,307 @@ img.flip {
   padding: 2px 8px;
   font-size: 11px;
 }
+
+/* ------------------------------------------------------------- ノードの道（枝分かれ） */
+
+.route-map .stage-path .path-line {
+  stroke: color-mix(in srgb, var(--area) 45%, rgba(255, 255, 255, 0.25));
+  stroke-width: 3;
+  stroke-dasharray: 6 6;
+  animation: none;
+}
+
+.route-map .stage-path .path-under {
+  stroke: rgba(0, 0, 0, 0.35);
+  stroke-width: 5;
+}
+
+/* 通ってきた道は光らせて流す */
+.route-map .stage-path .path-line.walked {
+  stroke: var(--accent);
+  stroke-width: 4;
+  stroke-dasharray: 10 8;
+  animation: path-flow 1.2s linear infinite;
+}
+
+.route-node {
+  position: absolute;
+  z-index: 2;
+  width: clamp(34px, 9.5vw, 44px);
+  height: clamp(34px, 9.5vw, 44px);
+  transform: translate(-50%, -50%);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--text);
+  background: radial-gradient(circle at 50% 35%, #3a4052, #151821 75%);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.22), 0 3px 0 rgba(0, 0, 0, 0.5);
+  animation: pin-in 0.4s var(--spring) both;
+  animation-delay: var(--d, 0s);
+}
+
+.route-art {
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.route-art img {
+  width: 120%;
+  height: 120%;
+  margin-bottom: -6%;
+  object-fit: contain;
+}
+
+.route-art.supply-art img {
+  width: 78%;
+  height: 78%;
+  margin: auto;
+}
+
+.route-node.kind-elite {
+  background: radial-gradient(circle at 50% 35%, #6b1830, #1d0710 75%);
+  box-shadow: 0 0 0 2px #ff4f6d, 0 3px 0 rgba(0, 0, 0, 0.5);
+}
+
+.route-node.kind-supply {
+  background: radial-gradient(circle at 50% 35%, #1f5a43, #0b1d16 75%);
+  box-shadow: 0 0 0 2px #4fe3a0, 0 3px 0 rgba(0, 0, 0, 0.5);
+}
+
+.route-node.kind-boss {
+  width: clamp(58px, 16vw, 76px);
+  height: clamp(58px, 16vw, 76px);
+  background: radial-gradient(circle, rgba(255, 79, 109, 0.45), #1d0710 72%);
+  box-shadow: 0 0 0 3px #ff4f6d, 0 0 16px rgba(255, 79, 109, 0.6);
+}
+
+.route-node.kind-boss .route-art img {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+.route-node.kind-boss .boss-tag {
+  top: auto;
+  bottom: -9px;
+}
+
+/* 地形・強敵の小さな印 */
+.route-field,
+.route-kind {
+  position: absolute;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: #0b0d12;
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.5);
+}
+
+.route-field {
+  left: -5px;
+  bottom: -4px;
+}
+
+.route-kind {
+  right: -5px;
+  top: -4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  background: #c8183a;
+}
+
+.field-icon {
+  width: 13px;
+  height: 13px;
+}
+
+.field-faction,
+.field-col {
+  font-style: normal;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+}
+
+.field-faction {
+  color: var(--fc);
+  text-shadow: 0 0 2px #000;
+}
+
+.route-node .node-check {
+  right: -3px;
+  top: auto;
+  bottom: -5px;
+  font-size: 12px;
+  padding: 0 3px;
+  color: #241900;
+  background: var(--accent);
+  border-radius: 6px;
+}
+
+.route-node.cleared:not(.walked) {
+  filter: saturate(0.5) brightness(0.8);
+}
+
+.route-node.walked {
+  box-shadow: 0 0 0 3px var(--accent), 0 3px 0 rgba(0, 0, 0, 0.5);
+}
+
+/* まだ遠いステージ（中身は見せるが暗く） */
+.route-node.far {
+  filter: brightness(0.6) saturate(0.6);
+}
+
+.route-node.next {
+  animation: pin-in 0.4s var(--spring) both, route-pulse 1.4s ease-in-out 0.6s infinite;
+}
+
+@keyframes route-pulse {
+  50% {
+    box-shadow: 0 0 0 3px var(--accent), 0 0 14px var(--accent);
+  }
+}
+
+.route-node.selected {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+  z-index: 3;
+}
+
+.route-node .next-tag {
+  bottom: -14px;
+}
+
+/* ステージの詳細: 種類・特性・相性 */
+.kind-chip {
+  padding: 1px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.12);
+  clip-path: polygon(5px 0, 100% 0, calc(100% - 5px) 100%, 0 100%);
+}
+
+.kind-chip.kind-elite,
+.kind-chip.kind-boss {
+  color: #fff;
+  background: #c8183a;
+}
+
+.kind-chip.kind-supply {
+  color: #062015;
+  background: #4fe3a0;
+}
+
+.trait-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.trait-row b {
+  flex: none;
+  font-size: 12px;
+}
+
+.trait-row small {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--muted);
+}
+
+.trait-row .field-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.trait-row .field-faction,
+.trait-row .field-col,
+.foe-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 700;
+  border-radius: 50%;
+  background: #0b0d12;
+}
+
+.foe-icon {
+  color: #fff;
+  background: #8a1230;
+}
+
+.match-mark {
+  flex: none;
+  min-width: 18px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.match-mark.m2 {
+  color: var(--accent);
+  text-shadow: 0 0 6px var(--accent);
+}
+
+.match-mark.m1 {
+  color: #d8dde8;
+}
+
+.match-mark.m0 {
+  color: #6b7283;
+}
+
+.meet-art.supply-art img {
+  width: 70%;
+  height: 70%;
+  margin: auto;
+}
+
+.stage-card .reward-face {
+  margin-right: -6px;
+}
+
+/* マーケット: 補給 */
+.supply-badge {
+  align-self: center;
+  padding: 2px 10px;
+  font-weight: 700;
+  font-size: 12px;
+  color: #062015;
+  background: #4fe3a0;
+  clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+}
+
+.battle-btn.depart-btn {
+  background: linear-gradient(180deg, #4fe3a0, #1f9a68);
+  color: #062015;
+}
+
+.stage-telop .telop-band.supply {
+  border-color: #4fe3a0;
+}
+
+.stage-telop .telop-band.supply .t-num {
+  font-size: clamp(40px, 13vw, 72px);
+  text-shadow: 4px 4px 0 #1f9a68;
+}

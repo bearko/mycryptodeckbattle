@@ -15,7 +15,7 @@
 //
 // ノード（時代×地域）ごとの専用の台本は M5（docs/story.md）で増やす。いまは近代・日本を専用、ほかは共通の台本。
 
-import { areaById, areaName, eraById, heroId, isFinalStage, machineByLevel } from "../engine/world.js";
+import { FIELDS, FOES, areaById, areaName, eraById, heroId, isFinalStage, machineByLevel } from "../engine/world.js";
 
 /** プロローグに出てくるエネミー（遭遇するだけ。戦わない） */
 const PROLOGUE_ENEMY = "assets/enemies/101.png";
@@ -119,10 +119,11 @@ function bossReveal(boss) {
 }
 
 /**
- * ステージの前のシーン（出会い）。boss はそのノードのレイドボス（最終ステージで登場）。
- * 出会うヒーローがいないステージは短く、最終ステージはレイドボスが現れる
+ * ステージの前のシーン（出会い）。boss はそのノードのレイドボス（最終ステージで登場）、stage は道のステージ
+ * （枝分かれでは種類・地形・エネミーの傾向がある）。出会うヒーローがいないステージは短く、最終ステージはレイドボスが現れる
  */
-export function stageIntro(area, index, { first, boss = null }) {
+export function stageIntro(area, index, { first, boss = null, stage = null }) {
+  const st = stage ?? area.stages[index];
   const steps = [];
   if (index === 0 && first) steps.push(...arrival(area));
   else steps.push({ bg: area.bg });
@@ -132,12 +133,17 @@ export function stageIntro(area, index, { first, boss = null }) {
     if (first && final) steps.push(...bossReveal(boss));
     return { bg: area.bg, steps };
   }
-  const meet = area.stages[index].meet;
-  if (!first) {
-    steps.push({ say: "mine", face: "smile", text: final ? `${boss.name}に、もう一度挑みましょう！` : "もう一度、腕だめしですね！" });
+  if (st.kind === "supply") {
+    steps.push(
+      { say: "mine", face: "sparkle", text: "ここで補給しましょう！ 宝箱を1つ選んで、マーケットで準備してから出発です" },
+      { say: "chris", face: "smile", text: "ひと休みだな" },
+    );
     return { bg: area.bg, steps };
   }
-  if (meet) {
+  const meet = st.meet;
+  if (!first) {
+    steps.push({ say: "mine", face: "smile", text: final ? `${boss.name}に、もう一度挑みましょう！` : "もう一度、腕だめしですね！" });
+  } else if (meet) {
     steps.push(
       { say: "mine", face: "pointer", text: index === 0 ? `到着！ ここは${areaName(area)}ですね` : final ? "この先から、ものすごく強い反応が……！" : "エネミーの反応が強くなってきました" },
       { say: `hero:${meet}`, text: final ? "おぬしたちも、あの巨大な怪物を追ってきたのか。" : "見慣れぬ者たちだな。……もしや、この地を騒がせる怪物を追っているのか？" },
@@ -150,6 +156,10 @@ export function stageIntro(area, index, { first, boss = null }) {
       { say: "chris", face: "guts", text: "まかせて！" },
     );
   }
+  // 枝分かれのステージの特性（強敵・地形・エネミーの傾向）
+  if (st.kind === "elite") steps.push({ say: "mine", face: "arms", text: "強い反応……強敵の部隊です！ そのかわり、倒せば宝箱が手に入りますよ" });
+  if (st.field) steps.push({ say: "mine", face: "pointer", text: `このあたりは「${FIELDS[st.field].name}」。${FIELDS[st.field].text}です` });
+  if (st.foe && st.foe !== "mixed") steps.push({ say: "mine", face: "smile", text: `エネミーは「${FOES[st.foe].name}」。${FOES[st.foe].text}みたいです` });
   if (final) steps.push(...bossReveal(boss));
   return { bg: area.bg, steps };
 }

@@ -2,6 +2,9 @@
 // 仕様は docs/story.md。数値や並びを変えるときはここだけ直せばよい。
 // ヒーローは MCH の ID（data/heroes.json の mch_id）、レイドボスは data/bosses.json の ID で書く。
 // コード上はノードを area と呼ぶ（AREAS / areaId など）。
+// ノードの中の道は 参考作 のように後半が枝分かれする（buildNodeMap）。
+
+import { createRng } from "./rng.js";
 
 /**
  * 時代（古いほど後で開く）。rankCap: その時代のマーケットランクの上限（プレイヤーもエネミーも）。
@@ -394,17 +397,174 @@ export const eraById = (id) => ERAS.find((e) => e.id === id);
 export const areaRankCap = (area) => area.rankCap ?? eraById(area.era).rankCap;
 export const machineByLevel = (level) => MACHINES[Math.max(1, Math.min(MAX_MACHINE_LEVEL, level)) - 1];
 
-/** "kindai-jp:2" のようなステージID */
-export const stageKey = (areaId, index) => `${areaId}:${index}`;
+// ---------------------------------------------------------------------------
+// ノードの道（参考作 のような枝分かれ）
+// ---------------------------------------------------------------------------
 
-export function parseStageKey(key) {
-  const [areaId, i] = key.split(":");
-  const area = areaById(areaId);
-  const index = Number(i);
-  if (!area || !area.stages[index]) return null;
-  return { area, index, stage: area.stages[index] };
+/** 枝分かれする行（X-5〜X-9。0から数える）。前半は1本道、最後（X-10）はレイドボスで合流 */
+export const BRANCH_FIRST = 4;
+export const BRANCH_LAST = 8;
+export const LANES = 3;
+export const LANE_LETTERS = ["A", "B", "C"];
+
+/** ステージの種類 */
+export const STAGE_KINDS = {
+  battle: { name: "戦闘", text: "エネミーの部隊と戦う" },
+  elite: { name: "強敵", text: "エネミーの効果量・HP +30%。クリアすると次のステージの最初に宝箱", power: 30, hp: 30 },
+  supply: { name: "補給", text: "バトルなし。宝箱を1つ選び、マーケットで買い物をして出発" },
+  boss: { name: "レイドボス", text: "最後のウェーブでレイドボスと戦う" },
+};
+
+/**
+ * 地形（そのステージのバトルで効く）。kinds: 得をするスキルの種類 / faction: 得をする勢力（プレイヤーだけ。エネミーは勢力なし）
+ * mods は units.js の collectMods と同じ形で足す
+ */
+export const FIELDS = {
+  poison: { name: "毒の沼", text: "毒の効果量 +50%（両陣営）", kinds: ["poison"], mods: { kindMult: { poison: 50 } } },
+  bleed: { name: "血の荒野", text: "出血の効果量 +50%（両陣営）", kinds: ["bleed"], mods: { kindMult: { bleed: 50 } } },
+  spring: { name: "癒やしの泉", text: "回復・シールド +50%（両陣営）", kinds: ["heal", "shield"], mods: { kindMult: { heal: 50, shield: 50 } } },
+  duel: { name: "決戦の地", text: "ダメージ +30%（両陣営）", kinds: ["damage"], mods: { kindMult: { damage: 30 } } },
+  tactics: {
+    name: "軍師の陣",
+    text: "効果量アップ・チャージ操作・弱体化 +50%（両陣営）",
+    kinds: ["buff", "haste", "slow", "weaken"],
+    mods: { kindMult: { buff: 50, haste: 50, slow: 50, weaken: 50 } },
+  },
+  front: { name: "最前線", text: "前衛の効果量 +40%（両陣営）", col: 0, mods: { colMult: [40, 0, 0] } },
+  back: { name: "見晴らしの丘", text: "後衛の効果量 +40%（両陣営）", col: 2, mods: { colMult: [0, 0, 40] } },
+};
+
+/** 勢力の地（その勢力のヒーローの効果量 +40%。エネミーには勢力がないのでプレイヤーだけ得をする） */
+const FACTION_NAMES = { 1: "朱雀", 2: "青龍", 3: "玄武", 4: "黄竜", 5: "白虎" };
+for (const [f, name] of Object.entries(FACTION_NAMES)) {
+  FIELDS[`faction${f}`] = { name: `${name}の地`, text: `${name}のヒーローの効果量 +40%`, faction: Number(f), mods: { factionMult: { [f]: 40 } } };
 }
 
-/** 画面に出すステージ番号（1-1 など） */
-export const stageLabel = (area, index) => `${area.no}-${index + 1}`;
+/** エネミーの傾向（そのステージに出るエネミーの顔ぶれ）。counter: 相性のよいスキルの種類 */
+export const FOES = {
+  mixed: { name: "混成部隊", text: "いろいろなエネミー", kinds: null, counter: [] },
+  venom: { name: "毒使いの群れ", text: "毒を使うエネミーが多い", kinds: ["poison"], counter: ["heal", "shield"] },
+  blade: { name: "切り裂き部隊", text: "出血を使うエネミーが多い", kinds: ["bleed"], counter: ["heal", "shield"] },
+  wall: { name: "鉄壁の部隊", text: "シールド・回復を使うエネミーが多い", kinds: ["shield", "heal"], counter: ["damage", "weaken"] },
+  assault: { name: "猛攻部隊", text: "ダメージの大きいエネミーが多い", kinds: ["damage"], counter: ["shield", "heal", "weaken"] },
+};
+
+function hashString(text) {
+  let h = 2166136261;
+  for (const c of text) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
+  return h >>> 0;
+}
+
+/**
+ * ノードの道を作る（ノードIDから決まるので毎回同じ）。
+ * 前半（X-1〜X-4）と最後（X-10）は1本道。X-5〜X-9 は3つのレーンに分かれ、隣のレーンへ渡る道もある。
+ * その行のヒーロー（area.stages の join）をレーンに分け、レーンごとに種類（戦闘・強敵・補給）・地形・エネミーの傾向を決める。
+ * 戻り値: { rows: [[ステージ]], next: [[次の行のステージの番号]] }（next[r][i] は r 行の i 番目から行ける r+1 行の番号）
+ */
+export function buildNodeMap(area) {
+  const count = area.stages.length;
+  const branching = area.id !== TUTORIAL_AREA && count > BRANCH_LAST + 1;
+  const rng = createRng(hashString(`${area.id}:map`));
+  const rows = [];
+  for (let r = 0; r < count; r++) {
+    const src = area.stages[r];
+    if (!branching || r < BRANCH_FIRST || r > BRANCH_LAST) {
+      const kind = r === count - 1 ? "boss" : "battle";
+      rows.push([{ row: r, lane: null, kind, meet: src.meet ?? null, join: [...src.join], meetAtStart: Boolean(src.meetAtStart), field: null, foe: null }]);
+      continue;
+    }
+    const kinds = ["battle", "battle", "battle"];
+    const sides = rng.shuffle([0, 2]);
+    if (rng.next() < 0.45) kinds[sides[0]] = "elite";
+    if (rng.next() < (r === BRANCH_LAST ? 0.7 : 0.3)) kinds[sides[1]] = "supply";
+    // ヒーローは真ん中 → 左 → 右の順に配る（補給には配らない）。最初のヒーローがそのレーンで出会うヒーロー
+    const order = [1, 0, 2].filter((l) => kinds[l] !== "supply");
+    const heroes = [[], [], []];
+    src.join.forEach((id, i) => heroes[order[i % order.length]].push(id));
+    rows.push(
+      kinds.map((kind, lane) => ({ row: r, lane, kind, meet: heroes[lane][0] ?? null, join: heroes[lane], meetAtStart: false, field: null, foe: null })),
+    );
+  }
+  // 地形とエネミーの傾向（枝分かれした戦闘・強敵だけ。同じ行で地形が重ならないように）
+  const fieldIds = Object.keys(FIELDS);
+  const foeIds = ["mixed", "mixed", "venom", "blade", "wall", "assault"];
+  for (const row of rows) {
+    if (row.length === 1) continue;
+    const used = new Set();
+    for (const st of row) {
+      if (st.kind === "supply") continue;
+      let field = rng.pick(fieldIds);
+      for (let i = 0; i < 4 && used.has(field); i++) field = rng.pick(fieldIds);
+      used.add(field);
+      st.field = field;
+      st.foe = rng.pick(foeIds);
+    }
+  }
+  // 道: 同じレーンへは必ず。隣のレーンへは確率で（道どうしが交差しないように）
+  const next = [];
+  for (let r = 0; r < count - 1; r++) {
+    const a = rows[r].length;
+    const b = rows[r + 1].length;
+    if (a === 1) next.push([Array.from({ length: b }, (_, i) => i)]);
+    else if (b === 1) next.push(Array.from({ length: a }, () => [0]));
+    else {
+      // 隣り合うレーンの組ごとに「渡らない / 右へ / 左へ」のどれか（両方向は交差するので選ばない）
+      const links = Array.from({ length: a }, (_, l) => [l]);
+      for (let l = 0; l + 1 < Math.min(a, b); l++) {
+        const way = rng.weighted([
+          ["none", 3],
+          ["right", 3.5],
+          ["left", 3.5],
+        ]);
+        if (way === "right") links[l].push(l + 1);
+        if (way === "left") links[l + 1].push(l);
+      }
+      next.push(links.map((x) => x.sort((m, n) => m - n)));
+    }
+  }
+  return { rows, next };
+}
+
+/** ノードの道（ノードIDから決まる。初めて使うときに作る） */
+export function nodeMap(area) {
+  area.route ??= buildNodeMap(area);
+  return area.route;
+}
+
+/** その行のステージ（1本道の行は lane が null） */
+export function stageAt(area, row, lane = null) {
+  const list = nodeMap(area).rows[row];
+  if (!list) return null;
+  if (list.length === 1) return lane === null || lane === undefined ? list[0] : null;
+  return lane === null || lane === undefined ? null : (list[lane] ?? null);
+}
+
+/** ノードのすべてのステージ（下の行から） */
+export const allStages = (area) => nodeMap(area).rows.flat();
+
+/** from（row, lane）から to（row+1 の lane）へ行けるか */
+export function linked(area, row, lane, toLane) {
+  const rows = nodeMap(area).rows;
+  const i = rows[row].length === 1 ? 0 : lane;
+  const j = rows[row + 1]?.length === 1 ? 0 : toLane;
+  return Boolean(nodeMap(area).next[row]?.[i]?.includes(j));
+}
+
+/** "kindai-jp:2"（1本道の行）や "kindai-eu:5.1"（枝分かれした行の B レーン）のようなステージID */
+export const stageKey = (areaId, row, lane = null) => (lane === null || lane === undefined ? `${areaId}:${row}` : `${areaId}:${row}.${lane}`);
+
+export function parseStageKey(key) {
+  const [areaId, rest] = String(key).split(":");
+  const area = areaById(areaId);
+  if (!area || rest === undefined) return null;
+  const [r, l] = rest.split(".");
+  const index = Number(r);
+  const lane = l === undefined ? null : Number(l);
+  const stage = stageAt(area, index, lane);
+  if (!stage) return null;
+  return { area, index, lane, stage };
+}
+
+/** 画面に出すステージ番号（1-1、2-6B など） */
+export const stageLabel = (area, index, lane = null) => `${area.no}-${index + 1}${lane === null || lane === undefined ? "" : LANE_LETTERS[lane]}`;
 export const areaName = (area) => (area.era === "hazama" ? area.region : `${eraById(area.era).name}・${area.region}`);

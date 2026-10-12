@@ -1,7 +1,20 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { loadDb } from "./load-db.mjs";
-import { AREAS, STARTER_HEROES, DECK_SIZE, MACHINES, heroId, stageKey, areaById, stageWaves } from "../js/engine/world.js";
+import {
+  AREAS,
+  STARTER_HEROES,
+  DECK_SIZE,
+  MACHINES,
+  BRANCH_FIRST,
+  BRANCH_LAST,
+  heroId,
+  stageKey,
+  areaById,
+  stageWaves,
+  nodeMap,
+  allStages,
+} from "../js/engine/world.js";
 import {
   migrateStory,
   newStory,
@@ -29,19 +42,20 @@ test("すべてのヒーローが、どこか1か所で仲間になる", () => {
   const add = (id, where) => seen.set(id, [...(seen.get(id) ?? []), where]);
   STARTER_HEROES.forEach((id) => add(id, "starter"));
   for (const a of AREAS) {
-    a.stages.forEach((s, i) => {
-      assert.ok(!s.meet || s.join.includes(s.meet) || s.meetAtStart, `${a.id}:${i} の出会うヒーローが仲間リストにない`);
-      new Set([...(s.meetAtStart ? [s.meet] : []), ...s.join]).forEach((id) => add(id, `${a.id}:${i}`));
-    });
+    for (const s of allStages(a)) {
+      const key = stageKey(a.id, s.row, s.lane);
+      assert.ok(!s.meet || s.join.includes(s.meet) || s.meetAtStart, `${key} の出会うヒーローが仲間リストにない`);
+      new Set([...(s.meetAtStart ? [s.meet] : []), ...s.join]).forEach((id) => add(id, key));
+    }
   }
   for (const h of db.heroes) assert.equal(seen.get(h.mch_id)?.length, 1, `${h.name} (${h.mch_id}) の割り当て: ${seen.get(h.mch_id)}`);
   for (const id of seen.keys()) assert.ok(db.has(heroId(id)), `データにないヒーロー ${id}`);
 });
 
-/** ノードのステージを最初から最後までクリアする */
+/** ノードを最初から最後まで、枝分かれは真ん中のレーン（B）を通ってクリアする */
 function clearArea(story, id) {
   const area = areaById(id);
-  return area.stages.map((_, i) => clearStage(story, stageKey(id, i)));
+  return nodeMap(area).rows.map((row, r) => clearStage(story, stageKey(id, r, row.length > 1 ? 1 : null)));
 }
 
 test("最初は近代・日本だけ。ノードをクリアすると同じ時代の国が開き、タイムマシンの改良で時代が開く", () => {
@@ -131,7 +145,10 @@ test("古い保存データ（パーツがステージごと）を、ノード�
   assert.deepEqual(s.cleared, old.cleared);
   assert.deepEqual(s.heroes, old.heroes);
   assert.ok(areaUnlocked(s, areaById("kindai-eu")));
-  assert.ok(stageUnlocked(s, areaById("kindai-eu"), 3));
+  // 繰り越しのチームがないので X-1 から
+  assert.ok(stageUnlocked(s, areaById("kindai-eu"), 0));
+  assert.ok(stageUnlocked(s, areaById("kindai-eu"), 2));
+  assert.ok(!stageUnlocked(s, areaById("kindai-eu"), 3));
 });
 
 test("デッキはコレクションから最大8種類", () => {
@@ -230,7 +247,7 @@ test("デッキにいないレアリティの枠は空（チュートリアル�
   clearArea(story, "kindai-jp");
   // 初心者だけのデッキで、難しいステージへ
   assert.ok(setDeck(story, ["h10001", "h10002", "h10003"], db).ok);
-  const key = stageKey("kindai-eu", 8);
+  const key = stageKey("kindai-eu", 8, 1);
   const run = newStageRun(db, story, key, 5);
   assert.equal(run.story.strictRarity, true);
   const rng = createRng(1);
@@ -286,7 +303,7 @@ test("ノードの中はチームを繰り越す（負けたら、そのステ�
   clearStage(story, stageKey(area.id, 0));
   carryOver(story, run);
   assert.equal(nodeRun(story, area.id).next, 1);
-  assert.equal(defaultStage(story, area), 1);
+  assert.equal(defaultStage(story, area), stageKey(area.id, 1));
   assert.ok(canSortie(story, area, 1));
   assert.ok(!canSortie(story, area, 0));
   // 2-2 は同じチームで始まる（ユニット・エクステンション・GUM・ステージ数を引き継ぎ、ライフは戻る）
@@ -319,10 +336,97 @@ test("最終ステージをクリアするとノードの繰り越しは終わ�
   const area = areaById("kindai-jp");
   story.nodeRuns[area.id] = { next: 2, team: { story: { areaId: area.id, index: 1 } } };
   carryOver(story, { story: { areaId: area.id, index: 2 } });
-  assert.deepEqual(nodeRun(story, area.id), { next: 0, team: null });
+  assert.deepEqual(nodeRun(story, area.id), { next: 0, at: null, team: null, path: [] });
   const v2 = { ...newStory(), version: 2 };
   delete v2.nodeRuns;
   const m = migrateStory(v2);
   assert.deepEqual(m.nodeRuns, {});
   assert.equal(m.version, newStory().version);
+});
+
+test("ノードの後半（X-5〜X-9）は3つのレーンに枝分かれし、道は交差しない", () => {
+  for (const a of AREAS) {
+    const { rows, next } = nodeMap(a);
+    if (a.id === "kindai-jp") {
+      assert.ok(rows.every((r) => r.length === 1));
+      continue;
+    }
+    rows.forEach((row, r) => assert.equal(row.length, r >= BRANCH_FIRST && r <= BRANCH_LAST ? 3 : 1, `${a.id} ${r}`));
+    assert.equal(rows.at(-1)[0].kind, "boss");
+    for (let r = 0; r < rows.length - 1; r++) {
+      // どのステージにも入ってくる道がある
+      for (let j = 0; j < rows[r + 1].length; j++) assert.ok(next[r].some((links) => links.includes(j)), `${a.id} ${r + 1}:${j}`);
+      // 交差しない（i→j と i'→j' で i<i' なら j<=j'）
+      for (let i = 0; i < next[r].length; i++)
+        for (let k = i + 1; k < next[r].length; k++)
+          for (const j of next[r][i]) for (const m of next[r][k]) assert.ok(j <= m, `${a.id} ${r} 交差`);
+    }
+    for (const st of rows.flat()) {
+      if (st.kind === "supply") assert.equal(st.join.length, 0);
+      if (st.lane !== null && st.kind !== "supply") assert.ok(st.field && st.foe, `${a.id} ${st.row}${st.lane}`);
+    }
+  }
+});
+
+test("出撃できるのは、いまいるステージから道でつながった次のステージだけ", async () => {
+  const { canSortie, carryOver, sortieOptions } = await import("../js/engine/story.js");
+  const { linked } = await import("../js/engine/world.js");
+  const story = newStory();
+  clearArea(story, "kindai-jp");
+  const area = areaById("kindai-eu");
+  // X-4 まで進んだ（1本道）
+  story.nodeRuns[area.id] = { next: BRANCH_FIRST, at: null, team: null };
+  assert.equal(sortieOptions(story, area).length, 3);
+  // X-5 の A レーンをクリアしたら、X-6 は A から道のあるレーンだけ
+  carryOver(story, { story: { areaId: area.id, index: BRANCH_FIRST, lane: 0 } });
+  for (let l = 0; l < 3; l++) assert.equal(canSortie(story, area, BRANCH_FIRST + 1, l), linked(area, BRANCH_FIRST, 0, l));
+  assert.ok(canSortie(story, area, BRANCH_FIRST + 1, 0));
+  assert.ok(!canSortie(story, area, BRANCH_FIRST + 2, 0));
+});
+
+test("補給はバトルなしで宝箱を選んで出発。強敵を倒すと次のステージの最初に宝箱", async () => {
+  const { carryOver } = await import("../js/engine/story.js");
+  const { departSupply, chooseTreasure, prepareBattle: prep } = await import("../js/engine/run.js");
+  const story = newStory();
+  clearArea(story, "kindai-jp");
+  const area = areaById("kindai-eu");
+  const rows = nodeMap(area).rows;
+  const supply = rows.flat().find((st) => st.kind === "supply");
+  story.nodeRuns[area.id] = { next: supply.row, at: 1, team: null };
+  const run = newStageRun(db, story, stageKey(area.id, supply.row, supply.lane), 3);
+  assert.equal(run.story.supply, true);
+  assert.equal(run.pending[0].type, "treasure");
+  assert.ok(!run.pending[0].options.includes("life"));
+  assert.equal(prep(run, db).ok, false);
+  assert.equal(departSupply(run).ok, false);
+  chooseTreasure(run, db, run.pending[0].options.find((o) => o !== "extension" && o !== "ce") ?? run.pending[0].options[0]);
+  while (run.pending.length) run.pending.shift();
+  assert.ok(departSupply(run).ok);
+  assert.equal(run.phase, "clear");
+  // 強敵
+  const elite = rows.flat().find((st) => st.kind === "elite");
+  if (elite) {
+    const team = newStageRun(db, story, stageKey(area.id, 0), 4);
+    team.story = { ...team.story, areaId: area.id, index: elite.row, lane: elite.lane, elite: true };
+    carryOver(story, team);
+    assert.equal(story.nodeRuns[area.id].team.bonus, "elite");
+    const nextRow = rows[elite.row + 1];
+    const lane = nextRow.length > 1 ? elite.lane : null;
+    const run2 = newStageRun(db, story, stageKey(area.id, elite.row + 1, lane), 5);
+    assert.ok(run2.pending.some((ev) => ev.type === "treasure" && ev.reason === "elite"));
+  }
+});
+
+test("地形は両陣営のスキルに効く", async () => {
+  const { playerTeam } = await import("../js/engine/run.js");
+  const { FIELDS } = await import("../js/engine/world.js");
+  const story = newStory();
+  const run = newStageRun(db, story, stageKey("kindai-jp", 0), 9);
+  const poisoner = db.heroes.find((h) => h.effects.some((e) => e.kind === "poison"));
+  run.party[0] = { uid: 1, defId: poisoner.id, level: 1, permMult: 0, cdReduce: 0 };
+  const before = playerTeam(run, db).fighters[0].effects.find((e) => e.kind === "poison").value;
+  run.story.field = "poison";
+  const after = playerTeam(run, db).fighters[0].effects.find((e) => e.kind === "poison").value;
+  assert.ok(after > before, `${before} → ${after}`);
+  assert.ok(FIELDS.faction1.mods.factionMult[1] > 0);
 });

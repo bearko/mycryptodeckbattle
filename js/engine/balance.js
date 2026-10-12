@@ -182,6 +182,9 @@ export const STORY_BALANCE = {
   cpuIncomeBase: -2,
   cpuPower: 6,
   cpuHp: 6,
+  // 強敵（枝分かれのステージ）の効果量・HP の上乗せ（%）
+  elitePower: 30,
+  eliteHp: 30,
 };
 
 export function storyPlayerBonus(story) {
@@ -197,7 +200,7 @@ export function storyCpuBonus(story) {
   return {
     rank: Math.floor(d * STORY_BALANCE.cpuRank),
     income: Math.floor(d * STORY_BALANCE.cpuIncome) + STORY_BALANCE.cpuIncomeBase - (story.handicap ?? 0),
-    power: Math.round(d * STORY_BALANCE.cpuPower),
-    hp: Math.round(d * STORY_BALANCE.cpuHp),
+    power: Math.round(d * STORY_BALANCE.cpuPower) + (story.elite ? STORY_BALANCE.elitePower : 0),
+    hp: Math.round(d * STORY_BALANCE.cpuHp) + (story.elite ? STORY_BALANCE.eliteHp : 0),
   };
 }

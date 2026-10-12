@@ -12,7 +12,7 @@ import { isBossWave } from "./engine/boss.js";
 import { audio } from "./ui/audio.js";
 import { clearRun, loadRun, loadSettings, loadStory, saveRun, saveSettings, saveStory } from "./ui/storage.js";
 import * as Story from "./engine/story.js";
-import { AREAS, DECK_SIZE, ERAS, TUTORIAL_AREA, areaById, areaName, machineByLevel, parseStageKey, stageKey, stageLabel } from "./engine/world.js";
+import { AREAS, DECK_SIZE, ERAS, TUTORIAL_AREA, areaById, areaName, machineByLevel, parseStageKey, stageLabel } from "./engine/world.js";
 import { MAP_INTRO, PROLOGUE, TUTORIAL_DONE, areaClearScene, stageIntro, upgradeScene } from "./story/scenes.js";
 import { ScenePlayer } from "./ui/scene.js";
 import { Coach } from "./ui/coach.js";
@@ -258,6 +258,7 @@ async function enterStage() {
     rank: effectiveRank(app.run),
     treasure: !app.run.story && TREASURE_STAGES.includes(app.run.stage),
     boss: isBossWave(app.run),
+    supply: Boolean(app.run.story?.supply),
   };
   const telop = stageTelop(app, info, () => close());
   overlay.append(telop);
@@ -277,6 +278,7 @@ async function enterStage() {
         const hasUnits = allUnits(app.run).length > 0;
         const story = Boolean(app.run.story);
         if (info.boss) say("boss");
+        else if (info.supply) say(null, {}, { text: "補給だ！ 宝箱を選んで、しっかり準備しよう" });
         else say(hasUnits && Math.random() < 0.35 ? "hint" : story ? "wave" : "stage", { n: story ? app.run.wins + 1 : app.run.stage });
       }
     }, 280);
@@ -456,8 +458,7 @@ function saveStoryNow() {
 }
 
 function stageLabelOf(st) {
-  const area = areaById(st.areaId);
-  return `${area.no}-${st.index + 1}`;
+  return stageLabel(areaById(st.areaId), st.index, st.lane);
 }
 
 /** シーン（会話劇）を再生して、終わるまで待つ */
@@ -482,12 +483,11 @@ function deckTargetStage(from) {
   const story = app.story;
   if (from === "area" && app.ui.storyArea) {
     const area = areaById(app.ui.storyArea);
-    const index = app.ui.storyStage ?? Story.defaultStage(story, area);
-    return stageKey(area.id, index);
+    return app.ui.storyStage ?? Story.defaultStage(story, area);
   }
   const open = AREAS.filter((a) => Story.areaUnlocked(story, a) && Story.nextStage(story, a) !== null);
   const area = open[open.length - 1];
-  return area ? stageKey(area.id, Story.defaultStage(story, area)) : null;
+  return area ? Story.defaultStage(story, area) : null;
 }
 
 /** いちばん新しく開いた時代 */
@@ -533,7 +533,7 @@ function storyStageEnd() {
   saveStoryNow();
   clearRun();
   app.run = null;
-  app.ui.stageResult = { areaId: st.areaId, index: st.index, key: st.key, cleared, result };
+  app.ui.stageResult = { areaId: st.areaId, index: st.index, lane: st.lane ?? null, key: st.key, cleared, result };
   audio.stopBgm();
   if (cleared) audio.se("clear", 0.7);
   const area = areaById(st.areaId);
@@ -588,21 +588,29 @@ const actions = {
     audio.playBgm("bgm_title");
     go("area", { bg: storyBackground(area.bg), mood: "area", accent: area.color });
   },
-  /** ステージのタイル: 選ぶ。選んでいるステージをもう一度タップすると出撃 */
-  selectStage(index) {
+  /** ステージのタイル: 選ぶ。選んでいるステージをもう一度タップすると出撃（key はステージID） */
+  selectStage(key) {
     const area = areaById(app.ui.storyArea);
     const current = app.ui.storyStage ?? Story.defaultStage(app.story, area);
-    if (index === current) {
-      if (Story.canSortie(app.story, area, index)) return actions.sortie(stageKey(area.id, index));
-      const next = Story.defaultStage(app.story, area);
-      if (Story.isCleared(app.story, stageKey(area.id, index))) {
-        return toast(`チームを繰り越して進むので、出撃できるのは ${stageLabel(area, next)} です`);
+    if (key === current) {
+      const parsed = parseStageKey(key);
+      if (parsed && Story.canSortie(app.story, area, parsed.index, parsed.lane)) return actions.sortie(key);
+      const options = Story.sortieOptions(app.story, area).map((o) => stageLabel(area, o.index, o.lane));
+      if (Story.isCleared(app.story, key) || options.length) {
+        return toast(`チームを繰り越して進むので、出撃できるのは ${options.join(" / ")} です`);
       }
       return toast("まだ出撃できません");
     }
-    app.ui.storyStage = index;
+    app.ui.storyStage = key;
     audio.se("buy", 0.3);
     render();
+  },
+  /** 補給のステージ: 宝箱を選んだあと「出発」でクリア */
+  departSupply() {
+    const res = Run.departSupply(app.run);
+    if (!res.ok) return toast(res.error, "error");
+    save();
+    storyStageEnd();
   },
   /** チームを作り直す（ノードの最初のステージから） */
   rebuildNode(areaId) {
@@ -612,15 +620,10 @@ const actions = {
         Story.resetNodeRun(app.story, areaId);
         saveStoryNow();
         app.ui.modal = null;
-        app.ui.storyStage = 0;
+        app.ui.storyStage = null;
         render();
       });
     render();
-  },
-  /** ステージクリア画面の「次のステージへ」: 繰り越したチームで続けて出撃 */
-  sortieNext() {
-    const info = app.ui.stageResult;
-    actions.sortie(stageKey(info.areaId, info.index + 1));
   },
   openDeck(from) {
     app.ui.deckFrom = from;
@@ -660,7 +663,7 @@ const actions = {
   /** 出撃: 出会いのシーン → ステージ開始。マーケットの枠が多く空くデッキなら先に確認する */
   async sortie(key, { force = false } = {}) {
     const parsed = parseStageKey(key);
-    if (!parsed || !Story.canSortie(app.story, parsed.area, parsed.index)) return;
+    if (!parsed || !Story.canSortie(app.story, parsed.area, parsed.index, parsed.lane)) return;
     const empty = Story.deckEmptyShare(app.db, app.story.deck, key);
     if (!force && empty >= 30) {
       app.ui.modal = () =>
@@ -679,7 +682,7 @@ const actions = {
     const story = app.story;
     const first = !story.flags[`met:${key}`] && !Story.isCleared(story, key);
     Story.joinAtStart(story, key);
-    await playScene(stageIntro(parsed.area, parsed.index, { first, boss: app.db.def(parsed.area.boss) }));
+    await playScene(stageIntro(parsed.area, parsed.index, { first, boss: app.db.def(parsed.area.boss), stage: parsed.stage }));
     story.flags[`met:${key}`] = true;
     saveStoryNow();
     app.run = Story.newStageRun(app.db, story, key, randomSeed());

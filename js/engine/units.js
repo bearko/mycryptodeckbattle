@@ -119,6 +119,17 @@ export function collectMods(extIds, db, bonusMaxHp = 0) {
   return m;
 }
 
+/** 地形などの補正（collectMods と同じ形の一部）を足す。field が無ければそのまま */
+export function addFieldMods(m, field) {
+  const extra = field?.mods;
+  if (!extra) return m;
+  for (const [k, v] of Object.entries(extra.kindMult ?? {})) m.kindMult[k] = (m.kindMult[k] || 0) + v;
+  for (const [k, v] of Object.entries(extra.factionMult ?? {})) m.factionMult[k] = (m.factionMult[k] || 0) + v;
+  (extra.colMult ?? []).forEach((v, i) => (m.colMult[i] += v));
+  m.speedAll += extra.speedAll ?? 0;
+  return m;
+}
+
 function roundTo(v, step) {
   return Math.round(v / step) * step;
 }
