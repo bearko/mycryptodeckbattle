@@ -607,19 +607,20 @@
   padding: 0 16%;
 }
 
-.vs-half.ally {
-  top: -6%;
-  background: linear-gradient(120deg, #0f2a33, #145466);
-  clip-path: polygon(0 0, 100% 0, 100% 72%, 0 100%);
-  animation: vs-ally 0.45s cubic-bezier(0.7, 0, 0.2, 1) both;
-}
-
+/* 盤面と同じく、敵が上（奥・右寄り）、自分が下（手前・左寄り） */
 .vs-half.enemy {
-  bottom: -6%;
+  top: -6%;
   justify-content: flex-end;
   background: linear-gradient(300deg, #3a0f1a, #6b1830);
-  clip-path: polygon(0 28%, 100% 0, 100% 100%, 0 100%);
+  clip-path: polygon(0 0, 100% 0, 100% 72%, 0 100%);
   animation: vs-enemy 0.45s cubic-bezier(0.7, 0, 0.2, 1) both;
+}
+
+.vs-half.ally {
+  bottom: -6%;
+  background: linear-gradient(120deg, #0f2a33, #145466);
+  clip-path: polygon(0 28%, 100% 0, 100% 100%, 0 100%);
+  animation: vs-ally 0.45s cubic-bezier(0.7, 0, 0.2, 1) both;
 }
 
 @keyframes vs-ally {

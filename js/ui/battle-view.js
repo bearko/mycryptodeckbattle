@@ -323,17 +323,18 @@ export class BattleView {
     const intro = h(
       "div",
       { class: "battle-intro" },
-      h(
-        "div",
-        { class: "vs-half ally" },
-        h("div", { class: `vs-figure${l.leader.pixelated ? "" : " mai"}` }, img(l.leader.image, l.leader.pixelated ? "pixel" : "")),
-        h("div", { class: "vs-name" }, l.name),
-      ),
+      // 盤面と同じ並び: 敵が上、自分が下
       h(
         "div",
         { class: "vs-half enemy" },
         h("div", { class: "vs-name" }, r.name),
         h("div", { class: "vs-figure enemy" }, img(r.leader.image, "pixel")),
+      ),
+      h(
+        "div",
+        { class: "vs-half ally" },
+        h("div", { class: `vs-figure${l.leader.pixelated ? "" : " mai"}` }, img(l.leader.image, l.leader.pixelated ? "pixel" : "")),
+        h("div", { class: "vs-name" }, l.name),
       ),
       h("div", { class: "vs-word" }, "VS"),
     );

@@ -384,6 +384,7 @@ COPY_FILES = {
     # 音声
     "Audio/BGM/pve.mp3": "assets/audio/bgm_battle.mp3",
     "Audio/BGM/land.mp3": "assets/audio/bgm_market.mp3",
+    "Audio/BGM/pvp.mp3": "assets/audio/bgm_title.mp3",
     "Audio/SE/Battle/1_single_damage.mp3": "assets/audio/se_damage.mp3",
     "Audio/SE/Battle/2_area_damage.mp3": "assets/audio/se_area_damage.mp3",
     "Audio/SE/Battle/3_heal_resurrection.mp3": "assets/audio/se_heal.mp3",

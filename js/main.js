@@ -369,7 +369,7 @@ const actions = {
   toTitle() {
     app.ui.modal = null;
     app.run = null;
-    audio.playBgm("bgm_market");
+    audio.playBgm("bgm_title");
     go("title", { bg: new URL(app.backgrounds[0], document.baseURI).href, mood: "title", accent: "#ffd23f" });
   },
   showMenu() {
@@ -413,7 +413,8 @@ const actions = {
   toggleSound() {
     audio.unlock();
     audio.toggle();
-    if (!audio.muted && app.screen === "market") audio.playBgm("bgm_market", true);
+    // 今の画面のBGMを鳴らし直す（ミュート解除や、最初のタップ前にボタンを押したとき）
+    if (!audio.muted && audio.bgmName) audio.playBgm(audio.bgmName, true);
     render();
   },
 
@@ -648,6 +649,8 @@ app.actions = actions;
 async function boot() {
   ambient = initAmbient();
   installRipple();
+  // タイトルのBGM。ブラウザの制限で、最初にタップしたときに鳴り始める
+  audio.playBgm("bgm_title");
   document.addEventListener("pointerdown", () => audio.unlock(), { once: true });
   try {
     const [heroes, enemies, extensions, manifest] = await Promise.all([

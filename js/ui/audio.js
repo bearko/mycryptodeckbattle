@@ -3,6 +3,7 @@
 import { loadSettings, saveSettings } from "./storage.js";
 
 const FILES = {
+  bgm_title: "assets/audio/bgm_title.mp3",
   bgm_market: "assets/audio/bgm_market.mp3",
   bgm_battle: "assets/audio/bgm_battle.mp3",
   damage: "assets/audio/se_damage.mp3",

@@ -707,3 +707,30 @@
     font-size: 70px;
   }
 }
+
+/* タイトルのサウンド切り替え（BGMは最初のタップで鳴り始める） */
+.title-sound {
+  position: absolute;
+  top: max(10px, env(safe-area-inset-top));
+  right: 12px;
+  z-index: 5;
+  width: 38px;
+  height: 38px;
+  color: var(--accent);
+}
+
+.title-sound.off {
+  color: var(--muted);
+}
+
+.title-sound .speaker {
+  display: flex;
+  width: 22px;
+  height: 22px;
+  margin: auto;
+}
+
+.title-sound .speaker svg {
+  width: 100%;
+  height: 100%;
+}
