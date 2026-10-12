@@ -1,0 +1,549 @@
+/* =========================================================================
+   バトル演出: 役割（誰が何をしたか）と状態異常（毒・出血をくらっている感）
+   役割の色は js/ui/battle-fx.js の ROLES と合わせる
+   ========================================================================= */
+
+/* ------------------------------------------------------------- ヒーローの役割 */
+
+.fighter {
+  --role: #ffffff;
+}
+
+/* 役割アイコン（MCHのバトルアイコン）をカードの左下に常時表示 */
+.role-badge {
+  position: absolute;
+  left: 3px;
+  bottom: 11px;
+  z-index: 1;
+  width: 17px;
+  height: 17px;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.7));
+}
+
+/* チャージゲージも役割の色にする */
+.fighter .charge-fill {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--role) 55%, #ffffff), var(--role));
+}
+
+/* 発動したヒーロー: 敵の方へ踏み込み、役割の色で内側から光る */
+.fighter::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(ellipse 80% 55% at 50% 100%, color-mix(in srgb, var(--role) 55%, transparent), transparent 75%);
+  box-shadow: inset 0 0 0 2px var(--role), inset 0 0 14px color-mix(in srgb, var(--role) 60%, transparent);
+}
+
+.fighter.cast {
+  animation: act-ally 0.42s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.battle-side.enemy .fighter.cast {
+  animation: act-enemy 0.42s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.fighter.cast::after {
+  animation: act-glow 0.5s ease-out;
+}
+
+@keyframes act-ally {
+  30% {
+    transform: translateY(-12px) scale(1.08);
+    filter: brightness(1.2);
+  }
+}
+
+@keyframes act-enemy {
+  30% {
+    transform: translateY(12px) scale(1.08);
+    filter: brightness(1.2);
+  }
+}
+
+@keyframes act-glow {
+  0% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+}
+
+/* 強化・加速を受けたヒーロー */
+.fighter.buffed .fighter-art::after {
+  content: "";
+  position: absolute;
+  inset: -10% 0;
+  pointer-events: none;
+  background: linear-gradient(0deg, transparent 20%, color-mix(in srgb, var(--fx, #ffd23f) 55%, transparent) 50%, transparent 80%);
+  background-size: 100% 200%;
+  mix-blend-mode: screen;
+  animation: buffed-sheen 0.6s ease-out forwards;
+}
+
+@keyframes buffed-sheen {
+  from {
+    background-position: 0 -100%;
+    opacity: 1;
+  }
+  to {
+    background-position: 0 100%;
+    opacity: 0;
+  }
+}
+
+/* 減速・弱体を受けたヒーロー */
+.fighter.debuffed {
+  animation: debuffed 0.4s ease-out;
+}
+
+@keyframes debuffed {
+  20% {
+    transform: translateX(-4px);
+    filter: brightness(0.7) sepia(0.6) hue-rotate(-30deg) saturate(2.5);
+  }
+  45% {
+    transform: translateX(4px);
+  }
+  70% {
+    transform: translateX(-2px);
+  }
+}
+
+/* ------------------------------------------------------------- 発動〜着弾の演出 */
+
+.cast-aura,
+.impact,
+.icon-pop,
+.role-chip,
+.beam,
+.vfx-slash,
+.vfx-splat,
+.vfx-drop,
+.vfx-cloud,
+.vfx-bubble {
+  position: absolute;
+  pointer-events: none;
+}
+
+.cast-aura {
+  z-index: 4;
+  border-radius: 50%;
+  border: 3px solid var(--role);
+  box-shadow: 0 0 14px var(--role), inset 0 0 12px var(--role);
+}
+
+.impact {
+  z-index: 6;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 12%, color-mix(in srgb, var(--role) 85%, transparent) 30%, transparent 68%);
+}
+
+/* 発動したヒーローの上に出る「アイコン＋役割」 */
+.role-chip {
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 9px 2px 3px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  line-height: 1;
+  color: #10121a;
+  white-space: nowrap;
+  background: var(--role);
+  clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+  filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.5));
+}
+
+.role-chip.compact {
+  padding: 2px 6px 2px 3px;
+}
+
+.role-chip-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* 攻撃の弾: 光の尾を引いて飛ぶ（transform で位置と向きを指定） */
+.shot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 6;
+  width: 72px;
+  height: 9px;
+  transform-origin: 0 0;
+  pointer-events: none;
+  border-radius: 5px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--role) 85%, transparent) 50%, #fff 90%);
+  box-shadow: 0 0 12px var(--role);
+}
+
+/* 弾の先頭の光 */
+.shot::after {
+  content: "";
+  position: absolute;
+  right: -7px;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  margin-top: -9px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 35%, var(--role) 60%, transparent 72%);
+}
+
+.shot-img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 6;
+  pointer-events: none;
+  filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.6));
+}
+
+.shot-img.poison {
+  filter: drop-shadow(0 0 8px #9dff5a);
+}
+
+.shot-img.bleed {
+  filter: drop-shadow(0 0 6px #ff3d6e);
+}
+
+.shot-img.shield {
+  filter: drop-shadow(0 0 8px #5fe3ff);
+}
+
+/* 回復の光の粒 */
+.heal-mote {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 6;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  pointer-events: none;
+  /* 十字（＋）の形。clip-path で切るので光は色の濃淡で出す */
+  clip-path: polygon(36% 0, 64% 0, 64% 36%, 100% 36%, 100% 64%, 64% 64%, 64% 100%, 36% 100%, 36% 64%, 0 64%, 0 36%, 36% 36%);
+  background: radial-gradient(circle, #ffffff 0 30%, #6dff9a 60%);
+}
+
+/* 強化・弱体の光線（発動者 → 対象） */
+.beam {
+  z-index: 5;
+  height: 6px;
+  margin-top: -3px;
+  transform-origin: 0 50%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--role) 30%, transparent), var(--role) 70%, #fff);
+  box-shadow: 0 0 10px var(--role);
+}
+
+.beam.slow,
+.beam.weaken {
+  background: repeating-linear-gradient(90deg, var(--role) 0 10px, transparent 10px 15px);
+  height: 5px;
+}
+
+.icon-pop {
+  z-index: 8;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6));
+}
+
+/* ------------------------------------------------------------- 出血・毒の素材 */
+
+.vfx-slash {
+  z-index: 7;
+  filter: drop-shadow(0 0 6px #ff3d6e);
+}
+
+.vfx-splat {
+  z-index: 5;
+  opacity: 0.9;
+}
+
+.vfx-drop {
+  z-index: 7;
+}
+
+.vfx-cloud {
+  z-index: 6;
+  filter: drop-shadow(0 0 10px rgba(157, 255, 90, 0.35));
+}
+
+.vfx-bubble {
+  z-index: 7;
+}
+
+/* ------------------------------------------------------------- 状態異常を受けている間 */
+
+/* パーティ全体にかかるもや（毒）と赤いにじみ（出血）。濃さはスタック数で変わる（--poison / --bleed） */
+.battle-grid {
+  position: relative;
+}
+
+.status-veil {
+  position: absolute;
+  inset: -2px;
+  z-index: 2;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.veil-poison,
+.veil-bleed {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.battle-side.poisoned .veil-poison {
+  opacity: var(--poison, 0);
+}
+
+.battle-side.bleeding .veil-bleed {
+  opacity: var(--bleed, 0);
+}
+
+.veil-poison {
+  background:
+    radial-gradient(ellipse 60% 45% at 20% 105%, rgba(140, 60, 230, 0.55), transparent 70%),
+    radial-gradient(ellipse 55% 40% at 75% 110%, rgba(120, 220, 80, 0.35), transparent 70%),
+    radial-gradient(ellipse 70% 50% at 50% 100%, rgba(110, 40, 200, 0.45), transparent 75%);
+  animation: miasma 3.2s ease-in-out infinite alternate;
+}
+
+@keyframes miasma {
+  from {
+    background-position: -20px 6px, 20px 0, 0 4px;
+  }
+  to {
+    background-position: 20px -6px, -20px 6px, 0 -4px;
+  }
+}
+
+.veil-poison img {
+  position: absolute;
+  bottom: -14px;
+  width: 14px;
+  height: 14px;
+  animation: veil-bubble 2.6s ease-in infinite;
+}
+
+@keyframes veil-bubble {
+  0% {
+    transform: translateY(0) scale(0.4);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-120px) translateX(8px) scale(1.2);
+    opacity: 0;
+  }
+}
+
+/* 縁だけ赤くにじませ、心拍のように脈打たせる */
+.veil-bleed {
+  box-shadow: inset 0 0 16px 1px rgba(200, 0, 40, 0.6);
+  animation: heartbeat 1s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+  0%,
+  100% {
+    box-shadow: inset 0 0 14px 1px rgba(200, 0, 40, 0.5);
+  }
+  15% {
+    box-shadow: inset 0 0 24px 4px rgba(230, 0, 50, 0.85);
+  }
+  30% {
+    box-shadow: inset 0 0 16px 2px rgba(200, 0, 40, 0.55);
+  }
+  45% {
+    box-shadow: inset 0 0 22px 3px rgba(220, 0, 45, 0.75);
+  }
+}
+
+/* 上の縁から血が垂れる */
+.veil-bleed img {
+  position: absolute;
+  top: -16px;
+  width: 9px;
+  height: 13px;
+  animation: drip 2.2s cubic-bezier(0.55, 0, 0.9, 0.6) infinite;
+}
+
+@keyframes drip {
+  0% {
+    transform: translateY(0) scaleY(0.6);
+    opacity: 0;
+  }
+  20% {
+    transform: translateY(14px) scaleY(1.3);
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(150px) scaleY(1);
+    opacity: 0;
+  }
+}
+
+/* 状態異常ダメージを受けた瞬間、パーティのヒーローが色づく（揺れている画像ではなく枠側に掛ける） */
+.battle-side.poison-tick .fighter:not(.empty) .fighter-art {
+  animation: poison-sick 0.6s ease-out;
+}
+
+@keyframes poison-sick {
+  25% {
+    filter: drop-shadow(0 0 6px #9dff5a) sepia(1) hue-rotate(220deg) saturate(3) brightness(0.9);
+    transform: scale(0.94, 1.04);
+  }
+  55% {
+    transform: scale(1.03, 0.97);
+  }
+}
+
+.battle-side.bleed-tick .fighter:not(.empty)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 50%, transparent 35%, rgba(220, 0, 40, 0.55));
+  animation: bleed-flash 0.4s ease-out forwards;
+}
+
+@keyframes bleed-flash {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* HPバー: 毒は紫の斜線が流れ、出血は赤く脈打つ */
+.hpbar-poison,
+.hpbar-bleed {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.hpbar-poison {
+  background: repeating-linear-gradient(-45deg, rgba(150, 70, 255, 0.75) 0 5px, rgba(157, 255, 90, 0.25) 5px 10px);
+  background-size: 28px 100%;
+  mix-blend-mode: hard-light;
+  animation: poison-flow 0.9s linear infinite;
+}
+
+.battle-side.poisoned .hpbar-poison {
+  opacity: 0.75;
+}
+
+@keyframes poison-flow {
+  to {
+    background-position: 28px 0;
+  }
+}
+
+.hpbar-bleed {
+  box-shadow: inset 0 0 0 2px #ff2a50, inset 0 0 10px rgba(255, 0, 40, 0.7);
+  animation: blink 1s ease-in-out infinite;
+}
+
+.battle-side.bleeding .hpbar-bleed {
+  opacity: 1;
+}
+
+/* 状態異常のスタック表示（MCHのアイコン） */
+.side-status .st {
+  height: 18px;
+  padding: 0 6px 0 1px;
+  border-radius: 9px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.side-status .st .mini-icon {
+  width: 17px;
+  height: 17px;
+}
+
+.bleed-st {
+  box-shadow: inset 0 0 0 1px rgba(255, 61, 110, 0.6);
+}
+
+.poison-st {
+  box-shadow: inset 0 0 0 1px rgba(180, 108, 255, 0.6);
+}
+
+.shield-st {
+  box-shadow: inset 0 0 0 1px rgba(95, 227, 255, 0.5);
+}
+
+.st.bump {
+  animation: st-bump 0.4s var(--spring);
+}
+
+@keyframes st-bump {
+  35% {
+    transform: scale(1.35);
+    filter: brightness(1.5);
+  }
+}
+
+.st.tick .mini-icon {
+  animation: st-tick 0.45s ease-out;
+}
+
+@keyframes st-tick {
+  30% {
+    transform: scale(1.4) rotate(-12deg);
+  }
+  60% {
+    transform: scale(0.95) rotate(8deg);
+  }
+}
+
+.hpbar.glow-heal {
+  animation: glow-heal 0.5s ease-out;
+}
+
+@keyframes glow-heal {
+  30% {
+    box-shadow: inset 0 0 0 2px #6dff9a, inset 0 0 12px #6dff9a;
+    filter: brightness(1.3);
+  }
+}
+
+.hpbar.glow-shield {
+  animation: glow-shield 0.5s ease-out;
+}
+
+@keyframes glow-shield {
+  30% {
+    box-shadow: inset 0 0 0 2px #5fe3ff, inset 0 0 12px #5fe3ff;
+    filter: brightness(1.3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .veil-poison img,
+  .veil-bleed img {
+    display: none;
+  }
+}

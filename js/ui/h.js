@@ -5,7 +5,7 @@ export function h(tag, props, ...children) {
   for (const [k, v] of Object.entries(props || {})) {
     if (v === null || v === undefined || v === false) continue;
     if (k === "class") el.className = v;
-    else if (k === "style" && typeof v === "object") Object.assign(el.style, v);
+    else if (k === "style" && typeof v === "object") setStyle(el, v);
     else if (k === "dataset") Object.assign(el.dataset, v);
     else if (k === "html") el.innerHTML = v;
     else if (k.startsWith("on") && typeof v === "function") el.addEventListener(k.slice(2).toLowerCase(), v);
@@ -13,6 +13,15 @@ export function h(tag, props, ...children) {
   }
   append(el, children);
   return el;
+}
+
+/** CSSカスタムプロパティ（--x）は Object.assign では入らないので setProperty で入れる */
+function setStyle(el, style) {
+  for (const [k, v] of Object.entries(style)) {
+    if (v === null || v === undefined) continue;
+    if (k.startsWith("--")) el.style.setProperty(k, String(v));
+    else el.style[k] = v;
+  }
 }
 
 function append(el, children) {

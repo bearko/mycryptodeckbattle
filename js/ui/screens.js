@@ -5,7 +5,8 @@
 import { h, img } from "./h.js";
 import { extensionIcon, gumAmount, modal, unitCard, unitDetail } from "./components.js";
 import { winGauge } from "./market-view.js";
-import { PLAYERS, TREASURES, playerById, treasureById } from "../engine/content.js";
+import { KIND_ICONS, PLAYERS, TREASURES, playerById, treasureById } from "../engine/content.js";
+import { ROLES } from "./battle-fx.js";
 import { START_LIVES, WINS_TO_CLEAR } from "../engine/balance.js";
 
 function playerImg(player, src, cls = "") {
@@ -421,6 +422,19 @@ export function resultPanel(app, result) {
 // ヘルプ（ページめくり。説明はここに集約）
 // ---------------------------------------------------------------------------
 
+/** ヘルプの役割の凡例（バトル中の色・アイコンと対応） */
+const ROLE_HELP = {
+  damage: "敵のパーティHPにダメージ",
+  heal: "味方のパーティHPを回復",
+  shield: "味方にシールド（先にダメージを受ける）",
+  bleed: "敵を出血させる。0.5秒ごとにダメージ、だんだん弱まる",
+  poison: "敵を毒にする。1秒ごとにダメージ、弱まらない",
+  buff: "隣のヒーローの効果量アップ",
+  haste: "隣のヒーローのチャージを進める",
+  slow: "敵のチャージを戻す",
+  weaken: "敵の一番強いヒーローの効果量ダウン",
+};
+
 function helpPages(app) {
   const terms = [
     ["ヒーロー", "パーティに編成して戦うユニット。マイクリの偉人ヒーロー。"],
@@ -498,6 +512,25 @@ function helpPages(app) {
           h("li", null, "出血・毒ダメージはシールドに対して15%軽減。"),
           h("li", null, "30秒経つとサドンデス。両陣営に増え続けるダメージ。"),
           h("li", null, "バトル中にヒーローをタップするとスキルを確認できます。"),
+        ),
+        h("h3", { style: { marginTop: "14px" } }, "役割の色とアイコン"),
+        h(
+          "p",
+          { class: "help-note" },
+          "スキルを使ったヒーローは役割の色に光り、対象へ弾や光線を飛ばします。カード左下のアイコンが主な役割です。",
+        ),
+        h(
+          "ul",
+          { class: "role-legend" },
+          Object.entries(ROLE_HELP).map(([kind, text]) =>
+            h(
+              "li",
+              { style: { "--role": ROLES[kind].color } },
+              img(KIND_ICONS[kind], "kind-icon"),
+              h("b", null, ROLES[kind].label),
+              h("span", null, text),
+            ),
+          ),
         ),
         h("h3", { style: { marginTop: "14px" } }, "プレイヤースキル"),
         h(

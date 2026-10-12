@@ -25,7 +25,7 @@ export const KIND_LABELS = {
 
 export const KIND_ICONS = {
   damage: "assets/battle-icons/phy.png",
-  shield: "assets/battle-icons/decoy.png",
+  shield: "assets/vfx/shield.svg",
   heal: "assets/battle-icons/hp.png",
   bleed: "assets/battle-icons/bleed.png",
   poison: "assets/battle-icons/poison.png",

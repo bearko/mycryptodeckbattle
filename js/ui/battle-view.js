@@ -1,16 +1,36 @@
 // バトル画面。エンジンを1ティックずつ進めながら描画する。
 // 大きなダメージでは画面を揺らし、HPバーは白い残像を遅れて減らして「当たった感触」を出す。
+// スキルは発動したヒーローから対象へ弾・光線を飛ばし、着弾してからHPや状態異常の表示を動かす
+// （誰が・誰に・何をしたかを見せるため。結果は事前に確定しているので表示だけの遅延）。
 
 import { h, img } from "./h.js";
 import { playSprite, popText, centerOf } from "./effects.js";
+import {
+  ROLES,
+  beam,
+  bloodBurst,
+  castAura,
+  iconPop,
+  impact,
+  poisonBubbles,
+  poisonCloud,
+  projectile,
+  roleChip,
+  slash,
+} from "./battle-fx.js";
 import { createBattle, stepBattle } from "../engine/battle.js";
 import { TICK, SUDDEN_DEATH_AT, PARTY_SIZE } from "../engine/balance.js";
 import { KIND_ICONS } from "../engine/content.js";
 import { bobDelay, effectShort, toast } from "./components.js";
-import { shake } from "./fx.js";
+import { pop, shake } from "./fx.js";
 import { ambient } from "./ambient.js";
 
 const SPEEDS = [1, 2, 4];
+// 弾が着弾するまでの時間（等速）。表示上のHP・状態異常はこの間だけ発動前の値を見せる
+const FLIGHT_MS = 300;
+const HOLD_MAX_MS = 700;
+const BEAM_MS = 420;
+const BEAM_REACH = 0.4;
 const KIND_SE = {
   damage: "damage",
   shield: "buff",
@@ -35,7 +55,8 @@ export class BattleView {
     this.running = false;
     this.cutins = [];
     this.suddenShown = false;
-    this.lastSkillPop = [0, 0];
+    this.hold = [null, null];
+    this.pre = null;
     this.el = this.build();
   }
 
@@ -61,6 +82,8 @@ export class BattleView {
           h("div", { class: "hpbar-trail" }),
           h("div", { class: "hpbar-fill" }),
           h("div", { class: "hpbar-shield" }),
+          h("div", { class: "hpbar-poison" }),
+          h("div", { class: "hpbar-bleed" }),
           h("span", { class: "hpbar-text" }),
         ),
         h(
@@ -72,17 +95,40 @@ export class BattleView {
         ),
       ),
     );
-    const grid = h("div", { class: "battle-grid" });
+    const grid = h(
+      "div",
+      { class: "battle-grid" },
+      h(
+        "div",
+        { class: "status-veil" },
+        h(
+          "div",
+          { class: "veil-poison" },
+          [8, 26, 47, 66, 84].map((left, i) =>
+            h("img", { src: "assets/vfx/poison-bubble.svg", alt: "", style: { left: `${left}%`, animationDelay: `${(i * 0.53) % 2.6}s` } }),
+          ),
+        ),
+        h(
+          "div",
+          { class: "veil-bleed" },
+          [12, 37, 61, 88].map((left, i) =>
+            h("img", { src: "assets/vfx/blood-drop.svg", alt: "", style: { left: `${left}%`, animationDelay: `${(i * 0.71) % 2.2}s` } }),
+          ),
+        ),
+      ),
+    );
     for (let slot = 0; slot < PARTY_SIZE; slot++) {
       const f = side.fighters.find((x) => x.slot === slot);
       if (!f) {
         grid.append(h("div", { class: "fighter empty" }));
         continue;
       }
+      const role = mainKind(f);
       const card = h(
         "div",
-        { class: `fighter r${f.rarity}`, style: { "--bd": bobDelay(slot + index * 3, 2.2) } },
+        { class: `fighter r${f.rarity}`, style: { "--bd": bobDelay(slot + index * 3, 2.2), "--role": ROLES[role]?.color } },
         h("div", { class: "fighter-art" }, img(f.image, "pixel", f.name), h("span", { class: `lv lv${f.level}` }, `Lv${f.level}`)),
+        img(KIND_ICONS[role], "role-badge", ROLES[role]?.label),
         h("div", { class: "charge" }, h("div", { class: "charge-fill" })),
         h("span", { class: "mult" }),
         f.multicast > 1 ? h("span", { class: "multicast" }, `×${f.multicast}`) : null,
@@ -134,7 +180,7 @@ export class BattleView {
       this.running = true;
       this.last = performance.now();
       this.app.actions.battleSpeak("battle");
-      this.handleEvents(stepBattle(this.battle));
+      this.step();
       this.update();
       requestAnimationFrame((t) => this.frame(t));
     });
@@ -175,6 +221,12 @@ export class BattleView {
     setTimeout(finish, this.speed >= 4 ? 700 : 1500);
   }
 
+  /** 1ティック進める。表示を遅らせるために進める前の値を覚えておく */
+  step() {
+    this.pre = this.battle.sides.map((s) => ({ hp: s.hp, shield: s.shield, bleed: s.bleed, poison: s.poison }));
+    this.handleEvents(stepBattle(this.battle));
+  }
+
   frame(now) {
     if (!this.running || !this.el.isConnected) return;
     const dt = Math.min(0.25, (now - this.last) / 1000);
@@ -183,7 +235,7 @@ export class BattleView {
       this.acc += dt * this.speed;
       while (this.acc >= TICK && !this.battle.over) {
         this.acc -= TICK;
-        this.handleEvents(stepBattle(this.battle));
+        this.step();
       }
     }
     this.update();
@@ -193,6 +245,8 @@ export class BattleView {
 
   skip() {
     if (!this.running) return;
+    this.skipped = true;
+    this.hold = [null, null];
     this.fx.replaceChildren();
     while (!this.battle.over) stepBattle(this.battle);
     this.update();
@@ -206,9 +260,33 @@ export class BattleView {
     setTimeout(() => this.app.actions.battleFinished(), 600);
   }
 
+  /** 演出の続きを実行してよいか（スキップ・画面遷移後は何もしない） */
+  alive() {
+    return !this.skipped && this.el.isConnected;
+  }
+
   // -------------------------------------------------------------------------
   // 描画
   // -------------------------------------------------------------------------
+
+  /** 弾が飛んでいる間、その陣営のHP・シールド・状態異常は発動前の値を見せる */
+  holdSide(index, ms) {
+    if (!this.pre) return;
+    const now = performance.now();
+    const cur = this.hold[index];
+    if (cur && cur.until > now) {
+      cur.until = Math.min(cur.start + HOLD_MAX_MS, Math.max(cur.until, now + ms));
+      return;
+    }
+    this.hold[index] = { start: now, until: now + ms, ...this.pre[index] };
+  }
+
+  shown(index) {
+    const side = this.battle.sides[index];
+    const hold = this.hold[index];
+    if (hold && hold.until > performance.now() && !this.battle.over) return hold;
+    return side;
+  }
 
   update() {
     const b = this.battle;
@@ -216,17 +294,23 @@ export class BattleView {
     this.timerEl.classList.toggle("sudden", b.time >= SUDDEN_DEATH_AT);
     [this.playerView, this.enemyView].forEach((view, i) => {
       const side = b.sides[i];
-      const hpRatio = Math.max(0, side.hp / side.maxHp);
+      const shown = this.shown(i);
+      const hpRatio = Math.max(0, shown.hp / side.maxHp);
       const width = `${hpRatio * 100}%`;
       const fill = view.querySelector(".hpbar-fill");
       fill.style.width = width;
       fill.classList.toggle("low", hpRatio < 0.25);
       view.querySelector(".hpbar-trail").style.width = width;
-      view.querySelector(".hpbar-shield").style.width = `${Math.min(1, side.shield / side.maxHp) * 100}%`;
-      view.querySelector(".hpbar-text").textContent = `${Math.ceil(side.hp)} / ${side.maxHp}`;
-      setStatus(view.querySelector(".shield-st"), Math.round(side.shield));
-      setStatus(view.querySelector(".bleed-st"), side.bleed);
-      setStatus(view.querySelector(".poison-st"), side.poison);
+      view.querySelector(".hpbar-shield").style.width = `${Math.min(1, shown.shield / side.maxHp) * 100}%`;
+      view.querySelector(".hpbar-text").textContent = `${Math.ceil(shown.hp)} / ${side.maxHp}`;
+      setStatus(view.querySelector(".shield-st"), Math.round(shown.shield));
+      setStatus(view.querySelector(".bleed-st"), shown.bleed);
+      setStatus(view.querySelector(".poison-st"), shown.poison);
+      // 毒・出血をくらっている間のもやとにじみ（スタックが多いほど濃い）
+      view.classList.toggle("poisoned", shown.poison > 0);
+      view.classList.toggle("bleeding", shown.bleed > 0);
+      view.style.setProperty("--poison", Math.min(1, 0.45 + shown.poison / 30).toFixed(2));
+      view.style.setProperty("--bleed", Math.min(1, 0.4 + shown.bleed / 25).toFixed(2));
       for (const f of side.fighters) {
         const card = this.cards[i].get(f.slot);
         if (!card) continue;
@@ -251,6 +335,12 @@ export class BattleView {
     return { x: p.x + (Math.random() - 0.5) * 80, y: p.y - 6 };
   }
 
+  statusPoint(index, kind) {
+    const el = this.sideEl(index).querySelector(`.${kind}-st`);
+    if (!el || el.style.display === "none") return this.hpPoint(index);
+    return centerOf(el, this.el);
+  }
+
   gridPoint(index) {
     return centerOf(this.sideEl(index).querySelector(".battle-grid"), this.el);
   }
@@ -258,6 +348,18 @@ export class BattleView {
   cardPoint(index, slot) {
     const card = this.cards[index].get(slot);
     return card ? centerOf(card, this.el) : this.gridPoint(index);
+  }
+
+  /** そのパーティの、ランダムなヒーローの位置 */
+  randomCardPoint(index) {
+    const cards = [...this.cards[index].values()];
+    if (!cards.length) return this.gridPoint(index);
+    const p = centerOf(cards[Math.floor(Math.random() * cards.length)], this.el);
+    return { x: p.x + (Math.random() - 0.5) * 30, y: p.y + (Math.random() - 0.5) * 20 };
+  }
+
+  fighter(index, slot) {
+    return this.battle.sides[index].fighters.find((x) => x.slot === slot);
   }
 
   bump(index, slot) {
@@ -268,20 +370,32 @@ export class BattleView {
     card.classList.add("cast");
   }
 
-  /** 発動したスキル名を小さく出す（等速のときだけ。出しすぎないよう間引く） */
-  skillPop(sideIndex, slot) {
-    if (this.speed > 1) return;
-    const now = performance.now();
-    if (now - this.lastSkillPop[sideIndex] < 650) return;
-    this.lastSkillPop[sideIndex] = now;
-    const f = this.battle.sides[sideIndex].fighters.find((x) => x.slot === slot);
-    if (!f) return;
-    const p = this.cardPoint(sideIndex, slot);
-    const el = h("div", { class: `skill-pop${sideIndex === 1 ? " enemy" : ""}` }, this.app.db.def(f.defId).skill_name);
-    el.style.left = `${p.x}px`;
-    el.style.top = `${p.y - 30}px`;
-    this.el.append(el);
-    setTimeout(() => el.remove(), 900);
+  /** カードに一時的なクラスを付ける（受けた側のリアクション） */
+  flashCard(index, slot, cls, color) {
+    const card = this.cards[index].get(slot);
+    if (!card) return;
+    if (color) card.style.setProperty("--fx", color);
+    card.classList.remove(cls);
+    void card.offsetWidth;
+    card.classList.add(cls);
+    setTimeout(() => card.classList.remove(cls), 650);
+  }
+
+  flashSide(index, cls) {
+    const view = this.sideEl(index);
+    view.classList.remove(cls);
+    void view.offsetWidth;
+    view.classList.add(cls);
+    clearTimeout(this[`t_${cls}${index}`]);
+    this[`t_${cls}${index}`] = setTimeout(() => view.classList.remove(cls), 650);
+  }
+
+  statusChip(index, kind, cls) {
+    pop(this.sideEl(index).querySelector(`.${kind}-st`), cls);
+  }
+
+  hpGlow(index, cls) {
+    pop(this.sideEl(index).querySelector(".hpbar"), cls);
   }
 
   hit(sideIndex, value) {
@@ -302,18 +416,14 @@ export class BattleView {
     for (const ev of events) {
       switch (ev.type) {
         case "cast":
-          this.bump(ev.side, ev.slot);
-          if (ev.trigger === "start") this.queueCutin(ev.side, ev.slot);
-          else this.skillPop(ev.side, ev.slot);
+          this.showCast(ev, fast);
           break;
         case "effect":
           this.showEffect(ev, fast);
           break;
-        case "dot": {
-          const p = this.hpPoint(ev.side);
-          popText(this.el, `-${ev.value}`, p.x, p.y, `dot ${ev.kind}`);
+        case "dot":
+          this.showDot(ev, fast);
           break;
-        }
         case "sudden":
           if (!this.suddenShown) {
             this.suddenShown = true;
@@ -342,69 +452,131 @@ export class BattleView {
     }
   }
 
+  /** 発動したヒーロー: 踏み込み＋役割の色の輪＋「アイコン＋役割」 */
+  showCast(ev, fast) {
+    this.bump(ev.side, ev.slot);
+    const f = this.fighter(ev.side, ev.slot);
+    if (!f) return;
+    const kind = f.effects.find((e) => e.trigger === ev.trigger)?.kind ?? mainKind(f);
+    const c = this.cardPoint(ev.side, ev.slot);
+    castAura(this.fx, c, kind);
+    if (!fast) roleChip(this.fx, { x: c.x, y: c.y - 26 }, kind, { compact: this.speed > 1, enemy: ev.side === 1 });
+    if (ev.trigger === "start") this.queueCutin(ev.side, ev.slot);
+  }
+
+  /** スキルの効果: 発動者から対象へ飛ばし、着弾してから数値と反応を出す */
   showEffect(ev, fast) {
     const foe = 1 - ev.side;
     const se = KIND_SE[ev.kind];
     if (se) this.app.audio.se(se, 0.45);
+    const from = this.cardPoint(ev.side, ev.slot);
+    const flight = fast ? 0 : Math.round(FLIGHT_MS / this.speed);
+    // 弾を飛ばす種類: 着弾まで対象陣営の表示を止めておく
+    const launch = (target, to, land) => {
+      if (!flight) return land();
+      this.holdSide(target, flight);
+      projectile(this.fx, from, to, ev.kind, flight).then(() => this.alive() && land());
+    };
     switch (ev.kind) {
       case "damage": {
-        const p = this.hpPoint(foe);
-        const ratio = ev.value / this.battle.sides[foe].maxHp;
-        const el = popText(this.el, `-${ev.value}`, p.x, p.y, `damage${ratio >= 0.08 ? " big" : ""}`);
-        if (el) el.style.setProperty("--fs", `${Math.round(18 + Math.min(18, ratio * 160))}px`);
-        this.hit(foe, ev.value);
-        if (!fast) {
-          const g = this.gridPoint(foe);
-          playSprite(this.el, "damage", g.x + (Math.random() - 0.5) * 120, g.y, { speed: this.speed });
-        }
-        break;
-      }
-      case "shield": {
-        const p = this.hpPoint(ev.side);
-        popText(this.el, `+${ev.value}`, p.x, p.y, "shield");
-        if (!fast) {
-          const c = this.cardPoint(ev.side, ev.slot);
-          playSprite(this.el, "buff", c.x, c.y, { scale: 1, speed: this.speed });
-        }
+        const to = this.hpPoint(foe);
+        launch(foe, to, () => {
+          const ratio = ev.value / this.battle.sides[foe].maxHp;
+          const el = popText(this.el, `-${ev.value}`, to.x, to.y, `damage${ratio >= 0.08 ? " big" : ""}`);
+          if (el) el.style.setProperty("--fs", `${Math.round(18 + Math.min(18, ratio * 160))}px`);
+          impact(this.fx, to, "damage", 56 + Math.min(60, ratio * 300));
+          this.hit(foe, ev.value);
+          if (!fast) playSprite(this.el, "damage", to.x, to.y + 10, { scale: 1.2, speed: this.speed });
+        });
         break;
       }
       case "heal": {
-        const p = this.hpPoint(ev.side);
-        popText(this.el, `+${ev.value}`, p.x, p.y, "heal");
-        if (!fast) {
-          const g = this.gridPoint(ev.side);
-          playSprite(this.el, "heal", g.x, g.y, { scale: 1.6, speed: this.speed });
-        }
+        const to = this.hpPoint(ev.side);
+        launch(ev.side, to, () => {
+          popText(this.el, `+${ev.value}`, to.x, to.y, "heal");
+          this.hpGlow(ev.side, "glow-heal");
+          if (!fast) playSprite(this.el, "heal", to.x, to.y, { scale: 1.1, speed: this.speed });
+        });
         break;
       }
-      case "bleed":
+      case "shield": {
+        const to = this.statusPoint(ev.side, "shield");
+        launch(ev.side, to, () => {
+          popText(this.el, `+${ev.value}`, to.x, to.y - 10, "shield");
+          impact(this.fx, to, "shield", 54);
+          this.hpGlow(ev.side, "glow-shield");
+          this.statusChip(ev.side, "shield", "bump");
+        });
+        break;
+      }
+      case "bleed": {
+        const to = this.hpPoint(foe);
+        launch(foe, to, () => {
+          slash(this.fx, to, 76);
+          bloodBurst(this.fx, to, { drops: fast ? 2 : 5, splat: !fast });
+          popText(this.el, `出血+${ev.value}`, to.x, to.y - 8, "bleed");
+          this.statusChip(foe, "bleed", "bump");
+        });
+        break;
+      }
       case "poison": {
-        const p = this.hpPoint(foe);
-        popText(this.el, `${ev.kind === "bleed" ? "出血" : "毒"}+${ev.value}`, p.x, p.y, ev.kind);
-        if (!fast) {
-          const g = this.gridPoint(foe);
-          playSprite(this.el, "debuff", g.x, g.y, { scale: 1.2, speed: this.speed });
-        }
+        const to = this.hpPoint(foe);
+        launch(foe, to, () => {
+          if (!fast) poisonCloud(this.fx, to, 90);
+          poisonBubbles(this.fx, to, { count: fast ? 2 : 5 });
+          popText(this.el, `毒+${ev.value}`, to.x, to.y - 8, "poison");
+          this.statusChip(foe, "poison", "bump");
+        });
         break;
       }
       case "haste":
       case "buff":
-        for (const slot of ev.targets) {
-          const c = this.cardPoint(ev.side, slot);
-          popText(this.el, ev.kind === "haste" ? `+${ev.value}s` : `+${ev.value}%`, c.x, c.y - 20, "buff");
-          if (!fast) playSprite(this.el, "buff", c.x, c.y, { scale: 0.9, speed: this.speed });
-        }
-        break;
       case "slow":
-      case "weaken":
+      case "weaken": {
+        const friendly = ev.kind === "haste" || ev.kind === "buff";
+        const targetSide = friendly ? ev.side : foe;
+        const icon = KIND_ICONS[ev.kind];
+        const text = { haste: `+${ev.value}s`, buff: `+${ev.value}%`, slow: `-${ev.value}s`, weaken: `-${ev.value}%` }[ev.kind];
         for (const slot of ev.targets) {
-          const c = this.cardPoint(foe, slot);
-          popText(this.el, ev.kind === "slow" ? `-${ev.value}s` : `-${ev.value}%`, c.x, c.y - 20, "debuff");
-          if (!fast) playSprite(this.el, "debuff", c.x, c.y, { scale: 0.9, speed: this.speed });
+          const to = this.cardPoint(targetSide, slot);
+          const land = () => {
+            iconPop(this.fx, { x: to.x, y: to.y - 8 }, icon, { size: 28 });
+            popText(this.el, text, to.x, to.y - 30, friendly ? "buff" : "debuff");
+            if (friendly) this.flashCard(targetSide, slot, "buffed", ROLES[ev.kind].color);
+            else this.flashCard(targetSide, slot, "debuffed");
+            if (!fast) playSprite(this.el, friendly ? "buff" : "debuff", to.x, to.y, { scale: 0.9, speed: this.speed });
+          };
+          if (fast) {
+            land();
+            continue;
+          }
+          const ms = Math.round(BEAM_MS / this.speed);
+          beam(this.fx, from, to, ev.kind, ms);
+          setTimeout(() => this.alive() && land(), ms * BEAM_REACH);
         }
         break;
+      }
       default:
         break;
+    }
+  }
+
+  /** 毒・出血のダメージ: パーティ全体が「くらっている」反応をする */
+  showDot(ev, fast) {
+    const p = this.hpPoint(ev.side);
+    popText(this.el, `-${ev.value}`, p.x, p.y, `dot ${ev.kind}`);
+    this.statusChip(ev.side, ev.kind, "tick");
+    if (ev.kind === "poison") {
+      poisonBubbles(this.fx, p, { count: fast ? 2 : 4, spread: 90 });
+      if (!fast) {
+        poisonCloud(this.fx, this.randomCardPoint(ev.side), 76);
+        iconPop(this.fx, this.statusPoint(ev.side, "poison"), KIND_ICONS.poison, { size: 24, rise: 26 });
+      }
+      this.flashSide(ev.side, "poison-tick");
+    } else {
+      bloodBurst(this.fx, p, { drops: fast ? 2 : 3, splat: false, scale: 0.8 });
+      if (!fast) bloodBurst(this.fx, this.randomCardPoint(ev.side), { drops: 3, scale: 0.7 });
+      this.flashSide(ev.side, "bleed-tick");
     }
   }
 
@@ -463,6 +635,11 @@ export class BattleView {
   showResult(content) {
     this.el.append(content);
   }
+}
+
+/** そのヒーローの主な役割（チャージで発動する最初の効果） */
+function mainKind(f) {
+  return (f.effects.find((e) => e.trigger === "charge") ?? f.effects[0])?.kind ?? "damage";
 }
 
 function setStatus(el, value) {

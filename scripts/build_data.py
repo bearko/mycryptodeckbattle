@@ -372,7 +372,6 @@ COPY_FILES = {
     "Image/BattleIcons/StatusEffects/bleed.png": "assets/battle-icons/bleed.png",
     "Image/BattleIcons/StatusEffects/poison.png": "assets/battle-icons/poison.png",
     "Image/BattleIcons/StatusEffects/sleep.png": "assets/battle-icons/sleep.png",
-    "Image/BattleIcons/StatusEffects/decoy.png": "assets/battle-icons/decoy.png",
     "Image/BattleIcons/StatusEffects/resurrection.png": "assets/battle-icons/resurrection.png",
     # バトルエフェクト
     "Image/Effects/Battle/01_single_damage.png": "assets/effects/01_single_damage.png",

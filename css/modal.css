@@ -614,3 +614,43 @@
   align-items: stretch;
   padding: 4px 10px;
 }
+
+/* ヘルプ: 役割の凡例（バトル中の色とアイコン） */
+.help-note {
+  margin: 4px 0 6px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.help-page .role-legend {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.help-page .role-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 3px 8px 3px 4px;
+  font-size: 12px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--role) 22%, transparent), transparent 70%);
+  box-shadow: inset 3px 0 0 var(--role);
+}
+
+.role-legend .kind-icon {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+
+.role-legend b {
+  flex: none;
+  width: 2.6em;
+  font-family: var(--font-display);
+  font-weight: 400;
+  color: var(--role);
+}
