@@ -2,8 +2,8 @@
 
 import { createDb } from "./engine/units.js";
 import * as Run from "./engine/run.js";
-import { moveUnit, allUnits } from "./engine/roster.js";
-import { reroll, toggleOfferLock, effectiveRank } from "./engine/market.js";
+import { moveUnit, allUnits, mergePreview } from "./engine/roster.js";
+import { bestAffordableOffer, reroll, toggleOfferLock, effectiveRank } from "./engine/market.js";
 import { randomSeed, withRng } from "./engine/rng.js";
 import { battleSummary, runBattle } from "./engine/battle.js";
 import { PLAYERS, playerById } from "./engine/content.js";
@@ -110,7 +110,7 @@ function setTalking(on) {
 /** プレイヤーキャラクターに喋らせる。anchor を省略するとHUDのアイコンから */
 function say(kind, vars = {}, { tone = "", anchor = null, text = null } = {}) {
   // チュートリアルでマインが案内している間は、クリスのセリフを控える（吹き出しが重なるため）
-  if (coach.el?.isConnected && tone !== "error") return;
+  if ((coach.el?.isConnected || (app.run?.story?.tutorial && tutorialStep())) && tone !== "error") return;
   const p = player();
   const msg = text ?? line(p.id, kind, vars);
   if (!msg) return;
@@ -393,8 +393,25 @@ function coachScreen() {
   return "market";
 }
 
-/** target が無いときは fallback の案内（OKで進む）にする */
+/**
+ * いま出す案内。target が無いときは fallback（OKで進む）。
+ * spendFirst の手順は、まだ買えるヒーローがあればバトルより先に「強化」を案内する。
+ */
 function stepView(step) {
+  if (step.spendFirst && app.run) {
+    const i = bestAffordableOffer(app.run);
+    if (i >= 0) {
+      const offer = app.run.market.offers[i];
+      const merge = mergePreview(app.run, offer.defId);
+      return {
+        ...step,
+        target: `.offer[data-offer="${i}"]`,
+        text: merge
+          ? `GUMが${app.run.gum}残っています！ 光っているヒーローを買うと合成してLv${merge}に。バトルの前に強化しましょう`
+          : `GUMが${app.run.gum}残っています！ バトルの前に、ヒーローを買ってパーティを強化しましょう`,
+      };
+    }
+  }
   if (step.fallback && step.target && !document.querySelector(step.target)) return { ...step, ...step.fallback, until: "ok" };
   return step;
 }

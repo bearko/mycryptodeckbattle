@@ -1153,6 +1153,24 @@
   filter: grayscale(0.85) brightness(0.6);
 }
 
+/* まだ買えるヒーローが残っている間は控えめに（先に強化してほしいので） */
+.battle-btn.wait {
+  color: #d6dbe6;
+  background: linear-gradient(100deg, #4a3040, #4a3a30);
+  box-shadow: inset 0 0 0 1px rgba(255, 122, 61, 0.45);
+}
+
+.battle-btn.wait::before,
+.battle-btn.wait::after {
+  animation: none;
+  opacity: 0.4;
+}
+
+/* 買えるヒーロー（GUMが足りて置き場所がある）に細い縁 */
+.offer.buyable:not(.selected):not(.locked) .unit-card {
+  box-shadow: inset 0 0 0 1px rgba(255, 210, 63, 0.7), inset 0 -3px 0 var(--rc);
+}
+
 .battle-btn.off::before,
 .battle-btn.off::after {
   animation: none;

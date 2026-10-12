@@ -2,6 +2,7 @@
 // screen: どの画面で出すか / wave: 何ウェーブ目で出すか（run.wins + 1）
 // target: 光らせる要素 / until: 次へ進むきっかけ（操作のイベント名。"ok" はボタン）
 // fallback: target が見つからないときの代わりの案内
+// spendFirst: まだ買えるヒーローが残っていたら、バトルより先に強化を案内する（main.js の stepView）
 
 export const TUTORIAL_STEPS = [
   {
@@ -36,6 +37,7 @@ export const TUTORIAL_STEPS = [
     target: ".battle-btn",
     text: "準備ができたら「バトル開始」！",
     until: "battle",
+    spendFirst: true,
   },
   {
     id: "battle-rule",
@@ -69,6 +71,7 @@ export const TUTORIAL_STEPS = [
     target: ".battle-btn",
     text: "いい感じです！ バトルへ行きましょう",
     until: "battle",
+    spendFirst: true,
   },
   {
     id: "lock",
@@ -86,5 +89,6 @@ export const TUTORIAL_STEPS = [
     target: ".battle-btn",
     text: "あと1勝で1-1クリアです。がんばって！",
     until: "battle",
+    spendFirst: true,
   },
 ];

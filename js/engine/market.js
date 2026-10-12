@@ -10,7 +10,7 @@ import {
   sellValue,
 } from "./balance.js";
 import { MATERIALS, materialById } from "./content.js";
-import { acquireUnit, allUnits, canAcquire, removeUnit } from "./roster.js";
+import { acquireUnit, allUnits, canAcquire, mergePreview, removeUnit } from "./roster.js";
 
 export function effectiveRank(owner) {
   return Math.max(1, Math.min(MAX_MARKET_RANK, owner.stage + (owner.rankBonus || 0)));
@@ -115,6 +115,25 @@ export function buyOffer(owner, db, index) {
   owner.itemUses -= 1;
   owner.market.offers[index] = null;
   return { ok: true, material };
+}
+
+/**
+ * いま買って使えるヒーローの枠（GUMが足り、置き場所か合成先がある）。
+ * 合成できるものを優先し、なければ安いもの。無ければ -1。
+ * 「GUMが残っているのにバトルへ進む」のを防ぐ案内に使う（マテリアルは数えない）。
+ */
+export function bestAffordableOffer(owner) {
+  let best = -1;
+  let bestScore = -Infinity;
+  owner.market.offers.forEach((o, i) => {
+    if (!o || o.type !== "hero" || o.cost > owner.gum || !canAcquire(owner, o.defId)) return;
+    const score = (mergePreview(owner, o.defId) ? 100 : 0) - o.cost;
+    if (score > bestScore) {
+      bestScore = score;
+      best = i;
+    }
+  });
+  return best;
 }
 
 export function unitSellValue(owner, db, unit, bonus = 0) {

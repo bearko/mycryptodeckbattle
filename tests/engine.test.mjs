@@ -4,7 +4,7 @@ import { loadDb } from "./load-db.mjs";
 import { createBattle, stepBattle, runBattle } from "../js/engine/battle.js";
 import { newRun, buy, sell, finishBattle, advance, prepareBattle, chooseExtension, chooseTreasure, usesKnownUnits, startStage } from "../js/engine/run.js";
 import { acquireUnit, allUnits, emptyRoster } from "../js/engine/roster.js";
-import { rollMarket, reroll, toggleOfferLock } from "../js/engine/market.js";
+import { rollMarket, reroll, toggleOfferLock, bestAffordableOffer } from "../js/engine/market.js";
 import { createRng } from "../js/engine/rng.js";
 import { buildCpuOpponent } from "../js/engine/cpu.js";
 import { sellValue, lifeLoss } from "../js/engine/balance.js";
@@ -276,4 +276,26 @@ test("旧仕様（ラインナップ全体の取り置き）の保存データ�
   startStage(run, db);
   assert.deepEqual(run.market.offers.map((o) => o?.defId ?? o?.id), before);
   assert.equal(run.market.locked, undefined);
+});
+
+test("買えるヒーローの枠: GUMと置き場所があるもの。合成できるものを優先", () => {
+  const run = newRun(db, { playerId: "chris", seed: 21 });
+  const id = run.heroPool.find((x) => db.def(x).rarity === 1);
+  run.market.offers = [
+    { type: "hero", defId: run.heroPool.find((x) => db.def(x).rarity === 2), cost: 8 },
+    { type: "hero", defId: id, cost: 5 },
+    null,
+    { type: "material", id: "ifrit", cost: 3 },
+  ];
+  run.gum = 4;
+  assert.equal(bestAffordableOffer(run), -1); // マテリアルは数えない
+  run.gum = 10;
+  assert.equal(bestAffordableOffer(run), 1); // 安い方
+  acquireUnit(run, run.market.offers[0].defId);
+  acquireUnit(run, run.market.offers[0].defId);
+  assert.equal(bestAffordableOffer(run), 0); // 合成できる方を優先
+  // 満員で合成もできないときは買えない
+  for (const zone of ["party", "bench"]) for (let i = 0; i < run[zone].length; i++) run[zone][i] ??= { uid: 900 + i, defId: run.heroPool[5], level: 3, permMult: 0, cdReduce: 0 };
+  run.market.offers = [{ type: "hero", defId: id, cost: 5 }];
+  assert.equal(bestAffordableOffer(run), -1);
 });

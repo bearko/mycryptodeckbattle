@@ -5,10 +5,10 @@ import { h, img } from "./h.js";
 import { compactMaterial, compactUnit, extensionIcon, gumAmount, materialCard, pips, unitCard } from "./components.js";
 import { COLUMN_NAMES, materialById, playerById } from "../engine/content.js";
 import { MATERIAL_SLOT, WINS_TO_CLEAR, marketOdds, sellValue } from "../engine/balance.js";
-import { effectiveRank, rerollCost } from "../engine/market.js";
+import { bestAffordableOffer, effectiveRank, rerollCost } from "../engine/market.js";
 import { canStartBattle, playerTeam, runGoal, runMods, targetMaterial } from "../engine/run.js";
 import { areaById, stageLabel } from "../engine/world.js";
-import { allUnits, countCopies, mergePreview, mergeProgress } from "../engine/roster.js";
+import { allUnits, canAcquire, countCopies, mergePreview, mergeProgress } from "../engine/roster.js";
 
 const RARITY_SHORT = ["", "C", "U", "R", "E", "L"];
 
@@ -177,7 +177,9 @@ function offerView(app, offer, index) {
     {
       class: `offer${deal}${isSelected(app.ui.selected, "offer", index) ? " selected" : ""}${run.gum >= offer.cost ? "" : " expensive"}${
         offer.type === "material" ? " material-slot" : ""
-      }${merge ? " merge-ready" : ""}${offer.locked ? " locked" : ""}`,
+      }${merge ? " merge-ready" : ""}${offer.locked ? " locked" : ""}${
+        offer.type === "hero" && run.gum >= offer.cost && !merge && canAcquire(run, offer.defId) ? " buyable" : ""
+      }`,
       style,
       dataset: { offer: String(index) },
       draggable: "true",
@@ -381,7 +383,14 @@ export function marketScreen(app) {
     h(
       "footer",
       { class: "market-footer" },
-      h("button", { class: `btn battle-btn${check.ok ? "" : " off"}`, onClick: () => app.actions.startBattle() }, "バトル開始"),
+      h(
+        "button",
+        {
+          class: `btn battle-btn${check.ok ? "" : " off"}${check.ok && bestAffordableOffer(app.run) >= 0 ? " wait" : ""}`,
+          onClick: () => app.actions.startBattle(),
+        },
+        "バトル開始",
+      ),
     ),
   );
   screen.style.setProperty("--player", player.color);
