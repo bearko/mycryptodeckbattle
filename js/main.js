@@ -10,6 +10,7 @@ import { PLAYERS, playerById } from "./engine/content.js";
 import { RARITY, TREASURE_STAGES, stageIncome, storyPlayerBonus } from "./engine/balance.js";
 import { isBossWave } from "./engine/boss.js";
 import { audio } from "./ui/audio.js";
+import { initPlatform, reportStageResult } from "./platform.js";
 import { clearRun, loadRun, loadSettings, loadStory, saveRun, saveSettings, saveStory } from "./ui/storage.js";
 import * as Story from "./engine/story.js";
 import { AREAS, DECK_SIZE, ERAS, TUTORIAL_AREA, areaById, areaMusic, areaName, machineByLevel, parseStageKey, stageLabel } from "./engine/world.js";
@@ -538,6 +539,8 @@ function storyStageEnd() {
   const st = run.story;
   const cleared = run.phase === "clear";
   const result = cleared ? Story.clearStage(app.story, st.key) : null;
+  // bearko.games 共通基盤のトロフィー（最初のノード・時空のはざまの制覇）。SDK がなければ何もしない
+  reportStageResult(st.areaId, result);
   // ノードの中はチームを繰り越す（負けたときは、そのステージを始めたときのチームのまま）
   if (cleared) Story.carryOver(app.story, run);
   saveStoryNow();
@@ -1076,6 +1079,7 @@ function sayOnSelect() {
 app.actions = actions;
 
 async function boot() {
+  initPlatform("0.1.0"); // bearko.games 共通基盤（docs/platform.md）
   ambient = initAmbient();
   installRipple();
   // タイトルのBGM。ブラウザの制限で、最初にタップしたときに鳴り始める
