@@ -1,5 +1,7 @@
 {
   "name": "mycryptodeckbattle",
   "compatibility_date": "2026-10-06",
-  "assets": { "directory": "." }
+  "assets": { "directory": "." },
+  // 本番以外のブランチ（プレビュー）のビルドで `wrangler preview` を使うために必要（中身は空でよい）
+  "previews": {}
 }
