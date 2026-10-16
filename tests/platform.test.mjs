@@ -48,3 +48,52 @@ test("共通基盤：ノードを制覇したときだけ送り、失敗・例�
     delete globalThis.window;
   }
 });
+
+// ---------------------------------------------------------------- 総合スコア（共通基盤 SPEC-002 3.4）
+import { partyPower, avgBattleSec, recordNodeScore, scoreMetrics, reportStoryScore } from "../js/platform.js";
+import { newStory } from "../js/engine/story.js";
+import { stageKey } from "../js/engine/world.js";
+
+const fakeDb = { def: (id) => ({ c: { rarity: 1 }, r: { rarity: 3 }, l: { rarity: 5 } })[id] };
+const unit = (defId, level, permMult = 0) => ({ uid: 1, defId, level, permMult, cdReduce: 0 });
+
+test("総合スコア：戦力はレアリティの基礎値 × Lv の倍率 × (1 + 永続強化) の合計", () => {
+  const run = { party: [unit("c", 1), unit("r", 3), unit("l", 2, 0.5), null, null, null] };
+  assert.equal(partyPower(fakeDb, run), 10 * 1 + 15 * 3 + 22 * 2 * 1.5);
+  assert.equal(partyPower(fakeDb, { party: [] }), 0);
+});
+
+test("総合スコア：平均の戦闘時間", () => {
+  assert.equal(avgBattleSec({ history: [{ time: 20 }, { time: 40 }, { time: 0 }] }), 30);
+  assert.equal(avgBattleSec({ history: [] }), null);
+});
+
+test("総合スコア：ノードの最後のステージでだけ記録し、よくなったときだけ書き換える", () => {
+  const story = newStory();
+  const area = AREAS.find((a) => a.id === "kindai-eu");
+  const last = area.stages.length - 1;
+  const run = (lv, t) => ({ party: [unit("r", lv)], history: [{ time: t }] });
+  assert.equal(recordNodeScore(story, "kindai-eu", 0, fakeDb, run(1, 30)), false, "最後のステージでない");
+  assert.equal(recordNodeScore(story, "kindai-eu", last, fakeDb, run(2, 30)), true);
+  assert.deepEqual(story.scores["kindai-eu"], { power: 30, avgBattleSec: 30 });
+  assert.equal(recordNodeScore(story, "kindai-eu", last, fakeDb, run(1, 40)), false, "悪い成績では書き換えない");
+  assert.equal(recordNodeScore(story, "kindai-eu", last, fakeDb, run(3, 20)), true);
+});
+
+test("総合スコア：送る成績は制覇したノードと、その自己ベスト。制覇がなければ送らない", async () => {
+  const story = newStory();
+  const tut = AREAS.find((a) => a.id === TUTORIAL_AREA);
+  for (let i = 0; i < tut.stages.length; i++) story.cleared.push(stageKey(tut.id, i));
+  story.scores = { [TUTORIAL_AREA]: { power: 50, avgBattleSec: 25 }, "kindai-eu": { power: 1, avgBattleSec: 1 } };
+  assert.deepEqual(scoreMetrics(story), { nodesCleared: [TUTORIAL_AREA], nodes: { [TUTORIAL_AREA]: { power: 50, avgBattleSec: 25 } } });
+  const sent = [];
+  globalThis.window = { BearkoGames: { submitScore: async (m, o) => { sent.push([m.nodesCleared.length, !!o?.quiet]); return { ok: true }; } } };
+  try {
+    reportStoryScore(newStory());
+    reportStoryScore(story, { quiet: true });
+    await new Promise((r) => setTimeout(r, 0));
+    assert.deepEqual(sent, [[1, true]]);
+  } finally {
+    delete globalThis.window;
+  }
+});

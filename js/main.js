@@ -10,7 +10,7 @@ import { PLAYERS, playerById } from "./engine/content.js";
 import { RARITY, TREASURE_STAGES, stageIncome, storyPlayerBonus } from "./engine/balance.js";
 import { isBossWave } from "./engine/boss.js";
 import { audio } from "./ui/audio.js";
-import { initPlatform, reportStageResult } from "./platform.js";
+import { initPlatform, recordNodeScore, reportStageResult, reportStoryScore } from "./platform.js";
 import { clearRun, loadRun, loadSettings, loadStory, saveRun, saveSettings, saveStory } from "./ui/storage.js";
 import * as Story from "./engine/story.js";
 import { AREAS, DECK_SIZE, ERAS, TUTORIAL_AREA, areaById, areaMusic, areaName, machineByLevel, parseStageKey, stageLabel } from "./engine/world.js";
@@ -541,6 +541,8 @@ function storyStageEnd() {
   const result = cleared ? Story.clearStage(app.story, st.key) : null;
   // bearko.games 共通基盤のトロフィー（最初のノード・時空のはざまの制覇）。SDK がなければ何もしない
   reportStageResult(st.areaId, result);
+  // 総合スコア：ノードの最後のステージなら、そのノードの戦力・戦闘時間を残して送る（carryOver の前。run はこのノードの通し）
+  if (cleared && (recordNodeScore(app.story, st.areaId, st.index, app.db, run) || result?.areaCleared)) reportStoryScore(app.story);
   // ノードの中はチームを繰り越す（負けたときは、そのステージを始めたときのチームのまま）
   if (cleared) Story.carryOver(app.story, run);
   saveStoryNow();
@@ -1098,6 +1100,8 @@ async function boot() {
     app.battleBackgrounds = manifest.battleBackgrounds ?? [];
     const saved = loadStory();
     app.story = saved?.cleared ? Story.migrateStory(saved) : Story.newStory();
+    // 総合スコア：これまでに制覇したノードを、起動のたびに送り直す（通知は出さない。サーバーで自己ベストだけ残る）
+    reportStoryScore(app.story, { quiet: true });
   } catch (err) {
     clear(root).append(h("div", { class: "loading error" }, `データの読み込みに失敗しました: ${err.message}`));
     throw err;
