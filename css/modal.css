@@ -615,6 +615,74 @@
   padding: 4px 10px;
 }
 
+/* メニューの音量（BGM・効果音）: 帯はいまの値まで金で埋める（--val は screens.js が入れる） */
+.vol-row {
+  display: grid;
+  grid-template-columns: 4.2em 1fr 3.4em;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 4px;
+  font-weight: 700;
+}
+
+.vol-value {
+  font-family: var(--font-num);
+  text-align: right;
+  color: var(--accent);
+}
+
+.vol-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 28px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.vol-range::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent) var(--val, 100%), rgba(255, 255, 255, 0.12) var(--val, 100%));
+  box-shadow: inset 0 1px 0 var(--edge-lo);
+}
+
+.vol-range::-moz-range-track {
+  height: 8px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.vol-range::-moz-range-progress {
+  height: 8px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+.vol-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -5px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #ffe680, var(--accent));
+  box-shadow: inset 1px 1px 0 var(--edge-hi), 0 1px 0 var(--edge-lo);
+}
+
+.vol-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border: 0;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #ffe680, var(--accent));
+}
+
+.vol-range:focus-visible {
+  outline: 1px solid var(--accent-2);
+  outline-offset: 2px;
+}
+
 /* タイトルの RTA：レギュレーションを選ぶ */
 .rta-choice {
   display: flex;
