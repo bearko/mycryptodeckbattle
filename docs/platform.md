@@ -25,6 +25,11 @@ bearko.games 配下の全タイトル共通の基盤（共通 Google ログイ�
 - 隠す画面：対戦（`app.screen === "battle"`）と会話劇（`"scene"`）。`chatHiddenOn(screen)` が決める。タイトル・ノード・デッキ・結果では出す
 - 画面の切り替え（`go()`・`startBattle`・`playScene`）で呼ぶ。SDK が後から読めたときは `initPlatform` が覚えていた値をそろえる
 
+## bearko.games 共通のアイコン（共通基盤 SPEC-005 5.3。SDK 1.7.0）
+
+- タイトルの「アイコン」ボタン → SDK の選ぶ窓（`openAvatarPicker`）。窓に「bearko.games 全体のアイコンが変わります」と出る
+- SDK が読めていない・古いときはボタンを出さない（`canPickAvatar`）。絵の一覧と保存は共通基盤が持つ
+
 ## テスト
 
 `npm test`（`tests/platform.test.mjs`）

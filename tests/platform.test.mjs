@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { AREAS, MAIN_AREAS, TUTORIAL_AREA } from "../js/engine/world.js";
-import { trophyIdsForAreaCleared, reportStageResult, initPlatform, setChatVisible, chatHiddenOn } from "../js/platform.js";
+import { trophyIdsForAreaCleared, reportStageResult, initPlatform, setChatVisible, chatHiddenOn, canPickAvatar, openAvatarPicker } from "../js/platform.js";
 
 test("共通基盤のトロフィー：最初のノードと、最後のノード（時空のはざま）の制覇で送る", () => {
   assert.deepEqual(trophyIdsForAreaCleared(TUTORIAL_AREA), ["deckbattle.area1"]);
@@ -160,6 +160,22 @@ test("全体チャット：対戦と会話劇では隠し、SDK がない・古�
     await new Promise((r) => setTimeout(r, 0));
     setChatVisible(true);
     assert.deepEqual(calls, [false, false, true]);
+  } finally {
+    delete globalThis.window;
+  }
+});
+
+test("共通のアイコン：SDK がない・古いときは出さず例外も出さない。あれば窓を開く", () => {
+  assert.equal(canPickAvatar(), false);
+  assert.equal(openAvatarPicker(), false);
+  let opened = 0;
+  globalThis.window = { BearkoGames: { init: async () => ({ ok: true }) } };
+  try {
+    assert.equal(canPickAvatar(), false);
+    globalThis.window.BearkoGames.openAvatarPicker = () => { opened++; };
+    assert.equal(canPickAvatar(), true);
+    assert.equal(openAvatarPicker(), true);
+    assert.equal(opened, 1);
   } finally {
     delete globalThis.window;
   }
