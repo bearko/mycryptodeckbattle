@@ -1383,6 +1383,15 @@ img.silhouette {
   flex: 1;
 }
 
+/* タイトル: bearko.games の総合ランキングへ */
+.title-platform {
+  align-self: center;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
 .hud .stat.story-stage b {
   font-size: 15px;
 }

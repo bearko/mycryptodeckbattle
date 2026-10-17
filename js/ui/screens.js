@@ -72,6 +72,12 @@ export function titleScreen(app, { hasSave, rta = false }) {
         rta ? h("button", { class: "btn", onClick: () => app.actions.openRta() }, "RTA") : null,
         h("button", { class: "btn", onClick: () => app.actions.showHelp() }, "遊び方"),
       ),
+      // bearko.games の総合ランキングへ（MyCryptoPortfolio#29。docs/platform.md）。遊んでいる画面を失わないよう新しいタブで
+      h(
+        "a",
+        { class: "title-platform enter-up", style: { "--d": "0.74s" }, href: "https://bearko.games/score/?game=deckbattle", target: "_blank", rel: "noopener" },
+        "bearko.games の総合ランキング ↗",
+      ),
     ),
     h("p", { class: "title-note" }, "UNOFFICIAL FAN GAME"),
     h(
