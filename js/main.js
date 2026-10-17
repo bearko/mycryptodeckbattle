@@ -79,7 +79,8 @@ const app = {
   // 本編のストーリーを mainStory に退避する（RTA 用のストーリー・ステージは保存しない）。docs/platform.md
   rta: null,
   saveSettings() {
-    saveSettings({ ...loadSettings(), ...app.settings, muted: audio.muted });
+    // app.settings は起動時の写しなので、音量は audio が今持っている値を書く
+    saveSettings({ ...loadSettings(), ...app.settings, ...audio.settingsPatch() });
   },
 };
 
@@ -892,12 +893,16 @@ const actions = {
     app.ui.modal = null;
     render();
   },
+  /** タイトルのスピーカー：BGMも効果音も 0 にする。もう一度押すと前の音量に戻す */
   toggleSound() {
     audio.unlock();
     audio.toggle();
-    // 今の画面のBGMを鳴らし直す（ミュート解除や、最初のタップ前にボタンを押したとき）
-    if (!audio.muted && audio.bgmName) audio.playBgm(audio.bgmName, { force: true, tone: audio.bgmTone });
     render();
+  },
+  /** メニューのつまみ。kind は "bgm" か "se"、level は 0〜1。つまみを動かすたびに呼ばれるので描き直さない */
+  setVolume(kind, level) {
+    audio.unlock();
+    audio.setVolumes({ [kind]: level });
   },
 
   clickSlot(zone, index) {

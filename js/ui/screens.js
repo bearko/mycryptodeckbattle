@@ -383,13 +383,41 @@ export function playerModal(app) {
   );
 }
 
+const volumeLabel = (pct) => (pct === 0 ? "OFF" : `${pct}%`);
+
+/** 音量のつまみ（0〜100%、5%きざみ。0 は OFF）。BGMはその場で効き、効果音は離したときに1つ鳴らして確かめる */
+function volumeRow(app, kind, label) {
+  const pct = Math.round(app.audio.volumes[kind] * 20) * 5;
+  const value = h("span", { class: "vol-value" }, volumeLabel(pct));
+  const input = h("input", {
+    type: "range",
+    min: 0,
+    max: 100,
+    step: 5,
+    value: pct,
+    class: "vol-range",
+    style: { "--val": `${pct}%` },
+    onInput: () => {
+      const v = Number(input.value);
+      app.actions.setVolume(kind, v / 100);
+      value.textContent = volumeLabel(v);
+      input.style.setProperty("--val", `${v}%`);
+    },
+    onChange: () => {
+      if (kind === "se") app.audio.se("buy");
+    },
+  });
+  return h("label", { class: "vol-row" }, h("span", { class: "vol-label" }, label), input, value);
+}
+
 export function menuModal(app) {
   return modal(
     "メニュー",
     h(
       "div",
       { class: "menu-list" },
-      h("button", { class: "btn big", onClick: () => app.actions.toggleSound() }, app.audio.muted ? "サウンド OFF" : "サウンド ON"),
+      volumeRow(app, "bgm", "BGM"),
+      volumeRow(app, "se", "効果音"),
       h("button", { class: "btn big", onClick: () => app.actions.showHelp() }, "遊び方"),
       app.run?.story ? h("button", { class: "btn big danger", onClick: () => app.actions.confirmRetreat() }, "ステージをやめる") : null,
       h("button", { class: "btn big danger", onClick: () => app.actions.confirmQuit() }, "タイトルへ"),
