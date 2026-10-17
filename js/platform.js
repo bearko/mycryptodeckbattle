@@ -46,6 +46,20 @@ export function setChatVisible(on) {
   applyChatVisible();
 }
 
+// ---------------------------------------------------------------- bearko.games 共通のアイコン（共通基盤 SPEC-005 5.3。選ぶ窓は SDK 1.7.0）
+/** 選ぶ窓を出せるか（SDK が読めて 1.7.0 以上） */
+export function canPickAvatar() {
+  const bg = sdk();
+  return !!(bg && typeof bg.openAvatarPicker === "function");
+}
+/** アイコンを選ぶ窓（すべてのゲームとチャットで同じ絵になる）。SDK がない・古いときは何もしない */
+export function openAvatarPicker() {
+  const bg = sdk();
+  if (!bg || typeof bg.openAvatarPicker !== "function") return false;
+  try { bg.openAvatarPicker(); } catch (e) { console.warn("[platform] avatar", e); }
+  return true;
+}
+
 /** その画面で 💬 を隠すか。純関数（tests/platform.test.mjs） */
 export function chatHiddenOn(screen) {
   return screen === "battle" || screen === "scene";

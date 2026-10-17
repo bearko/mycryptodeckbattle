@@ -8,6 +8,7 @@ import { winGauge } from "./market-view.js";
 import { COLUMN_NAMES, KIND_ICONS, PLAYERS, TREASURES, playerById, treasureById } from "../engine/content.js";
 import { ROLES, mainKind } from "./battle-fx.js";
 import { PARTY_COLS, START_LIVES, WINS_TO_CLEAR } from "../engine/balance.js";
+import { canPickAvatar, openAvatarPicker } from "../platform.js";
 import { effectText, triggerLabel } from "../engine/units.js";
 import { runGoal } from "../engine/run.js";
 import { areaById, stageLabel } from "../engine/world.js";
@@ -71,6 +72,8 @@ export function titleScreen(app, { hasSave, rta = false }) {
         // bearko.games 共通基盤の RTA（SDK が読めたときだけ。docs/platform.md）
         rta ? h("button", { class: "btn", onClick: () => app.actions.openRta() }, "RTA") : null,
         h("button", { class: "btn", onClick: () => app.actions.showHelp() }, "遊び方"),
+        // bearko.games 共通のアイコン（共通基盤 SPEC-005 5.3。窓は SDK。SDK が読めたときだけ）
+        canPickAvatar() ? h("button", { class: "btn", title: "bearko.games 全体（すべてのゲームとチャット）で同じ絵になります", onClick: () => openAvatarPicker() }, "アイコン") : null,
       ),
       // bearko.games の総合ランキングへ（MyCryptoPortfolio#29。docs/platform.md）。遊んでいる画面を失わないよう新しいタブで
       h(
