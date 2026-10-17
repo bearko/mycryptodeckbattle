@@ -22,6 +22,8 @@ import {
   rtaCheckpoint,
   rtaCheckpointForQuest,
   rtaCheckpointForStageClear,
+  setChatVisible,
+  chatHiddenOn,
   startRta,
 } from "./platform.js";
 import { clearRun, loadRun, loadSettings, loadStory, saveRun, saveSettings, saveStory } from "./ui/storage.js";
@@ -256,6 +258,7 @@ function go(screen, { bg = null, mood = screen, accent = null } = {}) {
   return wipe(
     () => {
       app.screen = screen;
+      setChatVisible(!chatHiddenOn(screen));   // 全体チャットの 💬（共通基盤 SPEC-004）
       app.ui.intro = true;
       if (bg) ambient.setBackground(bg, { mood, accent: accent ?? player()?.color });
       render();
@@ -508,6 +511,7 @@ async function playScene(scene, { bgm = "bgm_market", tone = null } = {}) {
   await wipe(
     () => {
       app.screen = "scene";
+      setChatVisible(false);   // 会話劇の最中は全体チャットの 💬 を隠す
       clear(root);
       root.append(player.el);
       if (scene.bg) ambient.setBackground(storyBackground(scene.bg), { mood: "story" });
@@ -1081,6 +1085,7 @@ const actions = {
     wipe(
       () => {
         app.screen = "battle";
+        setChatVisible(false);   // 対戦中は全体チャットの 💬 を隠す
         const bg = battleBackground();
         ambient.setBackground(bg, { mood: "battle", accent: "#ff4f6d" });
         clear(root);
