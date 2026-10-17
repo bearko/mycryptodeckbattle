@@ -10,7 +10,20 @@ import { PLAYERS, playerById } from "./engine/content.js";
 import { RARITY, TREASURE_STAGES, stageIncome, storyPlayerBonus } from "./engine/balance.js";
 import { isBossWave } from "./engine/boss.js";
 import { audio } from "./ui/audio.js";
-import { initPlatform, recordNodeScore, reportStageResult, reportStoryScore } from "./platform.js";
+import {
+  RTA_REGULATIONS,
+  abortRta,
+  initPlatform,
+  isRtaAvailable,
+  newRtaStory,
+  recordNodeScore,
+  reportStageResult,
+  reportStoryScore,
+  rtaCheckpoint,
+  rtaCheckpointForQuest,
+  rtaCheckpointForStageClear,
+  startRta,
+} from "./platform.js";
 import { clearRun, loadRun, loadSettings, loadStory, saveRun, saveSettings, saveStory } from "./ui/storage.js";
 import * as Story from "./engine/story.js";
 import { AREAS, DECK_SIZE, ERAS, TUTORIAL_AREA, areaById, areaMusic, areaName, machineByLevel, parseStageKey, stageLabel } from "./engine/world.js";
@@ -40,6 +53,7 @@ import {
   menuModal,
   playerModal,
   resultPanel,
+  rtaModal,
   selectScreen,
   stageTelop,
   titleScreen,
@@ -61,6 +75,9 @@ const app = {
   ui: { selected: null, modal: null, flash: null, arriving: null, deal: false, lastGum: null, treasureKey: null },
   battleView: null,
   story: null,
+  // RTA 中：{ regulation, started, finished, igtMs, mainStory }。近代・日本の RTA では app.story を RTA 用のストーリーに差し替え、
+  // 本編のストーリーを mainStory に退避する（RTA 用のストーリー・ステージは保存しない）。docs/platform.md
+  rta: null,
   saveSettings() {
     saveSettings({ ...loadSettings(), ...app.settings, muted: audio.muted });
   },
@@ -72,8 +89,18 @@ async function loadJson(path) {
   return res.json();
 }
 
+/** 近代・日本の RTA 中か（RTA 用のストーリーで遊んでいる。セーブに触らない） */
+function inRtaStory() {
+  return app.rta?.regulation === RTA_REGULATIONS.node1;
+}
+
 function save() {
-  if (app.run) saveRun(app.run);
+  if (app.run && !inRtaStory()) saveRun(app.run);
+}
+
+/** 遊んでいるステージのセーブを消す（RTA 用のストーリーでは、フリーバトルの「つづきから」を消さないよう何もしない） */
+function dropRun() {
+  if (!inRtaStory()) clearRun();
 }
 
 function background(offset = 0) {
@@ -172,7 +199,7 @@ function render() {
       screen = partsScreen(app, app.ui.partsInfo);
       break;
     default:
-      screen = titleScreen(app, { hasSave: Boolean(validSave()) });
+      screen = titleScreen(app, { hasSave: Boolean(validSave()), rta: isRtaAvailable() });
   }
   screen.classList.toggle("intro", Boolean(app.ui.intro));
   root.append(screen);
@@ -465,7 +492,7 @@ function tutorialEvent(name) {
 // ---------------------------------------------------------------------------
 
 function saveStoryNow() {
-  saveStory(app.story);
+  if (!inRtaStory()) saveStory(app.story);
 }
 
 function stageLabelOf(st) {
@@ -542,11 +569,12 @@ function storyStageEnd() {
   // bearko.games 共通基盤のトロフィー（最初のノード・時空のはざまの制覇）。SDK がなければ何もしない
   reportStageResult(st.areaId, result);
   // 総合スコア：ノードの最後のステージなら、そのノードの戦力・戦闘時間を残して送る（carryOver の前。run はこのノードの通し）
-  if (cleared && (recordNodeScore(app.story, st.areaId, st.index, app.db, run) || result?.areaCleared)) reportStoryScore(app.story);
+  // RTA 用のストーリーは本編の進み具合ではないので送らない
+  if (!inRtaStory() && cleared && (recordNodeScore(app.story, st.areaId, st.index, app.db, run) || result?.areaCleared)) reportStoryScore(app.story);
   // ノードの中はチームを繰り越す（負けたときは、そのステージを始めたときのチームのまま）
   if (cleared) Story.carryOver(app.story, run);
   saveStoryNow();
-  clearRun();
+  dropRun();
   app.run = null;
   app.ui.stageResult = { areaId: st.areaId, index: st.index, lane: st.lane ?? null, key: st.key, cleared, result };
   audio.stopBgm();
@@ -694,6 +722,11 @@ const actions = {
       return render();
     }
     app.ui.modal = null;
+    // 近代・日本の RTA：最初の出撃（1-1）で計測を始める
+    if (inRtaStory() && !app.rta.started) {
+      app.rta.started = true;
+      startRta(app.rta.regulation);
+    }
     const story = app.story;
     const first = !story.flags[`met:${key}`] && !Story.isCleared(story, key);
     Story.joinAtStart(story, key);
@@ -710,6 +743,8 @@ const actions = {
   },
   /** ステージ結果の「つぎへ」: パーツ獲得 → 改良の演出 → ノードクリアの会話 → 画面へ戻る */
   async afterStageResult() {
+    // 近代・日本の RTA を走り終えたら、パーツ・会話は出さずにタイトルへ（本編のストーリーに戻す）
+    if (inRtaStory() && app.rta.finished) return actions.toTitle();
     const info = app.ui.stageResult;
     const area = areaById(info.areaId);
     const res = info.result;
@@ -739,7 +774,7 @@ const actions = {
       confirmModal(app, "ステージをやめますか？（このステージの進み具合は失われます）", () => {
         const st = app.run?.story;
         app.ui.modal = null;
-        clearRun();
+        dropRun();
         app.run = null;
         if (st) actions.openArea(st.areaId);
         else actions.toTitle();
@@ -747,6 +782,8 @@ const actions = {
     render();
   },
   newGame() {
+    // RTA を走り終えたあとの「もう一度」は、ふつうのフリーバトル
+    if (app.rta?.finished) endRtaMode();
     app.ui.modal = null;
     app.ui.selectIndex = app.ui.selectIndex ?? 0;
     app.ui.selectCam = cameraVariant();
@@ -781,6 +818,11 @@ const actions = {
     enterStage();
   },
   startRun(playerId) {
+    // 10 勝でクリアの RTA：プレイヤーを選んだときに計測を始める
+    if (app.rta?.regulation === RTA_REGULATIONS.quest && !app.rta.started) {
+      app.rta.started = true;
+      startRta(app.rta.regulation);
+    }
     app.run = Run.newRun(app.db, { playerId, seed: randomSeed() });
     app.ui.treasureKey = null;
     save();
@@ -789,8 +831,28 @@ const actions = {
   toTitle() {
     app.ui.modal = null;
     app.run = null;
+    endRtaMode();
     audio.playBgm("bgm_title");
     go("title", { bg: new URL(app.backgrounds[0], document.baseURI).href, mood: "title", accent: "#ffd23f" });
+  },
+  /** タイトルの「RTA」：近代・日本 か 10 勝でクリア を選ぶ */
+  openRta() {
+    app.ui.modal = () => rtaModal(app);
+    render();
+  },
+  /** 近代・日本の RTA：RTA 用の新しいストーリーで、近代・日本のステージ選択へ（計測は 1-1 の出撃から） */
+  startRtaNode1() {
+    app.ui.modal = null;
+    app.rta = { regulation: RTA_REGULATIONS.node1, started: false, finished: false, igtMs: 0, mainStory: app.story };
+    app.story = newRtaStory();
+    app.ui.storyEra = null;
+    actions.openArea(TUTORIAL_AREA);
+  },
+  /** 10 勝でクリアの RTA：プレイヤー選択へ（計測はプレイヤーを選んだときから） */
+  startRtaQuest() {
+    app.ui.modal = null;
+    app.rta = { regulation: RTA_REGULATIONS.quest, started: false, finished: false, igtMs: 0, mainStory: null };
+    actions.newGame();
   },
   showMenu() {
     app.ui.modal = () => menuModal(app);
@@ -1043,6 +1105,7 @@ const actions = {
     coach.hide();
     const result = app.pendingResult;
     app.pendingResult = null;
+    rtaAfterBattle(result);
     audio.stopBgm();
     audio.se(result.won ? "win" : "lose", 0.7);
     app.battleView.showResult(resultPanel(app, result));
@@ -1064,7 +1127,7 @@ const actions = {
     if (run.story) return storyStageEnd();
     const cleared = run.phase === "clear";
     if (cleared) audio.se("clear", 0.7);
-    clearRun();
+    dropRun();
     audio.stopBgm();
     go("end", { bg: background(2), mood: "end" }).then(() => {
       if (cleared) confetti({ duration: 2600, count: 140 });
@@ -1072,6 +1135,34 @@ const actions = {
     });
   },
 };
+
+/** RTA：戦闘の演出が終わったとき（SKIP を含む）に、ゲーム内の戦闘時間を足し、区切りを送る */
+function rtaAfterBattle(result) {
+  const rta = app.rta;
+  const run = app.run;
+  if (!rta?.started || rta.finished || !run || !result) return;
+  rta.igtMs += Math.round((result.time || 0) * 1000);
+  const id = run.story
+    ? run.phase === "clear"
+      ? rtaCheckpointForStageClear(run.story.areaId, run.story.index)
+      : null
+    : rtaCheckpointForQuest(run);
+  if (id) rtaCheckpoint(id, rta.igtMs);
+  if (id === "clear") rta.finished = true;
+  else if (!run.story && run.phase === "gameover") {
+    abortRta();
+    rta.finished = true;
+  }
+}
+
+/** RTA をやめる（タイトルに戻ったとき）。走り終えていなければ中断にし、本編のストーリーに戻す */
+function endRtaMode() {
+  const rta = app.rta;
+  if (!rta) return;
+  if (rta.started && !rta.finished) abortRta();
+  if (rta.mainStory) app.story = rta.mainStory;
+  app.rta = null;
+}
 
 function sayOnSelect() {
   if (app.screen !== "select") return;

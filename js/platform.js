@@ -1,9 +1,9 @@
-// bearko.games 共通基盤（トロフィー・総合スコア）への窓口。docs/platform.md
+// bearko.games 共通基盤（トロフィー・総合スコア・RTA）への窓口。docs/platform.md
 // SDK（https://bearko.games/sdk/v1.js）が読めない・通信に失敗しても何もしない。ゲームの進行は止めない。
 // ログイン状態は共通基盤が持つので、ここではセーブ（localStorage）に触らない。
 import { AREAS, TUTORIAL_AREA, areaById, isFinalStage } from "./engine/world.js";
 import { LEVEL_MULT, RARITY } from "./engine/balance.js";
-import { areaCleared } from "./engine/story.js";
+import { areaCleared, newStory } from "./engine/story.js";
 
 /** ノードを初めて制覇したときに送るトロフィー ID（純関数。tests/platform.test.mjs） */
 export function trophyIdsForAreaCleared(areaId) {
@@ -58,9 +58,13 @@ export function partyPower(db, run) {
   return Math.round(power * 10) / 10;
 }
 
-/** そのノードで戦った戦闘の、ゲーム内の秒数の平均（戦っていなければ null） */
+/**
+ * そのノードで戦った戦闘（ノードの中の全ステージ）の、ゲーム内の秒数の平均（戦っていなければ null）。
+ * run.nodeTimes はチームと一緒に繰り越す記録。前の版のセーブで繰り越したチームにはないので、そのときはこのステージの戦闘だけ
+ */
 export function avgBattleSec(run) {
-  const times = (run?.history ?? []).map((h) => h.time).filter((t) => typeof t === "number" && t > 0);
+  const raw = Array.isArray(run?.nodeTimes) ? run.nodeTimes : (run?.history ?? []).map((h) => h.time);
+  const times = raw.filter((t) => typeof t === "number" && t > 0);
   if (!times.length) return null;
   return Math.round((times.reduce((a, b) => a + b, 0) / times.length) * 10) / 10;
 }
@@ -108,4 +112,74 @@ export function reportStoryScore(story, { quiet = false } = {}) {
   } catch (e) {
     console.warn("[platform] score", e);
   }
+}
+
+// ---------------------------------------------------------------- RTA（共通基盤 SPEC-001 6.11）
+// 時間は共通基盤の SDK が計る（公式タイムはサーバーの受信時刻の差）。ここでは始める・区切り・やめるを伝えるだけ
+
+export const RTA_REGULATIONS = {
+  node1: "deckbattle-node1", // 近代・日本の制覇まで（RTA 用の新しいストーリー）
+  quest: "deckbattle-quest", // フリーバトル 10 勝でクリア
+};
+/** RTA 中の戦闘の倍速（固定。SKIP は使える） */
+export const RTA_SPEED = 4;
+
+/** RTA を出せるか（SDK が読めたときだけ。ローカルで開いたときなどはタイトルに出さない） */
+export function isRtaAvailable() {
+  const bg = sdk();
+  return Boolean(bg && bg.rta && typeof bg.rta.start === "function");
+}
+
+/** RTA 用の新しいストーリー：プロローグ・ワールドマップの説明・マインの操作の案内は済んだことにする（純関数） */
+export function newRtaStory() {
+  const story = newStory();
+  story.prologue = true;
+  story.flags = { mapIntro: true, tut: "done" };
+  return story;
+}
+
+/** 近代・日本のステージをクリアしたときの区切り ID（純関数）。ほかのノードは null */
+export function rtaCheckpointForStageClear(areaId, index) {
+  if (areaId !== TUTORIAL_AREA) return null;
+  if (isFinalStage(areaById(areaId), index)) return "clear";
+  return index >= 0 ? `stage${index + 1}` : null;
+}
+
+/** フリーバトルの戦闘が終わったときの区切り ID（純関数）。5 勝目で win5、10 勝（クリア）で clear */
+export function rtaCheckpointForQuest(run) {
+  if (run?.phase === "clear") return "clear";
+  if (run?.lastResult?.won && run.wins === 5) return "win5";
+  return null;
+}
+
+function rtaCall(name, fn) {
+  const bg = sdk();
+  if (!bg || !bg.rta) return;
+  try {
+    Promise.resolve(fn(bg.rta))
+      .then((r) => {
+        if (r && r.ok === false) console.warn("[platform] rta", name, r.error);
+      })
+      .catch((e) => console.warn("[platform] rta", name, e));
+  } catch (e) {
+    console.warn("[platform] rta", name, e);
+  }
+}
+
+// 経過時間は画面の下、マーケットの「バトル開始」の帯（高さ 60px）のすぐ上に出す（上は HUD と戦闘の操作・タイマーがあるため）
+const RTA_TIMER_OFFSET = 64;
+
+/** 計測を始める（前の計測は SDK が中断にする） */
+export function startRta(regulation) {
+  rtaCall("start", (rta) => rta.start({ regulation, timer: "bottom", timerOffset: RTA_TIMER_OFFSET }));
+}
+
+/** 区切り。igtMs はゲーム内の戦闘時間の合計 */
+export function rtaCheckpoint(id, igtMs) {
+  rtaCall("checkpoint", (rta) => (rta.current && rta.current() ? rta.checkpoint(id, { igtMs }) : null));
+}
+
+/** やめたとき（ゲームオーバー・タイトルに戻ったとき） */
+export function abortRta() {
+  rtaCall("abort", (rta) => (rta.current && rta.current() ? rta.abort() : null));
 }

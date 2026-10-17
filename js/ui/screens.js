@@ -26,7 +26,7 @@ const pick = (list) => list[Math.floor(Math.random() * list.length)];
 // タイトル
 // ---------------------------------------------------------------------------
 
-export function titleScreen(app, { hasSave }) {
+export function titleScreen(app, { hasSave, rta = false }) {
   return h(
     "div",
     { class: "screen title-screen" },
@@ -68,6 +68,8 @@ export function titleScreen(app, { hasSave }) {
         "div",
         { class: "title-sub-actions enter-up", style: { "--d": "0.66s" } },
         h("button", { class: "btn", onClick: () => app.actions.newGame() }, "フリーバトル"),
+        // bearko.games 共通基盤の RTA（SDK が読めたときだけ。docs/platform.md）
+        rta ? h("button", { class: "btn", onClick: () => app.actions.openRta() }, "RTA") : null,
         h("button", { class: "btn", onClick: () => app.actions.showHelp() }, "遊び方"),
       ),
     ),
@@ -385,6 +387,23 @@ export function menuModal(app) {
       h("button", { class: "btn big", onClick: () => app.actions.showHelp() }, "遊び方"),
       app.run?.story ? h("button", { class: "btn big danger", onClick: () => app.actions.confirmRetreat() }, "ステージをやめる") : null,
       h("button", { class: "btn big danger", onClick: () => app.actions.confirmQuit() }, "タイトルへ"),
+    ),
+    { className: "menu-modal", footer: closeButton(app) },
+  );
+}
+
+/** タイトルの「RTA」：2 つのレギュレーションから選ぶ（共通基盤 SPEC-001 6.11） */
+export function rtaModal(app) {
+  const choice = (title, note, onClick) =>
+    h("button", { class: "btn big rta-choice", onClick }, h("b", null, title), h("small", null, note));
+  return modal(
+    "RTA",
+    h(
+      "div",
+      { class: "menu-list rta-list" },
+      choice("近代・日本の制覇まで", "RTA 用の新しいストーリー（いまのストーリーはそのまま）。1-1 の出撃から計測", () => app.actions.startRtaNode1()),
+      choice("10 勝でクリア", "フリーバトル。プレイヤーを選んだときから計測", () => app.actions.startRtaQuest()),
+      h("p", { class: "rta-note" }, "戦闘は ×4 固定（SKIP は使えます）。経過時間は画面の下に出ます。タイトルに戻ると中断します"),
     ),
     { className: "menu-modal", footer: closeButton(app) },
   );

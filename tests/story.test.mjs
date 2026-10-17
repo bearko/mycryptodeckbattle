@@ -356,12 +356,19 @@ test("ノードの中はチームを繰り越す（負けたら、そのステ�
     if (next.phase === "result") advance(next, db);
   }
   assert.equal(next.phase, "gameover");
-  assert.equal(newStageRun(db, story, stageKey(area.id, 1), 13).party[0].uid, 500);
+  const retry = newStageRun(db, story, stageKey(area.id, 1), 13);
+  assert.equal(retry.party[0].uid, 500);
+  // 総合スコアの「平均の戦闘時間」：ノードの中の戦闘時間はチームと一緒に繰り越し、負けたやり直しの分は消える
+  assert.equal(next.history.length, 3);
+  assert.equal(next.nodeTimes.length, runGoal(run) + 3);
+  assert.equal(retry.nodeTimes.length, runGoal(run));
   // 作り直すと 2-1 から新しいチーム（クリア済みのまま）
   resetNodeRun(story, area.id);
   assert.ok(canSortie(story, area, 0));
   assert.ok(story.cleared.includes(stageKey(area.id, 0)));
-  assert.equal(newStageRun(db, story, stageKey(area.id, 0), 14).party.filter(Boolean).length, 0);
+  const fresh = newStageRun(db, story, stageKey(area.id, 0), 14);
+  assert.equal(fresh.party.filter(Boolean).length, 0);
+  assert.equal(fresh.nodeTimes, undefined);
 });
 
 test("最終ステージをクリアするとノードの繰り越しは終わる。古い保存データ（v2）には繰り越しを足す", async () => {

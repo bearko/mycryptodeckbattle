@@ -26,6 +26,7 @@ import { bobDelay, effectShort, toast } from "./components.js";
 import { pop, shake } from "./fx.js";
 import { battleBackdrop } from "./battle-backdrop.js";
 import { ambient } from "./ambient.js";
+import { RTA_SPEED } from "../platform.js";
 
 const SPEEDS = [1, 2, 4];
 // 弾が着弾するまでの時間（等速）。表示上のHP・状態異常はこの間だけ発動前の値を見せる
@@ -117,7 +118,8 @@ export class BattleView {
     this.prep = prep;
     this.background = background;
     this.battle = createBattle(prep.left, prep.right);
-    this.speed = app.settings.speed || 1;
+    // RTA 中は ×4 固定（ふだんの倍速の設定は書き換えない。SKIP は使える）
+    this.speed = app.rta ? RTA_SPEED : app.settings.speed || 1;
     this.cards = [new Map(), new Map()];
     this.acc = 0;
     this.last = 0;
@@ -300,9 +302,9 @@ export class BattleView {
   build() {
     this.fx = h("div", { class: "fx-layer" });
     this.timerEl = h("div", { class: "timer" }, "0.0");
-    this.speedBtns = SPEEDS.map((s) =>
-      h("button", { class: `btn small${s === this.speed ? " active" : ""}`, onClick: () => this.setSpeed(s) }, `×${s}`),
-    );
+    this.speedBtns = this.app.rta
+      ? []
+      : SPEEDS.map((s) => h("button", { class: `btn small${s === this.speed ? " active" : ""}`, onClick: () => this.setSpeed(s) }, `×${s}`));
     const controls = h(
       "div",
       { class: "battle-controls" },
