@@ -15,6 +15,10 @@ bearko.games 配下の全タイトル共通の基盤（共通 Google ログイ�
 - 通知（「トロフィー獲得」、未ログインなら「未登録のトロフィー n 個 — ログインして登録」）は共通基盤の SDK が画面下に出す
 - `index.html` で SDK（`https://bearko.games/sdk/v1.js`）を `defer` で読み込む。**SDK が読めない・失敗しても何もしない**。セーブ（localStorage）には触らない
 
+## 総合ランキングへの導線（MyCryptoPortfolio#29）
+
+- タイトルのボタンの下に「bearko.games の総合ランキング ↗」（`https://bearko.games/score/?game=deckbattle`、新しいタブ）。ゲーム内にランキングはないので、共通基盤のランキングへの入口はここだけ
+
 ## テスト
 
 `npm test`（`tests/platform.test.mjs`）
