@@ -97,3 +97,49 @@ test("総合スコア：送る成績は制覇したノードと、その自己�
     delete globalThis.window;
   }
 });
+
+test("RTA：近代・日本の区切りは 1-1・1-2・制覇。ほかのノードでは送らない", async () => {
+  const { rtaCheckpointForStageClear, RTA_REGULATIONS } = await import("../js/platform.js");
+  assert.equal(rtaCheckpointForStageClear(TUTORIAL_AREA, 0), "stage1");
+  assert.equal(rtaCheckpointForStageClear(TUTORIAL_AREA, 1), "stage2");
+  assert.equal(rtaCheckpointForStageClear(TUTORIAL_AREA, 2), "clear");
+  assert.equal(rtaCheckpointForStageClear("kindai-eu", 0), null);
+  assert.deepEqual(RTA_REGULATIONS, { node1: "deckbattle-node1", quest: "deckbattle-quest" });
+});
+
+test("RTA：10 勝でクリアの区切りは 5 勝目と 10 勝", async () => {
+  const { rtaCheckpointForQuest } = await import("../js/platform.js");
+  assert.equal(rtaCheckpointForQuest({ phase: "result", wins: 5, lastResult: { won: true } }), "win5");
+  assert.equal(rtaCheckpointForQuest({ phase: "result", wins: 5, lastResult: { won: false } }), null, "5 勝のまま負けても送り直さない");
+  assert.equal(rtaCheckpointForQuest({ phase: "result", wins: 4, lastResult: { won: true } }), null);
+  assert.equal(rtaCheckpointForQuest({ phase: "clear", wins: 10, lastResult: { won: true } }), "clear");
+  assert.equal(rtaCheckpointForQuest({ phase: "gameover", wins: 3, lastResult: { won: false } }), null);
+});
+
+test("RTA：RTA 用のストーリーは新しいストーリーで、プロローグと案内は済み", async () => {
+  const { newRtaStory } = await import("../js/platform.js");
+  const { newStory } = await import("../js/engine/story.js");
+  const story = newRtaStory();
+  assert.equal(story.prologue, true);
+  assert.deepEqual(story.flags, { mapIntro: true, tut: "done" });
+  assert.deepEqual(story.cleared, []);
+  assert.deepEqual(story.heroes, newStory().heroes);
+});
+
+test("総合スコア：平均の戦闘時間はノード全体（ステージをまたいで繰り越した記録）", async () => {
+  const { avgBattleSec } = await import("../js/platform.js");
+  assert.equal(avgBattleSec({ nodeTimes: [10, 20, 30], history: [{ time: 30 }] }), 20, "ノード全体");
+  assert.equal(avgBattleSec({ history: [{ time: 8 }, { time: 12 }] }), 10, "前の版のセーブ（nodeTimes なし）はこのステージだけ");
+  assert.equal(avgBattleSec({ nodeTimes: [], history: [] }), null);
+});
+
+test("RTA：SDK がなくても例外を出さない", async () => {
+  const { startRta, rtaCheckpoint, abortRta, isRtaAvailable } = await import("../js/platform.js");
+  const saved = globalThis.window;
+  globalThis.window = {};
+  assert.equal(isRtaAvailable(), false);
+  assert.doesNotThrow(() => startRta("deckbattle-quest"));
+  assert.doesNotThrow(() => rtaCheckpoint("win5", 1000));
+  assert.doesNotThrow(() => abortRta());
+  globalThis.window = saved;
+});

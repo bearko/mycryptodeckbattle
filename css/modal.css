@@ -615,6 +615,29 @@
   padding: 4px 10px;
 }
 
+/* タイトルの RTA：レギュレーションを選ぶ */
+.rta-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: center;
+}
+
+.rta-choice small {
+  white-space: normal;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: normal;
+  line-height: 1.4;
+}
+
+.rta-note {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
 /* ヘルプ: 役割の凡例（バトル中の色とアイコン） */
 .help-note {
   margin: 4px 0 6px;

@@ -405,6 +405,9 @@ export function finishBattle(run, db, summary) {
     }
   }
   run.history.push({ stage: run.stage, won, opponent: result.opponent, time: summary.time });
+  // ストーリー：ノードの中の全ステージの戦闘時間（history はステージごとに空になるが、こちらはチームと一緒に繰り越す。
+  // 総合スコアの「平均の戦闘時間」。負けてステージをやり直すと、そのステージを始めたときのチームに戻るので消える）
+  if (run.story) (run.nodeTimes ??= []).push(summary.time);
   run.lastResult = result;
   if (run.wins >= runGoal(run)) run.phase = "clear";
   else if (run.lives <= 0) run.phase = "gameover";
