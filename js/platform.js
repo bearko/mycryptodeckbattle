@@ -18,10 +18,37 @@ export function initPlatform(version) {
   const bg = sdk();
   if (!bg) return;
   try {
-    Promise.resolve(bg.init({ game: "deckbattle", version })).catch((e) => console.warn("[platform] init", e));
+    Promise.resolve(bg.init({ game: "deckbattle", version }))
+      .then(() => applyChatVisible())   // SDK が後から読めたときも、いまの画面の出す／隠すをそろえる
+      .catch((e) => console.warn("[platform] init", e));
   } catch (e) {
     console.warn("[platform] init", e);
   }
+}
+
+// ---------------------------------------------------------------- 全体チャット（共通基盤 SPEC-004。SDK 1.6.0 から）
+// 窓そのものは SDK が描く（右下の 💬）。ここでは出す・隠すだけ：対戦（battle）と会話劇（scene）では隠し、それ以外で出す
+let chatWanted = true;
+
+function applyChatVisible() {
+  const bg = sdk();
+  if (!bg || !bg.chat || typeof bg.chat.setVisible !== "function") return;
+  try {
+    bg.chat.setVisible(chatWanted);
+  } catch (e) {
+    console.warn("[platform] chat", e);
+  }
+}
+
+/** 💬 を出す（true）／隠す（false）。SDK がない・古い（chat が無い）ときは覚えておいて、読めたときにそろえる */
+export function setChatVisible(on) {
+  chatWanted = !!on;
+  applyChatVisible();
+}
+
+/** その画面で 💬 を隠すか。純関数（tests/platform.test.mjs） */
+export function chatHiddenOn(screen) {
+  return screen === "battle" || screen === "scene";
 }
 
 /** ステージの結果（Story.clearStage の戻り値）を受けて、ノードを制覇していたらトロフィーを送る */

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { AREAS, MAIN_AREAS, TUTORIAL_AREA } from "../js/engine/world.js";
-import { trophyIdsForAreaCleared, reportStageResult, initPlatform } from "../js/platform.js";
+import { trophyIdsForAreaCleared, reportStageResult, initPlatform, setChatVisible, chatHiddenOn } from "../js/platform.js";
 
 test("共通基盤のトロフィー：最初のノードと、最後のノード（時空のはざま）の制覇で送る", () => {
   assert.deepEqual(trophyIdsForAreaCleared(TUTORIAL_AREA), ["deckbattle.area1"]);
@@ -142,4 +142,25 @@ test("RTA：SDK がなくても例外を出さない", async () => {
   assert.doesNotThrow(() => rtaCheckpoint("win5", 1000));
   assert.doesNotThrow(() => abortRta());
   globalThis.window = saved;
+});
+
+test("全体チャット：対戦と会話劇では隠し、SDK がない・古いときは何もしない", async () => {
+  assert.equal(chatHiddenOn("battle"), true);
+  assert.equal(chatHiddenOn("scene"), true);
+  assert.equal(chatHiddenOn("title"), false);
+  assert.equal(chatHiddenOn("stageResult"), false);
+  assert.doesNotThrow(() => setChatVisible(false));
+  globalThis.window = { BearkoGames: { init: async () => ({ ok: true }) } };
+  try {
+    assert.doesNotThrow(() => setChatVisible(true));
+    const calls = [];
+    globalThis.window.BearkoGames.chat = { setVisible: (on) => calls.push(on) };
+    setChatVisible(false);   // 対戦に入った
+    initPlatform("0.0.0");   // SDK が後から読めても、いまの値をそろえる
+    await new Promise((r) => setTimeout(r, 0));
+    setChatVisible(true);
+    assert.deepEqual(calls, [false, false, true]);
+  } finally {
+    delete globalThis.window;
+  }
 });

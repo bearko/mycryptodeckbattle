@@ -19,6 +19,12 @@ bearko.games 配下の全タイトル共通の基盤（共通 Google ログイ�
 
 - タイトルのボタンの下に「bearko.games の総合ランキング ↗」（`https://bearko.games/score/?game=deckbattle`、新しいタブ）。ゲーム内にランキングはないので、共通基盤のランキングへの入口はここだけ
 
+## 全体チャット（共通基盤 SPEC-004。SDK 1.6.0）
+
+- 窓は SDK が描く（右下の 💬）。ゲーム側は `setChatVisible` で出す・隠すだけ
+- 隠す画面：対戦（`app.screen === "battle"`）と会話劇（`"scene"`）。`chatHiddenOn(screen)` が決める。タイトル・ノード・デッキ・結果では出す
+- 画面の切り替え（`go()`・`startBattle`・`playScene`）で呼ぶ。SDK が後から読めたときは `initPlatform` が覚えていた値をそろえる
+
 ## テスト
 
 `npm test`（`tests/platform.test.mjs`）
