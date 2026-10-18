@@ -876,7 +876,7 @@ const actions = {
   },
   helpPage(i) {
     const prev = app.ui.helpPage ?? 0;
-    if (i === prev || i < 0 || i > 5) return;
+    if (i === prev || i < 0 || i > 6) return; // ヘルプは 7 ページ（screens.js の helpPages）
     app.ui.helpDir = i > prev ? 1 : -1;
     app.ui.helpPage = i;
     render();
