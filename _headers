@@ -1,0 +1,3 @@
+# Cloudflare Workers の静的アセットのヘッダー（vercel.json の headers から移した）
+/assets/*
+  Cache-Control: public, max-age=604800
