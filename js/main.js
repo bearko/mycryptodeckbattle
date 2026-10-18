@@ -10,6 +10,7 @@ import { PLAYERS, playerById } from "./engine/content.js";
 import { RARITY, TREASURE_STAGES, stageIncome, storyPlayerBonus } from "./engine/balance.js";
 import { isBossWave } from "./engine/boss.js";
 import { audio } from "./ui/audio.js";
+import { VERSION } from "./version.js";
 import {
   RTA_REGULATIONS,
   abortRta,
@@ -1183,7 +1184,7 @@ function sayOnSelect() {
 app.actions = actions;
 
 async function boot() {
-  initPlatform("0.1.0"); // bearko.games 共通基盤（docs/platform.md）
+  initPlatform(VERSION); // bearko.games 共通基盤（docs/platform.md）
   ambient = initAmbient();
   installRipple();
   // タイトルのBGM。ブラウザの制限で、最初にタップしたときに鳴り始める

@@ -68,6 +68,8 @@ python3 -m http.server 8080
 
 ## ドキュメント
 
+- [CHANGELOG.md](CHANGELOG.md): 更新履歴（v1.0.0 から。版は `js/version.js`）
+- [docs/platform.md](docs/platform.md): bearko.games 共通基盤（トロフィー・総合スコア・RTA）との連携
 - [docs/research.md](docs/research.md): 参考作 の仕組みの調査結果と、確認できなかった点
 - [docs/glossary.md](docs/glossary.md): 参考作 → マイクリ用語の対応表
 - [docs/design.md](docs/design.md): MVP の設計、独自に決めた数値、スキル生成・CPUの仕組み
@@ -92,7 +94,7 @@ python3 -m http.server 8080
 ## 開発
 
 ```bash
-npm test                     # エンジンのテスト
+npm test                     # エンジンのテスト（CI でも .github/workflows/ci.yml で走る）
 npm run simulate             # 自動プレイによるバランス確認（周回数とプレイヤーIDを指定可能）
 node scripts/simulate-story.mjs 30 best   # ストーリーのステージごとのクリア率（デッキの組み方: best / straight / novice / auto。straight はルートを相性で選ばない比較用）
 npm run build:data           # data/ と assets/ を再生成（../mycryptoheroes が必要）

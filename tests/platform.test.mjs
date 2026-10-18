@@ -206,3 +206,11 @@ test("共通のアイコン：SDK がない・古いときは出さず例外も�
     delete globalThis.window;
   }
 });
+
+test("版：js/version.js の VERSION は package.json の version と同じ", async () => {
+  const { VERSION } = await import("../js/version.js");
+  const { readFileSync } = await import("node:fs");
+  const pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
+  assert.equal(VERSION, pkg.version);
+  assert.match(VERSION, /^\d+\.\d+\.\d+$/);
+});

@@ -2,6 +2,7 @@
 // 説明文はヘルプ・詳細モーダルに集約し、通常の画面は最小限の表記にしている。
 // 文字（ロゴやテロップ）の手前にキャラクターを重ねて、UIを空間の一部として見せる。
 
+import { VERSION } from "../version.js";
 import { h, img } from "./h.js";
 import { extensionIcon, factionBadge, gumAmount, levelStars, modal, rarityBadge, unitCard, unitDetail } from "./components.js";
 import { winGauge } from "./market-view.js";
@@ -82,7 +83,7 @@ export function titleScreen(app, { hasSave, rta = false }) {
         "bearko.games の総合ランキング ↗",
       ),
     ),
-    h("p", { class: "title-note" }, "UNOFFICIAL FAN GAME"),
+    h("p", { class: "title-note" }, `UNOFFICIAL FAN GAME · v${VERSION}`),
     h(
       "button",
       {
