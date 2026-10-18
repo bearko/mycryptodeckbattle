@@ -1,19 +1,43 @@
 # bearko.games 共通基盤との連携
 
-bearko.games 配下の全タイトル共通の基盤（共通 Google ログイン・トロフィー・総合スコア・RTA）に参加する。窓口は `js/platform.js`。設計は [bearko/mycryptoportfolio の SPEC-001](https://github.com/bearko/mycryptoportfolio/blob/claude/game-portfolio-page-4afqbc/docs/specs/SPEC-001-bearko-games-platform.md)。
+bearko.games 配下の全タイトル共通の基盤（共通 Google ログイン・アチーブメント・総合スコア・RTA）に参加する。窓口は `js/platform.js`。設計は [bearko/mycryptoportfolio の SPEC-001](https://github.com/bearko/mycryptoportfolio/blob/claude/game-portfolio-page-4afqbc/docs/specs/SPEC-001-bearko-games-platform.md)。
 
-## トロフィー（2026-10-16〜）
+## アチーブメント（共通基盤 SPEC-008。2026-10-18 に「トロフィー」から改称）
 
-ステージの結果（`Story.clearStage` の戻り値）で、**ノードを初めて制覇したとき** に送る（`js/platform.js`）。
+共通基盤の名鑑（ヒーロー 100 枚）とエクステンションに組み直した。定義（名前・絵・説明）は共通基盤の `platform/trophies.js` が持ち、ゲームは条件を満たしたら ID を送るだけ（SDK の `unlockTrophy`。関数の名前は旧のまま）。窓口は `js/platform.js`。
 
-| 制覇したノード | トロフィー | 名前 |
-|---|---|---|
-| 近代・日本（最初のノード。`TUTORIAL_AREA`） | `deckbattle.area1` | 開拓者の一歩 |
-| 時空のはざま（本編の全ノード制覇で行ける最後のノード） | `deckbattle.clear` | 十二の功業 |
+### 送るもの
 
-- 特別ステージ（特異点）では送らない
-- 通知（「トロフィー獲得」、未ログインなら「未登録のトロフィー n 個 — ログインして登録」）は共通基盤の SDK が画面下に出す
-- `index.html` で SDK（`https://bearko.games/sdk/v1.js`）を `defer` で読み込む。**SDK が読めない・失敗しても何もしない**。セーブ（localStorage）には触らない
+| No. | ID | 名前（絵） | 条件 | 判定 | 送る場面 |
+|---|---|---|---|---|---|
+| 078 | `deckbattle.area1` | 大日本沿海輿地全図（伊能忠敬） | 最初のノード（近代・日本）を制覇する | セーブ（`story.cleared`） | ステージの終わり・起動 |
+| 079 | `deckbattle.quest` | 長沙桓王（孫策） | フリーバトルで 10 勝してクリアする | その場（`run.phase === "clear"` かつ `!run.story`） | 戦闘の演出が終わったとき |
+| 080 | `deckbattle.europe` | 鉄血演説（ビスマルク） | 近代・ヨーロッパ（`kindai-eu`）を制覇する | セーブ | ステージの終わり・起動 |
+| 081 | `deckbattle.machine2` | イデア論（プラトン） | タイムマシンを Lv.2 にする | セーブ（`story.machine >= 2`） | ステージの終わり・起動 |
+| 082 | `deckbattle.corsica` | 七年戦争（マリア・テレジア） | コルシカの特異点（`ex-corsica`）を制覇する | セーブ | ステージの終わり・起動 |
+| 083 | `deckbattle.heroes50` | 威風凛々（楊端和） | 仲間を 50 人集める | セーブ（`story.heroes.length >= 50`） | ステージの終わり・起動 |
+| 084 | `deckbattle.abyss` | 一閃のカットラス（メアリ・リード） | 深海の特異点（`ex-abyss`）を制覇する | セーブ | ステージの終わり・起動 |
+| 085 | `deckbattle.machine5` | 国士無双（韓信） | タイムマシンを Lv.5 にする | セーブ（`story.machine >= 5`） | ステージの終わり・起動 |
+| 086 | `deckbattle.clear` | 冥府への旅（ブリュンヒルド） | 最後のノード「時空のはざま」（`hazama`）を制覇する（真のクリア） | セーブ | ステージの終わり・起動 |
+| 087 | `deckbattle.maou` | マハー・アヴァターラ（ラーマ） | 魔王の特異点（`ex-maou`。最後のレイドボスが覚醒魔王ファオ）を制覇する | セーブ | ステージの終わり・起動 |
+| 088 | `deckbattle.allstages` | エクスカリバー（アーサー王） | すべてのノード（特別ステージも）のすべてのステージ（枝分かれも）をクリアする | セーブ（`areaProgress` がすべて done = total） | ステージの終わり・起動 |
+| ext | `deckbattle.firstwin` | 開拓者の一歩（大西部のブーツ） | 初めてバトルに勝つ（ストーリー・フリーバトルどちらでも） | その場（`result.won`） | 戦闘の演出が終わったとき |
+| ext | `deckbattle.merge` | 無限の循環（帝国式機光戦輪ウロボロス） | 初めてヒーローを合成する | その場（マーケットで買って `res.merges` がある） | 買ったとき |
+| ext | `deckbattle.heroes100` | 十二の功業（キングヘラクレス） | 仲間を 100 人集める | セーブ（`story.heroes.length >= 100`） | ステージの終わり・起動 |
+
+`deckbattle.visit`（来訪）は SDK が自動で送るので、ゲームでは送らない。
+
+### 送り方
+
+- **セーブから判定するもの**（`storyTrophyIds(story)`。純関数）は、起動のとき（`boot`）と、ステージをクリアしたとき（`storyStageEnd`）に、いま満たしているものをまとめて送る（`reportStoryTrophies`）。前から遊んでいる人にも付く。新しく得たものだけ共通基盤が通知を出す
+- ノードを初めて制覇したときは、これまでどおり `reportStageResult`（`Story.clearStage` の `areaCleared`）でも送る
+- **その場で送るもの**：`firstwin` と `quest` は `battleFinished`（`trophyIdsForBattle`・`trophyIdsForQuestEnd`）、`merge` はマーケットの `buy`（`trophyIdsForBuy`）。宝箱のヒーローやクリプトエナジーで起きた合成では送らない（次にマーケットで合成したときに付く）
+- **1 つずつ順に送る**（`unlockTrophies`。前の返事を待ってから次を送る）。未ログインの最初の書き込みで仮アカウントができるため
+- **同じ起動で同じ ID は 2 回送らない**（失敗しても送り直さない。次の起動で、セーブから判定するものは送り直す）
+- **RTA「近代・日本」の使い捨てのストーリー（`inRtaStory()`）では、新しいアチーブメントは送らない**（総合スコアと同じ除外）。最初のノードの制覇（`area1`）だけは前からどおり送る
+- 通知（「アチーブメント獲得」、未ログインなら登録の案内）は共通基盤の SDK が画面下に出す
+- `index.html` で SDK（`https://bearko.games/sdk/v1.js`）を `defer` で読み込む。**SDK が読めない・失敗しても何もしない**。セーブ（localStorage）には触らない。保存の形は変えていない
+- 共通基盤に定義が公開される前は、新しい ID は共通基盤がはじく（遊びには影響しない）
 
 ## 総合ランキングへの導線（MyCryptoPortfolio#29）
 
@@ -75,7 +99,7 @@ bearko.games 配下の全タイトル共通の基盤（共通 Google ログイ�
 
 - **戦闘は ×4 固定・SKIP あり**（作者の決定 2026-10-17）。RTA 中は倍速のボタンを出さない。ふだんの倍速の設定（`settings.speed`）は書き換えない
 - 区切りは、戦闘の演出が終わったとき（SKIP を含む。`battleFinished`）に送る。IGT はゲーム内の戦闘時間の合計（SKIP しても、その戦闘のゲーム内の秒数で数える）
-- **RTA 用のストーリー**（`newRtaStory`）：新しいストーリーで、プロローグ・ワールドマップの説明・マインの操作の案内は済んだことにする。本編のストーリーは `app.rta.mainStory` に退避して、タイトルに戻ると元に戻す。**RTA 用のストーリーとそのステージは保存しない**（本編のセーブ・フリーバトルの「つづきから」に触らない）。総合スコアは送らない（トロフィーは送る）。制覇したら、パーツ・会話は出さずにタイトルへ
+- **RTA 用のストーリー**（`newRtaStory`）：新しいストーリーで、プロローグ・ワールドマップの説明・マインの操作の案内は済んだことにする。本編のストーリーは `app.rta.mainStory` に退避して、タイトルに戻ると元に戻す。**RTA 用のストーリーとそのステージは保存しない**（本編のセーブ・フリーバトルの「つづきから」に触らない）。総合スコアは送らない（アチーブメントは最初のノードの制覇だけ送る）。制覇したら、パーツ・会話は出さずにタイトルへ
 - ステージに負けても、そのステージからやり直せる（計測は続く）
 - 再読み込みすると SDK の計測が消える（共通基盤の決まり）
 - 経過時間は SDK が画面の下に出す（マーケットの「バトル開始」の帯のすぐ上。`timerOffset: 64`）
