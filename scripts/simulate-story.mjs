@@ -51,6 +51,7 @@ const jsonOut = args.includes("--json") ? args.splice(args.indexOf("--json"), 1)
 // --score: 総合スコア（共通基盤 SPEC-002 3.4）の係数の確認。ノードを制覇したときの戦力と平均の戦闘時間を集める
 //   例: node scripts/simulate-story.mjs 100 best --score
 const scoreOut = args.includes("--score") ? args.splice(args.indexOf("--score"), 1) && true : false;
+const dumpOut = args.includes("--dump") ? args.splice(args.indexOf("--dump"), 1) && true : false; // --score と一緒に：生の値を JSON で
 const runs = Number(args[0] || 10);
 const policy = args[1] || "best";
 const only = new Set(args.slice(2));
@@ -182,7 +183,7 @@ function skipArea(story, area) {
 const ORDER = MAIN_AREAS.flatMap((a) => [a, ...AREAS.filter((sp) => sp.special && sp.after === a.id)]);
 
 const kindStats = {};
-const nodeScores = {}; // ノードID → [{ run, power, sec }]（js/platform.js の partyPower・avgBattleSec。sec はノード全体の平均）
+const nodeScores = {}; // ノードID → [{ run, node, power, sec }]（js/platform.js の partyPower・avgBattleSec。sec はノード全体の平均）
 for (let i = 0; i < runs; i++) {
   const story = newStory();
   let attempts = 0;
@@ -226,7 +227,7 @@ for (let i = 0; i < runs; i++) {
       }
       if (!replay && isFinalStage(area, index)) {
         const sec = avgBattleSec(cleared);
-        if (sec != null) (nodeScores[area.id] ??= []).push({ run: i, power: partyPower(db, cleared), sec });
+        if (sec != null) (nodeScores[area.id] ??= []).push({ run: i, node: area.id, power: partyPower(db, cleared), sec });
       }
       clearStage(story, key);
       carryOver(story, cleared);
@@ -238,22 +239,24 @@ for (let i = 0; i < runs; i++) {
 }
 
 if (scoreOut) {
-  // 共通基盤の計算式（bearko/mycryptoportfolio の platform/scoring/deckbattle.v2.js）と同じ係数
-  const POWER = 0.6;
-  const SPEED = 1900;
-  const value = (x) => x.power * POWER + SPEED / x.sec;
+  // ノードごとの戦力（平均・10%・中央・90%・最大）と平均の戦闘時間。共通基盤 SPEC-002 3.4 の「ふつうの戦力」と上限の根拠
   const mean = (xs) => xs.reduce((a, b) => a + b, 0) / xs.length;
-  const q = (xs, digits = 0) => {
+  const pct = (xs, p) => {
     const v = [...xs].sort((a, b) => a - b);
-    return [0.1, 0.5, 0.9].map((p) => v[Math.floor((v.length - 1) * p)].toFixed(digits)).join(" / ");
+    return v[Math.floor((v.length - 1) * p)];
   };
+  const q = (xs, digits = 0) => [0.1, 0.5, 0.9].map((p) => pct(xs, p).toFixed(digits)).join(" / ");
   console.log(`デッキ: ${policy} / ${runs}周。ノードを制覇したときの戦力と平均の戦闘時間（ノード全体・ゲーム内の秒）`);
-  console.log(`ノード          制覇  戦力(平均)  平均の秒(平均)  成績(戦力×${POWER}+${SPEED}÷秒)`);
+  console.log("ノード          制覇   戦力: 平均   10%  中央   90%   最大   平均の秒");
+  const normal = {};
   for (const area of ORDER) {
     const xs = nodeScores[area.id];
     if (!xs?.length) continue;
+    const pw = xs.map((x) => x.power);
+    normal[area.id] = mean(pw);
+    const f = (v) => v.toFixed(0).padStart(5);
     console.log(
-      `${area.id.padEnd(15)} ${String(xs.length).padStart(4)}  ${mean(xs.map((x) => x.power)).toFixed(0).padStart(8)}  ${mean(xs.map((x) => x.sec)).toFixed(1).padStart(12)}  ${mean(xs.map(value)).toFixed(0).padStart(10)}`,
+      `${area.id.padEnd(15)} ${String(xs.length).padStart(4)}  ${f(mean(pw))} ${f(pct(pw, 0.1))} ${f(pct(pw, 0.5))} ${f(pct(pw, 0.9))} ${f(Math.max(...pw))}  ${mean(xs.map((x) => x.sec)).toFixed(1).padStart(8)}`,
     );
   }
   // 本編を最後（時空のはざま）まで制覇した周だけで、周ごとの合計（係数の逆算用）
@@ -261,9 +264,10 @@ if (scoreOut) {
   if (per.length) {
     console.log(`本編を全部制覇した周: ${per.length}（10% / 中央 / 90%）`);
     console.log(`  戦力の合計: ${q(per.map((xs) => xs.reduce((a, x) => a + x.power, 0)))}`);
+    console.log(`  戦力 ÷ そのノードの平均 の合計: ${q(per.map((xs) => xs.reduce((a, x) => a + x.power / normal[x.node], 0)), 2)}`);
     console.log(`  1 ÷ 平均秒 の合計: ${q(per.map((xs) => xs.reduce((a, x) => a + 1 / x.sec, 0)), 3)}`);
-    console.log(`  成績の点: ${q(per.map((xs) => xs.reduce((a, x) => a + value(x), 0)))}`);
   }
+  if (dumpOut) console.log(JSON.stringify(nodeScores));
   process.exit(0);
 }
 if (jsonOut) {

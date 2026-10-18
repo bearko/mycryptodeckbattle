@@ -15,6 +15,7 @@ import {
   abortRta,
   initPlatform,
   isRtaAvailable,
+  migrateScores,
   newRtaStory,
   recordNodeScore,
   reportStageResult,
@@ -1201,6 +1202,8 @@ async function boot() {
     app.battleBackgrounds = manifest.battleBackgrounds ?? [];
     const saved = loadStory();
     app.story = saved?.cleared ? Story.migrateStory(saved) : Story.newStory();
+    // 総合スコア：前の版の自己ベスト（戦力の数え方が違う）は捨てる。前の制覇は節目の点だけになる（docs/platform.md）
+    if (migrateScores(app.story)) saveStory(app.story);
     // 総合スコア：これまでに制覇したノードを、起動のたびに送り直す（通知は出さない。サーバーで自己ベストだけ残る）
     reportStoryScore(app.story, { quiet: true });
   } catch (err) {

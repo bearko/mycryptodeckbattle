@@ -86,7 +86,10 @@ export function reportStageResult(areaId, result) {
 // ノードの最後のステージをクリアしたときのパーティの「戦力」と、そのノードの平均の戦闘時間で測る。
 // 点の計算は共通基盤。ここでは成績を作って送るだけ（純関数は tests/platform.test.mjs）
 
-/** 戦力（新設）：パーティの各ヒーローの「レアリティの基礎値 × Lv の倍率 × (1 + 永続強化)」の合計。強いほど高い */
+/**
+ * 戦力（新設）：パーティの各ヒーローの「レアリティの基礎値 × Lv の倍率 × (1 + 永続強化 ÷ 100)」の合計。強いほど高い。
+ * permMult は %（イフリートの魔石 1 つで +20）。v1.0.0 より前は ÷ 100 をしておらず、魔石 1 つで 21 倍になっていた（共通基盤 SPEC-002 3.4）
+ */
 export function partyPower(db, run) {
   let power = 0;
   for (const unit of run?.party ?? []) {
@@ -94,7 +97,7 @@ export function partyPower(db, run) {
     const def = db.def(unit.defId);
     const rarity = RARITY[def?.rarity];
     if (!rarity) continue;
-    power += rarity.budget * (LEVEL_MULT[unit.level] ?? 0) * (1 + (unit.permMult || 0));
+    power += rarity.budget * (LEVEL_MULT[unit.level] ?? 0) * (1 + (unit.permMult || 0) / 100);
   }
   return Math.round(power * 10) / 10;
 }
@@ -110,8 +113,48 @@ export function avgBattleSec(run) {
   return Math.round((times.reduce((a, b) => a + b, 0) / times.length) * 10) / 10;
 }
 
-// どちらがよい成績か（共通基盤の式と同じ形：戦力 ＋ 4,800 ÷ 平均秒）
-const nodeValue = (e) => e.power + 4800 / e.avgBattleSec;
+/**
+ * ノードごとのふつうの戦力（ボットで 200 周した平均を 5 単位に丸めた値）。
+ * 共通基盤の platform/scoring/deckbattle.v3.js の NORMAL_POWER と同じ。どちらかを変えたら、もう一方も直す
+ */
+export const NORMAL_POWER = {
+  "kindai-jp": 180,
+  "kindai-eu": 255,
+  "kindai-us": 295,
+  "kinsei-jp": 290,
+  "kinsei-eu": 340,
+  "kinsei-sea": 340,
+  "chusei-jp": 335,
+  "chusei-eu": 315,
+  "chusei-asia": 345,
+  "kodai-sangoku": 340,
+  "kodai-east": 345,
+  "kodai-med": 345,
+  hazama: 340,
+  "ex-corsica": 205,
+  "ex-abyss": 215,
+  "ex-maou": 235,
+};
+
+/** ノードの成績（共通基盤の v3 と同じ式：190 × 戦力 ÷ そのノードのふつうの戦力 ＋ 1,900 ÷ 平均秒）。自己ベストを選ぶのに使う */
+export function nodeValue(areaId, e) {
+  return (190 * e.power) / (NORMAL_POWER[areaId] ?? 300) + 1900 / e.avgBattleSec;
+}
+
+/** 自己ベスト（story.scores）の版。戦力の数え方を変えたら上げ、前の版の自己ベストは捨てる */
+export const SCORES_VERSION = 3;
+
+/**
+ * セーブを読んだときに呼ぶ。前の版の自己ベストは戦力の数え方が違う（魔石を ÷ 100 していない）ので捨てる。
+ * 前の制覇は節目の点だけになり、ノードを遊び直すと成績の点も入る（#12）。捨てたら true
+ */
+export function migrateScores(story) {
+  if (!story || story.scoresVersion === SCORES_VERSION) return false;
+  const had = Boolean(story.scores && Object.keys(story.scores).length);
+  delete story.scores;
+  story.scoresVersion = SCORES_VERSION;
+  return had;
+}
 
 /**
  * ノードの最後のステージをクリアしたときに、そのノードの自己ベストを story.scores に残す。
@@ -124,8 +167,9 @@ export function recordNodeScore(story, areaId, index, db, run) {
   if (sec == null) return false;
   const entry = { power: partyPower(db, run), avgBattleSec: Math.max(1, sec) };
   story.scores ??= {};
+  story.scoresVersion = SCORES_VERSION;
   const prev = story.scores[areaId];
-  if (prev && nodeValue(prev) >= nodeValue(entry)) return false;
+  if (prev && nodeValue(areaId, prev) >= nodeValue(areaId, entry)) return false;
   story.scores[areaId] = entry;
   return true;
 }

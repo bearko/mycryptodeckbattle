@@ -57,10 +57,36 @@ import { stageKey } from "../js/engine/world.js";
 const fakeDb = { def: (id) => ({ c: { rarity: 1 }, r: { rarity: 3 }, l: { rarity: 5 } })[id] };
 const unit = (defId, level, permMult = 0) => ({ uid: 1, defId, level, permMult, cdReduce: 0 });
 
-test("総合スコア：戦力はレアリティの基礎値 × Lv の倍率 × (1 + 永続強化) の合計", () => {
-  const run = { party: [unit("c", 1), unit("r", 3), unit("l", 2, 0.5), null, null, null] };
+test("総合スコア：戦力はレアリティの基礎値 × Lv の倍率 × (1 + 永続強化 ÷ 100) の合計", () => {
+  const run = { party: [unit("c", 1), unit("r", 3), unit("l", 2, 50), null, null, null] };
   assert.equal(partyPower(fakeDb, run), 10 * 1 + 15 * 3 + 22 * 2 * 1.5);
   assert.equal(partyPower(fakeDb, { party: [] }), 0);
+  // イフリートの魔石 1 つ（+20%）で 1.2 倍。前の版は 21 倍になっていた
+  assert.equal(partyPower(fakeDb, { party: [unit("c", 1, 20)] }), 12);
+});
+
+test("総合スコア：自己ベストの比べ方は共通基盤の v3 と同じ（190 × 戦力 ÷ ふつう ＋ 1,900 ÷ 平均秒）", async () => {
+  const { nodeValue, NORMAL_POWER } = await import("../js/platform.js");
+  assert.equal(nodeValue("kindai-jp", { power: 180, avgBattleSec: 10 }), 380);
+  assert.equal(nodeValue("hazama", { power: 340, avgBattleSec: 10 }), 380, "ふつうの戦力なら、どのノードでも戦力の部分は 190");
+  for (const a of AREAS) assert.ok(NORMAL_POWER[a.id] > 0, `${a.id} のふつうの戦力`);
+});
+
+test("総合スコア：前の版の自己ベスト（戦力の数え方が違う）は捨てる。制覇は残る（#12）", async () => {
+  const { migrateScores, SCORES_VERSION } = await import("../js/platform.js");
+  const old = { ...newStory(), cleared: [stageKey(TUTORIAL_AREA, 0)], scores: { [TUTORIAL_AREA]: { power: 785, avgBattleSec: 11.6 } } };
+  assert.equal(migrateScores(old), true);
+  assert.equal(old.scores, undefined);
+  assert.equal(old.scoresVersion, SCORES_VERSION);
+  assert.deepEqual(old.cleared, [stageKey(TUTORIAL_AREA, 0)]);
+  assert.equal(migrateScores(old), false, "2 回目は何もしない");
+  const fresh = newStory();
+  assert.equal(migrateScores(fresh), false, "自己ベストがなければ捨てるものもない");
+  const story = newStory();
+  const area = AREAS.find((a) => a.id === "kindai-eu");
+  recordNodeScore(story, "kindai-eu", area.stages.length - 1, fakeDb, { party: [unit("r", 1)], history: [{ time: 10 }] });
+  assert.equal(migrateScores(story), false, "いまの版で残した自己ベストは捨てない");
+  assert.ok(story.scores["kindai-eu"]);
 });
 
 test("総合スコア：平均の戦闘時間", () => {
