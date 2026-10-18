@@ -21,12 +21,17 @@ import {
   recordNodeScore,
   reportStageResult,
   reportStoryScore,
+  reportStoryTrophies,
   rtaCheckpoint,
   rtaCheckpointForQuest,
   rtaCheckpointForStageClear,
   setChatVisible,
   chatHiddenOn,
   startRta,
+  trophyIdsForBattle,
+  trophyIdsForBuy,
+  trophyIdsForQuestEnd,
+  unlockTrophies,
 } from "./platform.js";
 import { clearRun, loadRun, loadSettings, loadStory, saveRun, saveSettings, saveStory } from "./ui/storage.js";
 import * as Story from "./engine/story.js";
@@ -573,8 +578,10 @@ function storyStageEnd() {
   const st = run.story;
   const cleared = run.phase === "clear";
   const result = cleared ? Story.clearStage(app.story, st.key) : null;
-  // bearko.games 共通基盤のトロフィー（最初のノード・時空のはざまの制覇）。SDK がなければ何もしない
+  // bearko.games 共通基盤のアチーブメント（ノードの制覇）。SDK がなければ何もしない
   reportStageResult(st.areaId, result);
+  // セーブから判定するアチーブメント（タイムマシン・仲間の数・全ステージ）。RTA 用のストーリーでは送らない
+  if (!inRtaStory() && cleared) reportStoryTrophies(app.story);
   // 総合スコア：ノードの最後のステージなら、そのノードの戦力・戦闘時間を残して送る（carryOver の前。run はこのノードの通し）
   // RTA 用のストーリーは本編の進み具合ではないので送らない
   if (!inRtaStory() && cleared && (recordNodeScore(app.story, st.areaId, st.index, app.db, run) || result?.areaCleared)) reportStoryScore(app.story);
@@ -987,6 +994,8 @@ const actions = {
     render();
     animateBuy(res, cap);
     tutorialEvent(last ? "merge" : "buy");
+    // アチーブメント「初めてヒーローを合成する」（RTA 用のストーリーでは送らない）
+    if (!inRtaStory()) unlockTrophies(trophyIdsForBuy(res));
   },
   sell(zone, index) {
     const unit = app.run[zone][index];
@@ -1118,6 +1127,8 @@ const actions = {
     const result = app.pendingResult;
     app.pendingResult = null;
     rtaAfterBattle(result);
+    // アチーブメント「初めてバトルに勝つ」・フリーバトルの「10 勝してクリア」（RTA 用のストーリーでは送らない）
+    if (!inRtaStory()) unlockTrophies([...trophyIdsForBattle(result), ...trophyIdsForQuestEnd(app.run)]);
     audio.stopBgm();
     audio.se(result.won ? "win" : "lose", 0.7);
     app.battleView.showResult(resultPanel(app, result));
@@ -1207,6 +1218,8 @@ async function boot() {
     if (migrateScores(app.story)) saveStory(app.story);
     // 総合スコア：これまでに制覇したノードを、起動のたびに送り直す（通知は出さない。サーバーで自己ベストだけ残る）
     reportStoryScore(app.story, { quiet: true });
+    // アチーブメント：セーブから、いま満たしているものを送る（前から遊んでいる人にも付く。送り済みは共通基盤が通知しない）
+    reportStoryTrophies(app.story);
   } catch (err) {
     clear(root).append(h("div", { class: "loading error" }, `データの読み込みに失敗しました: ${err.message}`));
     throw err;

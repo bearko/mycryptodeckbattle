@@ -16,7 +16,7 @@ My Crypto Heroes（マイクリ）のアセットを使った、**参考作 風�
 - 本番のブランチ（`main`）にマージすると、Cloudflare Workers Builds が自動で公開します（ビルド不要の静的サイト。設定は `wrangler.jsonc`。リポジトリのルートをそのまま配信）
 - 配信しないファイルは `.assetsignore`（`tests/`・`scripts/`・`docs/`・`content/` など）。`assets/` のキャッシュの設定は `_headers`（1 週間）
 - `main` 以外のブランチはプレビューとしてビルドされます（`wrangler.jsonc` の `previews`）
-- bearko.games の共通基盤（共通ログイン・トロフィー・総合スコア・RTA・全体チャット・アイコン）に参加しています。詳しくは [docs/platform.md](docs/platform.md)
+- bearko.games の共通基盤（共通ログイン・アチーブメント・総合スコア・RTA・全体チャット・アイコン）に参加しています。詳しくは [docs/platform.md](docs/platform.md)
 - 2026-10 に Vercel から移しました。Vercel の設定（`vercel.json`・`.vercelignore`）は消してあります
 
 スマホの縦画面を基準にしたレイアウトで、どの画面もスクロールせずに操作できます（スクロールするのはエクステンション一覧などのリストと、遊び方・詳細の説明画面だけ）。
@@ -69,7 +69,7 @@ python3 -m http.server 8080
 ## ドキュメント
 
 - [CHANGELOG.md](CHANGELOG.md): 更新履歴（v1.0.0 から。版は `js/version.js`）
-- [docs/platform.md](docs/platform.md): bearko.games 共通基盤（トロフィー・総合スコア・RTA）との連携
+- [docs/platform.md](docs/platform.md): bearko.games 共通基盤（アチーブメント・総合スコア・RTA）との連携
 - [docs/research.md](docs/research.md): 参考作 の仕組みの調査結果と、確認できなかった点
 - [docs/glossary.md](docs/glossary.md): 参考作 → マイクリ用語の対応表
 - [docs/design.md](docs/design.md): MVP の設計、独自に決めた数値、スキル生成・CPUの仕組み

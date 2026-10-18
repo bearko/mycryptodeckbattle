@@ -1,15 +1,68 @@
-// bearko.games 共通基盤（トロフィー・総合スコア・RTA）への窓口。docs/platform.md
+// bearko.games 共通基盤（アチーブメント・総合スコア・RTA）への窓口。docs/platform.md
 // SDK（https://bearko.games/sdk/v1.js）が読めない・通信に失敗しても何もしない。ゲームの進行は止めない。
 // ログイン状態は共通基盤が持つので、ここではセーブ（localStorage）に触らない。
 import { AREAS, TUTORIAL_AREA, areaById, isFinalStage } from "./engine/world.js";
 import { LEVEL_MULT, RARITY } from "./engine/balance.js";
-import { areaCleared, newStory } from "./engine/story.js";
+import { areaCleared, areaProgress, newStory } from "./engine/story.js";
 
-/** ノードを初めて制覇したときに送るトロフィー ID（純関数。tests/platform.test.mjs） */
+// ---------------------------------------------------------------- アチーブメント（共通基盤 SPEC-008。旧トロフィー）
+// 送り方は SDK の unlockTrophy（名前は旧のまま）。定義（名前・絵）は共通基盤が持つ
+
+/** 制覇するとアチーブメントになるノード（ノード ID → アチーブメント ID） */
+export const AREA_ACHIEVEMENTS = {
+  [TUTORIAL_AREA]: "deckbattle.area1", // 最初のノード（近代・日本）
+  "kindai-eu": "deckbattle.europe", // 近代・ヨーロッパ
+  "ex-corsica": "deckbattle.corsica", // コルシカの特異点
+  "ex-abyss": "deckbattle.abyss", // 深海の特異点
+  hazama: "deckbattle.clear", // 時空のはざま：本編の全ノードを制覇すると行ける最後のノード
+  "ex-maou": "deckbattle.maou", // 魔王の特異点（最後のステージのレイドボスが覚醒魔王ファオ）
+};
+
+/** ノードを初めて制覇したときに送るアチーブメント ID（純関数。tests/platform.test.mjs） */
 export function trophyIdsForAreaCleared(areaId) {
-  if (areaId === TUTORIAL_AREA) return ["deckbattle.area1"]; // 最初のノード（近代・日本）
-  if (areaId === "hazama") return ["deckbattle.clear"]; // 時空のはざま：本編の全ノードを制覇すると行ける最後のノード
-  return [];
+  const id = AREA_ACHIEVEMENTS[areaId];
+  return id ? [id] : [];
+}
+
+/** すべてのノードのすべてのステージ（枝分かれ・特別ステージも含む）をクリアしたか */
+export function allStagesCleared(story) {
+  return AREAS.every((a) => {
+    const p = areaProgress(story, a);
+    return p.total > 0 && p.done >= p.total;
+  });
+}
+
+/**
+ * ストーリーのセーブから、いま満たしているアチーブメント（純関数。tests/platform.test.mjs）。
+ * 起動のときとステージが終わったときに送る（前から遊んでいる人にも付く）
+ */
+export function storyTrophyIds(story) {
+  if (!story) return [];
+  const ids = [];
+  for (const a of AREAS) if (AREA_ACHIEVEMENTS[a.id] && areaCleared(story, a)) ids.push(AREA_ACHIEVEMENTS[a.id]);
+  const machine = story.machine ?? 1;
+  if (machine >= 2) ids.push("deckbattle.machine2");
+  if (machine >= 5) ids.push("deckbattle.machine5");
+  const heroes = story.heroes?.length ?? 0;
+  if (heroes >= 50) ids.push("deckbattle.heroes50");
+  if (heroes >= 100) ids.push("deckbattle.heroes100");
+  if (allStagesCleared(story)) ids.push("deckbattle.allstages");
+  return ids;
+}
+
+/** フリーバトル（クエスト）が終わったとき：10 勝してクリアしていたら（純関数） */
+export function trophyIdsForQuestEnd(run) {
+  return run && !run.story && run.phase === "clear" ? ["deckbattle.quest"] : [];
+}
+
+/** 戦闘の演出が終わったとき：勝っていたら「初めてバトルに勝つ」（純関数。2 回目からは送り済みとして送らない） */
+export function trophyIdsForBattle(result) {
+  return result?.won ? ["deckbattle.firstwin"] : [];
+}
+
+/** マーケットで買ったとき：合成が起きていたら「初めてヒーローを合成する」（純関数） */
+export function trophyIdsForBuy(res) {
+  return res?.ok && res.merges?.length ? ["deckbattle.merge"] : [];
 }
 
 const sdk = () => (typeof window !== "undefined" ? window.BearkoGames : undefined);
@@ -65,21 +118,48 @@ export function chatHiddenOn(screen) {
   return screen === "battle" || screen === "scene";
 }
 
-/** ステージの結果（Story.clearStage の戻り値）を受けて、ノードを制覇していたらトロフィーを送る */
-export function reportStageResult(areaId, result) {
+// 送ったもの（この起動のあいだ）。同じ ID は 2 回送らない（失敗しても送り直さない。次の起動で送る）
+const sentTrophies = new Set();
+// 1 つずつ順に送る（未ログインの最初の書き込みで仮アカウントができるため、同時に送らない）
+let trophyChain = Promise.resolve();
+
+/** アチーブメントを送る。SDK がない・失敗しても何もしない。返すのは送り終わる Promise（テスト用） */
+export function unlockTrophies(ids) {
   const bg = sdk();
-  if (!bg || !result?.areaCleared) return;
-  for (const id of trophyIdsForAreaCleared(areaId)) {
-    try {
-      Promise.resolve(bg.unlockTrophy(id))
-        .then((r) => {
-          if (!r || !r.ok) console.warn("[platform] trophy", id, r && r.error);
-        })
-        .catch((e) => console.warn("[platform] trophy", id, e));
-    } catch (e) {
-      console.warn("[platform] trophy", id, e);
-    }
+  if (!bg || typeof bg.unlockTrophy !== "function") return trophyChain;
+  for (const id of ids ?? []) {
+    if (sentTrophies.has(id)) continue;
+    sentTrophies.add(id);
+    trophyChain = trophyChain.then(() => {
+      try {
+        return Promise.resolve(bg.unlockTrophy(id))
+          .then((r) => {
+            if (!r || !r.ok) console.warn("[platform] trophy", id, r && r.error);
+          })
+          .catch((e) => console.warn("[platform] trophy", id, e));
+      } catch (e) {
+        console.warn("[platform] trophy", id, e);
+      }
+    });
   }
+  return trophyChain;
+}
+
+/** テスト用：この起動で送ったものを忘れる */
+export function _resetSentTrophies() {
+  sentTrophies.clear();
+  trophyChain = Promise.resolve();
+}
+
+/** ステージの結果（Story.clearStage の戻り値）を受けて、ノードを制覇していたらアチーブメントを送る */
+export function reportStageResult(areaId, result) {
+  if (!result?.areaCleared) return trophyChain;
+  return unlockTrophies(trophyIdsForAreaCleared(areaId));
+}
+
+/** ストーリーのセーブから、いま満たしているアチーブメントをまとめて送る（送り済みは送らない） */
+export function reportStoryTrophies(story) {
+  return unlockTrophies(storyTrophyIds(story));
 }
 
 // ---------------------------------------------------------------- 総合スコア（共通基盤 SPEC-002 3.4）

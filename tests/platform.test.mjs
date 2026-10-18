@@ -1,13 +1,17 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { AREAS, MAIN_AREAS, TUTORIAL_AREA } from "../js/engine/world.js";
-import { trophyIdsForAreaCleared, reportStageResult, initPlatform, setChatVisible, chatHiddenOn, canPickAvatar, openAvatarPicker } from "../js/platform.js";
+import { trophyIdsForAreaCleared, reportStageResult, initPlatform, setChatVisible, chatHiddenOn, canPickAvatar, openAvatarPicker, _resetSentTrophies } from "../js/platform.js";
 
-test("共通基盤のトロフィー：最初のノードと、最後のノード（時空のはざま）の制覇で送る", () => {
+test("共通基盤のアチーブメント：ノードの制覇で送る（最初・近代・ヨーロッパ・時空のはざま・特異点 3 つ）", () => {
   assert.deepEqual(trophyIdsForAreaCleared(TUTORIAL_AREA), ["deckbattle.area1"]);
   assert.deepEqual(trophyIdsForAreaCleared("hazama"), ["deckbattle.clear"]);
-  assert.deepEqual(trophyIdsForAreaCleared("kindai-eu"), []);
-  assert.deepEqual(trophyIdsForAreaCleared("ex-corsica"), [], "特別ステージでは送らない");
+  assert.deepEqual(trophyIdsForAreaCleared("kindai-eu"), ["deckbattle.europe"]);
+  assert.deepEqual(trophyIdsForAreaCleared("ex-corsica"), ["deckbattle.corsica"]);
+  assert.deepEqual(trophyIdsForAreaCleared("ex-abyss"), ["deckbattle.abyss"]);
+  assert.deepEqual(trophyIdsForAreaCleared("ex-maou"), ["deckbattle.maou"]);
+  assert.deepEqual(trophyIdsForAreaCleared("kindai-us"), []);
+  assert.equal(AREAS.find((a) => a.id === "ex-maou").boss, "b373", "魔王の特異点の最後のレイドボスは覚醒魔王ファオ");
   const hazama = AREAS.find((a) => a.id === "hazama");
   assert.ok(hazama?.requiresAll, "時空のはざまは本編の全ノード制覇が条件");
   assert.ok(MAIN_AREAS.some((a) => a.id === TUTORIAL_AREA));
@@ -31,6 +35,7 @@ test("共通基盤：ノードを制覇したときだけ送り、失敗・例�
   };
   const warn = console.warn;
   console.warn = () => {};
+  _resetSentTrophies();
   try {
     initPlatform("0.1.0");
     reportStageResult(TUTORIAL_AREA, { areaCleared: false });
@@ -42,10 +47,118 @@ test("共通基盤：ノードを制覇したときだけ送り、失敗・例�
     globalThis.window.BearkoGames.unlockTrophy = () => {
       throw new Error("boom");
     };
+    _resetSentTrophies();
     assert.doesNotThrow(() => reportStageResult(TUTORIAL_AREA, { areaCleared: true }));
+    await new Promise((r) => setTimeout(r, 0));
   } finally {
     console.warn = warn;
     delete globalThis.window;
+    _resetSentTrophies();
+  }
+});
+
+// ---------------------------------------------------------------- アチーブメント（共通基盤 SPEC-008）
+import { storyTrophyIds, allStagesCleared, trophyIdsForQuestEnd, trophyIdsForBattle, trophyIdsForBuy, unlockTrophies, reportStoryTrophies } from "../js/platform.js";
+import { newStory as freshStory, areaProgress } from "../js/engine/story.js";
+import { allStages, stageKey as keyOf } from "../js/engine/world.js";
+
+const clearArea = (story, area) => {
+  for (const st of allStages(area)) story.cleared.push(keyOf(area.id, st.row, st.lane));
+};
+
+test("アチーブメント：新しいストーリーでは何も満たしていない", () => {
+  assert.deepEqual(storyTrophyIds(freshStory()), []);
+  assert.deepEqual(storyTrophyIds(null), []);
+});
+
+test("アチーブメント：セーブから、ノードの制覇・タイムマシン・仲間の数を判定する", () => {
+  const story = freshStory();
+  const tut = AREAS.find((a) => a.id === TUTORIAL_AREA);
+  story.cleared.push(keyOf(tut.id, tut.stages.length - 1)); // 最後のステージだけ（枝分かれを全部通らなくても制覇）
+  assert.deepEqual(storyTrophyIds(story), ["deckbattle.area1"]);
+  story.machine = 2;
+  assert.deepEqual(storyTrophyIds(story), ["deckbattle.area1", "deckbattle.machine2"]);
+  story.machine = 5;
+  story.heroes = Array.from({ length: 50 }, (_, i) => `h${i}`);
+  assert.deepEqual(storyTrophyIds(story), ["deckbattle.area1", "deckbattle.machine2", "deckbattle.machine5", "deckbattle.heroes50"]);
+  story.heroes = Array.from({ length: 100 }, (_, i) => `h${i}`);
+  assert.ok(storyTrophyIds(story).includes("deckbattle.heroes100"));
+  story.heroes.pop();
+  assert.ok(!storyTrophyIds(story).includes("deckbattle.heroes100"), "99 人では届かない");
+  for (const id of ["kindai-eu", "ex-corsica", "ex-abyss", "hazama", "ex-maou"]) {
+    const area = AREAS.find((a) => a.id === id);
+    story.cleared.push(keyOf(id, area.stages.length - 1));
+  }
+  const ids = storyTrophyIds(story);
+  for (const id of ["europe", "corsica", "abyss", "clear", "maou"]) assert.ok(ids.includes(`deckbattle.${id}`), id);
+  assert.ok(!ids.includes("deckbattle.allstages"), "枝分かれを残している");
+});
+
+test("アチーブメント：すべてのノードのすべてのステージ（枝分かれ・特別ステージも）をクリアしたら allstages", () => {
+  const story = freshStory();
+  for (const a of AREAS) clearArea(story, a);
+  assert.equal(allStagesCleared(story), true);
+  assert.ok(storyTrophyIds(story).includes("deckbattle.allstages"));
+  for (const a of AREAS) {
+    const p = areaProgress(story, a);
+    assert.equal(p.done, p.total, a.id);
+  }
+  // 1 つでも残っていたら付かない
+  const last = AREAS.at(-1);
+  const rest = freshStory();
+  for (const a of AREAS) clearArea(rest, a);
+  rest.cleared = rest.cleared.filter((k) => k !== keyOf(last.id, 0));
+  assert.equal(allStagesCleared(rest), false);
+  assert.ok(!storyTrophyIds(rest).includes("deckbattle.allstages"));
+});
+
+test("アチーブメント：その場で送るもの（初勝利・合成・フリーバトルのクリア）", () => {
+  assert.deepEqual(trophyIdsForBattle({ won: true }), ["deckbattle.firstwin"]);
+  assert.deepEqual(trophyIdsForBattle({ won: false }), []);
+  assert.deepEqual(trophyIdsForBattle(null), []);
+  assert.deepEqual(trophyIdsForBuy({ ok: true, merges: [{ defId: "h1", level: 2 }] }), ["deckbattle.merge"]);
+  assert.deepEqual(trophyIdsForBuy({ ok: true, merges: [] }), []);
+  assert.deepEqual(trophyIdsForBuy({ ok: false }), []);
+  assert.deepEqual(trophyIdsForQuestEnd({ phase: "clear", wins: 10 }), ["deckbattle.quest"]);
+  assert.deepEqual(trophyIdsForQuestEnd({ phase: "clear", story: { areaId: TUTORIAL_AREA } }), [], "ストーリーのステージのクリアは別");
+  assert.deepEqual(trophyIdsForQuestEnd({ phase: "gameover" }), []);
+  assert.deepEqual(trophyIdsForQuestEnd({ phase: "result" }), []);
+});
+
+test("アチーブメント：1 つずつ順に送り、同じ起動で同じ ID は 2 回送らない", async () => {
+  _resetSentTrophies();
+  const log = [];
+  let inFlight = 0;
+  globalThis.window = {
+    BearkoGames: {
+      unlockTrophy: async (id) => {
+        inFlight += 1;
+        assert.equal(inFlight, 1, "前の返事を待ってから送る");
+        log.push(id);
+        await new Promise((r) => setTimeout(r, 5));
+        inFlight -= 1;
+        return { ok: id !== "deckbattle.machine2", error: "unknown trophy" };
+      },
+    },
+  };
+  const warn = console.warn;
+  console.warn = () => {};
+  try {
+    const story = freshStory();
+    const tut = AREAS.find((a) => a.id === TUTORIAL_AREA);
+    story.cleared.push(keyOf(tut.id, tut.stages.length - 1));
+    story.machine = 2;
+    reportStoryTrophies(story);
+    reportStageResult(TUTORIAL_AREA, { areaCleared: true }); // 送り済み
+    unlockTrophies(trophyIdsForBattle({ won: true }));
+    await unlockTrophies(trophyIdsForBattle({ won: true })); // 2 回目の勝利
+    assert.deepEqual(log, ["deckbattle.area1", "deckbattle.machine2", "deckbattle.firstwin"]);
+    await reportStoryTrophies(story);
+    assert.equal(log.length, 3, "失敗（machine2）も同じ起動では送り直さない");
+  } finally {
+    console.warn = warn;
+    delete globalThis.window;
+    _resetSentTrophies();
   }
 });
 
