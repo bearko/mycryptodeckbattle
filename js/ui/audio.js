@@ -30,6 +30,9 @@ const SE_GAP_MS = 90;
 const BGM_BASE = 0.35; // BGMの元の音量。効果音は呼び出しごとに渡す
 const DEFAULT_VOLUMES = Object.freeze({ bgm: 1, se: 1 });
 
+// 画面が隠れている（ほかのアプリやタブへ移った・画面を消した・ブラウザを閉じた）
+const pageHidden = () => typeof document !== "undefined" && document.visibilityState === "hidden";
+
 function clamp01(v, fallback) {
   const n = Number(v);
   return Number.isFinite(n) ? Math.max(0, Math.min(1, n)) : fallback;
@@ -89,7 +92,7 @@ class AudioManager {
     saveSettings({ ...loadSettings(), ...this.settingsPatch() });
     if (this.bgm) {
       this.bgm.volume = mixVolume(BGM_BASE, this.volumes.bgm);
-      if (this.bgm.paused && this.volumes.bgm > 0) this.bgm.play().catch(() => {});
+      if (this.bgm.paused && this.volumes.bgm > 0 && !pageHidden()) this.bgm.play().catch(() => {});
     }
     this.listeners.forEach((fn) => fn(this.muted));
   }
@@ -123,7 +126,7 @@ class AudioManager {
       a.playbackRate = tone.rate;
     }
     if (tone?.lowpass) this.filter(a, tone.lowpass);
-    a.play().catch(() => {});
+    if (!pageHidden()) a.play().catch(() => {}); // 隠れているあいだは、戻ったときに onShow が流す
     this.bgm = a;
   }
 
@@ -157,7 +160,7 @@ class AudioManager {
   }
 
   se(name, volume = 0.55) {
-    if (!this.unlocked || !FILES[name]) return;
+    if (!this.unlocked || !FILES[name] || pageHidden()) return;
     const vol = mixVolume(volume, this.volumes.se);
     if (vol <= 0) return;
     const now = performance.now();
@@ -167,6 +170,28 @@ class AudioManager {
     a.volume = vol;
     a.play().catch(() => {});
   }
+
+  /**
+   * 画面が隠れたら BGM を止め、戻ったら続きから流す。ブラウザやアプリの外枠は、裏に回ったことを
+   * ページの音までは伝えてくれない（HTML の Audio は鳴り続ける）ので、ここで自分で止める
+   */
+  watchPage() {
+    if (typeof document === "undefined") return;
+    const hide = () => {
+      this.bgm?.pause();
+      this.ctx?.suspend().catch(() => {});
+    };
+    const show = () => {
+      if (pageHidden()) return;
+      this.ctx?.resume().catch(() => {});
+      if (this.bgm && this.bgm.paused && this.unlocked && this.volumes.bgm > 0) this.bgm.play().catch(() => {});
+    };
+    document.addEventListener("visibilitychange", () => (pageHidden() ? hide() : show()));
+    window.addEventListener("pagehide", hide);
+    // 戻る・進むで同じページに戻ってきたとき（bfcache）は visibilitychange が来ないことがある
+    window.addEventListener("pageshow", (e) => { if (e.persisted) show(); });
+  }
 }
 
 export const audio = new AudioManager();
+audio.watchPage();
